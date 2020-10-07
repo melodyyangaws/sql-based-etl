@@ -1,9 +1,10 @@
 from configparser import ConfigParser
+import os.path as path
 
 def ConfigSectionMap(section):
     dict1 = {}
     config = ConfigParser()
-    config.read("deployment/environment.cfg")
+    config.read(path.join(path.dirname(__file__),"../../deployment/environment.cfg"))
 
     for key in config[section]:
         try:

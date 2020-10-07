@@ -3,25 +3,30 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      nodejs: 10    
+      python: 3.8
+      nodejs: 12 
     commands:
-      - echo "nothing to do in install"
+      - npm install -g aws-cdk
+      - pip3 install .
   pre_build:
     commands:
       - echo "Installing dependencies and executing unit tests - `pwd`"
-      - cd source
-      - chmod +x ./run-all-tests.sh && ./run-all-tests.sh
-      - echo "Installing dependencies and executing unit tests completed `date`"
+      - cd deployment
+      - chmod +x ./pull_and_push_ecr.sh && ./run-all-tests.sh
+      - echo "Docker images pull and push are completed `date`"
   build:
     commands:
-      - echo "Starting build `date` in `pwd`"
-      - cd ../deployment
-      - chmod +x ./build-s3-dist.sh && ./build-s3-dist.sh $DIST_OUTPUT_BUCKET $SOLUTION_NAME $VERSION
-      - echo "Build completed `date`"
-      - echo "Starting open-source-dist `date` in `pwd`"
-      - chmod +x ./build-open-source-dist.sh && ./build-open-source-dist.sh $SOLUTION_NAME
-      - echo "Open Source Dist completed `date`"
-
+      - cd deployment
+      - echo "Starting deploy docker images `date` in `pwd`"
+      - export REGION=$(aws configure get region)
+      - export ACCOUNTNUMBER=$(aws sts get-caller-identity --query Account --output text)
+      - chmod +x ./pull_and_push_ecr.sh && ./pull_and_push_ecr.sh 
+      - echo "Images are pushed `date`"
+      - cd ../
+      - echo "Starting deploy CDK `date` in `pwd`"
+      - pip install -r requirements.txt
+      - cdk deploy -c env=develop
+      - echo "CDK deployment is completed `date`"
   post_build:
     commands:
       - echo "Retrieving next stage buildspec `date` in `pwd`"

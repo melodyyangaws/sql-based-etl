@@ -19,12 +19,14 @@ setuptools.setup(
     packages=setuptools.find_packages(where="sql-based-etl"),
 
     install_requires=[
-        "aws-cdk.core==1.62.0",
-        "aws-cdk.aws_iam==1.62.0",
-        "aws-cdk.aws_eks==1.62.0",
-        "aws-cdk.aws_ec2==1.62.0",
-        "aws-cdk.aws_s3==1.62.0",
-        "aws-cdk.aws_ssm==1.62.0",
+        "aws-cdk.core==1.66.0",
+        "aws-cdk.aws_iam==1.66.0",
+        "aws-cdk.aws_eks==1.66.0",
+        "aws-cdk.aws_ec2==1.66.0",
+        "aws-cdk.aws_s3==1.66.0",
+        "aws-cdk.aws_ssm==1.66.0",
+        "aws-cdk.aws_cloud9==1.66.0",
+        "pyyaml"
     ],
 
     python_requires=">=3.6",
