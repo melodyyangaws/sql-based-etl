@@ -26,7 +26,8 @@ setuptools.setup(
         "aws-cdk.aws_s3==1.66.0",
         "aws-cdk.aws_ssm==1.66.0",
         "aws-cdk.aws_cloud9==1.66.0",
-        "pyyaml"
+        "aws-cdk.aws_efs==1.66.0",
+        "pyyaml==5.3"
     ],
 
     python_requires=">=3.6",

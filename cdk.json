@@ -2,6 +2,7 @@
   "app": "python3 source/app.py",
   "context": {
     "cluster_name": "spark-on-eks",
+    "cluster_admin_name":"EKSAdmin",
     "@aws-cdk/core:enableStackNameDuplicates": "true",
     "aws-cdk:enableDiffNoFail": "true",
     "@aws-cdk/core:stackRelativeExports": "true"

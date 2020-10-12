@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: nyctaxi-job-
+  # namespace: spark
+  # name: nyctaxi-job-spark
+spec:
+  serviceAccountName: etl
+  entrypoint: nyctaxi-job
+  # podGC: 
+  #   strategy: OnWorkflowSuccess
+  ttlStrategy:
+    secondsAfterCompletion: 86400
+    secondsAfterSuccess: 43200
+    secondsAfterFailure: 86400  
+  templates:
+  - name: nyctaxi-job
+    dag:
+      tasks:
+        - name: step1-query
+          templateRef:
+            name: arc-spark-clustertemplate
+            template: sparkLocal
+            clusterScope: true   
+          arguments:
+            parameters:
+            - name: jobId
+              value: nyctaxi 
+            # in a jupyter notebook, each stage associates to env, eg.test & prod. Could skip a stage when env mismatches 
+            - name: environment
+              value: test    
+            - name: executorInstances
+              value: "1"
+            - name: executorCores
+              value: "1"
+            - name: executorMemory
+              value: "1"  
+            - name: tags
+              value: "project=sqlbasedetl, owner=myang, costcenter=66666"  
+            - name: configUri
+              value: https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes/nyctaxi.ipynb
+            - name: parameters
+              value: "--ETL_CONF_DATA_URL=s3a://nyc-tlc/trip*data --ETL_CONF_JOB_URL=https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes"
+            - name: sparkConf  
+              value: "--conf spark.hadoop.fs.s3a.aws.credentials.provider=com.amazonaws.auth.WebIdentityTokenCredentialsProvider"

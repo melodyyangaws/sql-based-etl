@@ -1,153 +1,68 @@
-#!/usr/bin/env python3
 from aws_cdk import (
     core,
-    aws_ssm as ssm
+    aws_ec2 as ec2
 )
-from aws_cdk.aws_ec2 import (
-    Vpc, 
-    Port,
-    SecurityGroup,
-    SubnetSelection, 
-    SubnetType, 
-    GatewayVpcEndpointAwsService, 
-    InterfaceVpcEndpointAwsService
-)
-
 class NetworkSgConst(core.Construct):
 
     @property
     def vpc(self):
         return self._vpc
 
-    @property
-    def cluster_sg(self):
-        return self._eks_control_plane_sg
+    # @property
+    # def control_plane_sg(self):
+    #     return self._eks_control_plane_sg
 
-    def __init__(
-            self,
-            scope: core.Construct,
-            id: str,
-            cluster_name: str,
-            **kwargs,
-    ) -> None:
+    def __init__(self,scope: core.Construct, id:str, eksname:str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
-        # create a vpc
-        self._vpc = Vpc(self, 'eksVpc',max_azs=2)
+# //*************************************************//
+# //******************* NETWORK ********************//
+# //************************************************//
 
-        core.Tags.of(self._vpc).add(
-                key='Name',
-                value= cluster_name + 'eksVpc',
-        )
+        self._vpc = ec2.Vpc(self, 'eksVpc',max_azs=2)
+        core.Tags.of(self._vpc).add('Name', eksname + 'EksVpc')
 
         # Add VPC endpoint 
         self._vpc.add_gateway_endpoint("S3GatewayEndpoint",
-                                        service=GatewayVpcEndpointAwsService.S3,
-                                        subnets=[SubnetSelection(subnet_type=SubnetType.PUBLIC),
-                                                 SubnetSelection(subnet_type=SubnetType.PRIVATE)])
+                                        service=ec2.GatewayVpcEndpointAwsService.S3,
+                                        subnets=[ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
+                                                 ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE)])
                                                       
-        # self._vpc.add_interface_endpoint("EcrDockerEndpoint", 
-        #                                 service=InterfaceVpcEndpointAwsService.ECR_DOCKER
-        # )
-        self._vpc.add_interface_endpoint("Ec2Endpoint", 
-                                        service=InterfaceVpcEndpointAwsService.EC2
-        )
-        self._vpc.add_interface_endpoint("CWLogsEndpoint", 
-                                        service=InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS
-        )
-        self._vpc.add_interface_endpoint("StsEndpoint", 
-                                        service=InterfaceVpcEndpointAwsService.STS
-        )
+        # self._vpc.add_interface_endpoint("EcrDockerEndpoint",service=InterfaceVpcEndpointAwsService.ECR_DOCKER)
+        self._vpc.add_interface_endpoint("Ec2Endpoint", service=ec2.InterfaceVpcEndpointAwsService.EC2)
+        self._vpc.add_interface_endpoint("CWLogsEndpoint", service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS)
+        self._vpc.add_interface_endpoint("StsEndpoint", service=ec2.InterfaceVpcEndpointAwsService.STS)
 
-        # # Fetch vpc
-        # self.vpc = aws_ec2.Vpc.from_lookup(
-        #     self,
-        #     'Vpc',
-        #     vpc_id=vpc_id,
-        # )
+# //******************************************************//
+# //******************* SECURITY GROUP ******************//
+# //****************************************************//
 
-        # Control plane SG
-        self._eks_control_plane_sg = SecurityGroup(self,'control-plane-sg',
-            security_group_name= cluster_name + '-control-plane-sg',
-            vpc=self._vpc,
-            allow_all_outbound=True,
-            description='EKS control plane SG for' + cluster_name,
-        )
-        core.Tags.of(self._eks_control_plane_sg).add(
-                key='kubernetes.io/cluster/' + cluster_name,
-                value= 'owned',
-        )
-        core.Tags.of(self._eks_control_plane_sg).add(
-                key='Name',
-                value= 'control-plan-sg',
-        )
+        # self._eks_control_plane_sg = ec2.SecurityGroup(self,'control-plane-sg',
+        #     security_group_name= eksname + '-control-plane-sg',
+        #     vpc=self._vpc,
+        #     allow_all_outbound=True,
+        #     description='EKS control plane SG for' + eksname,
+        # )
+        # core.Tags.of(self._eks_control_plane_sg).add('kubernetes.io/cluster/' + eksname,'owned')
+        # core.Tags.of(self._eks_control_plane_sg).add('Name','control-plane-sg')
 
-        # worker SG
-        self._eks_worker_sg = SecurityGroup(self,'worker-sg',
-            security_group_name= cluster_name + '-worker-sg',
-            vpc=self._vpc,
-            allow_all_outbound=True,
-            description='EKS worker SG for '+ cluster_name,
-        )
+        # # worker SG
+        # self._eks_worker_sg = ec2.SecurityGroup(self,'worker-sg',
+        #     security_group_name= eksname + '-worker-sg',
+        #     vpc=self._vpc,
+        #     allow_all_outbound=True,
+        #     description='EKS worker SG for ' + eksname,
+        # )
+        # core.Tags.of(self._eks_worker_sg).add('kubernetes.io/cluster/' + eksname,'owned')
+        # core.Tags.of(self._eks_worker_sg).add('Name', eksname + '-worker-sg')
+        
+        # # SG Ports
 
-        core.Tags.of(self._eks_worker_sg).add(
-                key='kubernetes.io/cluster/' + cluster_name,
-                value= 'owned',
-        )
-        core.Tags.of(self._eks_worker_sg).add(
-                key='Name',
-                value= cluster_name+ '-worker-sg',
-        )
+        # self._eks_control_plane_sg.add_ingress_rule(self._eks_worker_sg,ec2.Port.all_traffic())
+        # self._eks_control_plane_sg.add_ingress_rule(self._eks_control_plane_sg,ec2.Port.all_traffic())
+        # self._eks_control_plane_sg.add_ingress_rule(self._eks_worker_sg,ec2.Port.tcp(port=443))
+        # self._eks_control_plane_sg.add_ingress_rule(self._eks_worker_sg,ec2.Port.tcp(port=10250)
 
-         # Allow ports from workers to control plane
-        self._eks_control_plane_sg.add_ingress_rule(
-            peer=self._eks_worker_sg,
-            connection=Port.all_traffic(),
-        )
-        self._eks_control_plane_sg.add_ingress_rule(
-            peer=self._eks_control_plane_sg,
-            connection=Port.all_traffic(),
-        )
-        # self._eks_control_plane_sg.add_ingress_rule(
-        #     peer=self._eks_worker_sg,
-        #     connection=Port.tcp(port=443),
-        # )
-        # self._eks_control_plane_sg.add_ingress_rule(
-        #     peer=self._eks_worker_sg,
-        #     connection=Port.tcp(port=10250),
-        # )
 
-        # # Allow ports from control plan to workers
-        # self._eks_control_plane_sg.add_egress_rule(
-        #     peer=self._eks_worker_sg,
-        #     connection=Port.tcp_range(start_port=1025, end_port=65535)
-        # )
-        # self._eks_control_plane_sg.add_egress_rule(
-        #     peer=self._eks_worker_sg,
-        #     connection=Port.tcp(port=443),
-        # )
-        # self._eks_control_plane_sg.add_egress_rule(
-        #     peer=self._eks_worker_sg,
-        #     connection=Port.tcp(port=10250),
-        # )
-
-        # Allow ports 0-65535 from control plane to workers
-        # self._eks_worker_sg.add_ingress_rule(
-        #     peer=self._eks_control_plane_sg,
-        #     connection=Port.tcp_range(start_port=0, end_port=65535),
-        # )
-        # self._eks_worker_sg.add_ingress_rule(
-        #     peer=self._eks_control_plane_sg,
-        #     connection=Port.tcp(port=10250),
-        # )
-        self._eks_worker_sg.add_ingress_rule(
-            peer=self._eks_worker_sg,
-            connection=Port.all_traffic(),
-        )
-        self._eks_worker_sg.add_ingress_rule(
-            peer=self._eks_control_plane_sg,
-            connection=Port.all_traffic(),
-        )
-        # self._eks_worker_sg.add_egress_rule(
-        #     connection=Port.all_traffic()
-        # )
+        # self._eks_worker_sg.add_ingress_rule(self._eks_worker_sg,ec2.Port.all_traffic())
+        # self._eks_worker_sg.add_ingress_rule(self._eks_control_plane_sg,ec2.Port.all_traffic())

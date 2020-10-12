@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: scd2-job-
+  # namespace: spark
+  # name: scd2-job
+spec:
+  serviceAccountName: etl
+  entrypoint: spark-template
+  # podGC: 
+  #   strategy: OnWorkflowSuccess
+  ttlStrategy:
+    secondsAfterCompletion: 86400
+    secondsAfterSuccess: 43200
+    secondsAfterFailure: 86400  
+  templates:
+  - name: spark-template
+    dag:
+      tasks:
+        - name: Delta-load-SCD2
+          templateRef:
+            name: arc-spark-clustertemplate
+            template: sparkClient
+            clusterScope: true 
+          arguments:
+            parameters:
+            - name: jobId
+              value: scd2 
+            # in the sample jupyter notebook, all stages will be run in test and prod only.
+            - name: environment
+              value: test   
+            - name: executorInstances
+              value: "2"
+            - name: executorCores
+              value: "1"
+            - name: executorMemory
+              value: "2g"  
+            - name: tags
+              value: "project=sqlbasedetl, owner=myang, costcenter=66666"     
+            - name: configUri
+              value: s3a://testtestmelody/app-code/job/auto_job.ipynb
+            - name: parameters
+              value: "--ETL_CONF_DATALAKE_LOC=testtestmelody --ETL_CONF_CURRENT_TIMESTAMP='2020-02-02'"
