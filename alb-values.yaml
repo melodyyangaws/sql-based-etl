@@ -1,8 +1,0 @@
-awsRegion: us-west-2
-awsVpcID: vpc-0ebbb998098abfe8f,
-clusterName: eksctl-managed,
-rbac:
-  create: true,
-  serviceAccount:
-    create: false,
-    name: alb-ingress-controller
