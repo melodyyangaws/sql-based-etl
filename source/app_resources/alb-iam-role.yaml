@@ -3,7 +3,8 @@
   - acm:DescribeCertificate
   - acm:ListCertificates
   - acm:GetCertificate
-  Resource: "*"
+  Resource: 
+  - "*"
 - Effect: Allow
   Action:
   - ec2:AuthorizeSecurityGroupIngress

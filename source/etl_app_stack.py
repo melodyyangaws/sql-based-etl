@@ -36,7 +36,7 @@ class CreateAppStack(core.Stack):
 #         _expose_ui = eks.KubernetesPatch(self,'port-forwarding',
 #             cluster= _my_cluster,
 #             resource_name='service/argo-server',
-#             apply_patch=loadYamlLocal('../app_resources/argo-server-svc.yaml'),
+#             apply_patch=loadYamlLocal('app_resources/argo-server-svc.yaml'),
 #             # can't revert back to ClusterIP, a known k8s issue https://github.com/kubernetes/kubernetes/issues/33766
 #             restore_patch={"spec": {"type": "ClusterIP"}},
 #             resource_namespace='argo'
@@ -45,14 +45,14 @@ class CreateAppStack(core.Stack):
 
 #         # Submit Spark workflow template
 #         _submit_tmpl = _my_cluster.add_manifest('spark-wrktmpl',
-#             loadYamlLocal('../app_resources/spark-template.yaml')
+#             loadYamlLocal('app_resources/spark-template.yaml')
 #         )
 
         # Deploy Metrics Server for Horizontal Pod Autoscaler
         # kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.3.6/components.yaml
 
 
-        # _submit_job=_my_cluster.add_manifest('spark_template',loadYamlLocal('../app_resources/spark-template.yaml'))
+        # _submit_job=_my_cluster.add_manifest('spark_template',loadYamlLocal('app_resources/spark-template.yaml'))
         # submit spark ETL job to ARGO: kubectl apply -f app_resources/nyctaxi.yaml -n argo --serviceaccount etl 
         
 # //***************** Submit Native Spark job ******************//
@@ -63,18 +63,18 @@ class CreateAppStack(core.Stack):
 # //*********************************************************************//
 # //***************************** Setup Jupyter **************************//
 # //*********************************************************************//
-        _jhub_install=_my_cluster.add_helm_chart('jhub',
-            chart='jupyterhub',
-            repository='https://jupyterhub.github.io/helm-chart',
-            release='jhub',
-            namespace='jupyter',
-            create_namespace=True,
-            values=loadYamlLocal('../app_resources/jupyter-values.yaml')
-        )
+        # _jhub_install=_my_cluster.add_helm_chart('jhub',
+        #     chart='jupyterhub',
+        #     repository='https://jupyterhub.github.io/helm-chart',
+        #     release='jhub',
+        #     namespace='jupyter',
+        #     create_namespace=True,
+        #     values=loadYamlLocal('app_resources/jupyter-values.yaml')
+        # )
 
-        _expose_hub = _my_cluster.add_manifest('enalble-jhub-ui',
-            loadYamlLocal('../app_resources/jupyter-ingress.yaml')
-        )
+        # _expose_hub = _my_cluster.add_manifest('enalble-jhub-ui',
+        #     loadYamlLocal('app_resources/jupyter-ingress.yaml')
+        # )
     
         # _expose_hub = eks.KubernetesPatch(self,'enalble-jhub-ui',
         #     cluster=_my_cluster,

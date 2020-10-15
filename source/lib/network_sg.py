@@ -28,7 +28,7 @@ class NetworkSgConst(core.Construct):
                                         subnets=[ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC),
                                                  ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE)])
                                                       
-        # self._vpc.add_interface_endpoint("EcrDockerEndpoint",service=InterfaceVpcEndpointAwsService.ECR_DOCKER)
+        self._vpc.add_interface_endpoint("EcrDockerEndpoint",service=ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER)
         self._vpc.add_interface_endpoint("Ec2Endpoint", service=ec2.InterfaceVpcEndpointAwsService.EC2)
         self._vpc.add_interface_endpoint("CWLogsEndpoint", service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS)
         self._vpc.add_interface_endpoint("StsEndpoint", service=ec2.InterfaceVpcEndpointAwsService.STS)

@@ -2,6 +2,7 @@ import yaml
 import urllib.request as request
 import os.path as path
 import sys
+import re
 
 def loadYamlRemotely(url, multi_resource=False):
     try:
@@ -19,6 +20,7 @@ def loadYamlRemotely(url, multi_resource=False):
     return yaml_data 
 
 def loadYamlLocal(yaml_file, multi_resource=False):
+
     fileToBeParsed=path.join(path.dirname(__file__), yaml_file)
     if not path.exists(fileToBeParsed):
         print("The file {} does not exist"
@@ -39,6 +41,53 @@ def loadYamlLocal(yaml_file, multi_resource=False):
         
     return yaml_data 
 
-# loadYamlLocal('/Users/meloyang/Documents/sourcecode/sql-based-etl/source/app_resources/jupyter-values.yaml')
+# loadYamlLocal('/Users/meloyang/Documents/sourcecode/sql-based-etl/source/app_resources/DELETE_cw_special.yaml', True)
 # loadYamlRemotely('https://raw.githubusercontent.com/kubernetes-sigs/aws-alb-ingress-controller/v1.1.8/docs/examples/alb-ingress-controller.yaml')
 
+
+def loadYamlReplaceVarRemotely(url, fields, multi_resource=False):
+    try:
+        with request.urlopen(url) as f:
+            fileToBeReplaced = f.read().decode('utf-8')
+            for searchwrd,replwrd in fields.items():
+                fileToBeReplaced = fileToBeReplaced.replace(searchwrd, replwrd)
+
+        if multi_resource:
+            yaml_data = list(yaml.full_load_all(fileToBeReplaced))
+        else:
+            yaml_data = yaml.full_load(fileToBeReplaced) 
+        # print(yaml_data)
+    except request.URLError as e:
+        print(e.reason)
+        sys.exit(1)
+
+    return yaml_data
+
+
+def loadYamlReplaceVarLocal(yaml_file, fields, multi_resource=False):
+
+    fileToBeReplaced=path.join(path.dirname(__file__), yaml_file)
+    if not path.exists(fileToBeReplaced):
+        print("The file {} does not exist"
+            "".format(fileToBeReplaced))
+        sys.exit(1)
+
+    try:
+        with open(fileToBeReplaced, 'r') as f:
+            filedata = f.read()
+
+            for searchwrd, replwrd in fields.items():
+                filedata = filedata.replace(searchwrd, replwrd)
+            if multi_resource:
+                yaml_data = list(yaml.full_load_all(filedata))
+            else:
+                yaml_data = yaml.full_load(filedata) 
+        # print(yaml_data)
+    except request.URLError as e:
+        print(e.reason)
+        sys.exit(1)
+
+    return yaml_data
+
+# dataDict = {"{{region_name}}":"us-west-2","{{cluster_name}}":"_my_cluster","{{vpc_id}}": "testeste12345"}
+# loadYamlLocal('../app_resources/autoscaler-iam-role.yaml')

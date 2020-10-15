@@ -2,11 +2,11 @@ apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
   generateName: scd2-job-
-  # namespace: spark
+  namespace: spark
   # name: scd2-job
 spec:
-  serviceAccountName: etl
-  entrypoint: spark-template
+  serviceAccountName: arcjob
+  entrypoint: scd2-load
   # podGC: 
   #   strategy: OnWorkflowSuccess
   ttlStrategy:
@@ -14,13 +14,13 @@ spec:
     secondsAfterSuccess: 43200
     secondsAfterFailure: 86400  
   templates:
-  - name: spark-template
+  - name: scd2-load
     dag:
       tasks:
-        - name: Delta-load-SCD2
+        - name: delta-load-SCD2
           templateRef:
             name: arc-spark-clustertemplate
-            template: sparkClient
+            template: sparkLocal
             clusterScope: true 
           arguments:
             parameters:
@@ -34,7 +34,7 @@ spec:
             - name: executorCores
               value: "1"
             - name: executorMemory
-              value: "2g"  
+              value: "10"  
             - name: tags
               value: "project=sqlbasedetl, owner=myang, costcenter=66666"     
             - name: configUri

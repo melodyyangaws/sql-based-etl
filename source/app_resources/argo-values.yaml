@@ -4,4 +4,4 @@ workflow:
   namespace: spark
   serviceAccount:
     create: false
-    name: etl   
+    name: arcjob

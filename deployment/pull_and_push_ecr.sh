@@ -16,10 +16,12 @@ fi
 
 echo "Pull and push image for arc-jupyter"
 docker pull ghcr.io/tripl-ai/arc-jupyter:arc-jupyter_3.6.0_scala_2.12_hadoop_3.2.0_1.0.0
+docker tag ghcr.io/tripl-ai/arc-jupyter:arc-jupyter_3.6.0_scala_2.12_hadoop_3.2.0_1.0.0 $ACCOUNTNUMBER.dkr.ecr.$REGION.amazonaws.com/arc-jupyter:latest
 docker push $ACCOUNTNUMBER.dkr.ecr.$REGION.amazonaws.com/arc-jupyter:latest
 
 echo "Pull and push image for arc"
 docker pull ghcr.io/tripl-ai/arc:arc_3.4.0_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.0.0
+docker tag ghcr.io/tripl-ai/arc:arc_3.4.0_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.0.0 $ACCOUNTNUMBER.dkr.ecr.$REGION.amazonaws.com/arc:latest
 docker push $ACCOUNTNUMBER.dkr.ecr.$REGION.amazonaws.com/arc:latest
 
 echo "Setting up deployment files with new image details"

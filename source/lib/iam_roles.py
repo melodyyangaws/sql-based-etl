@@ -50,25 +50,26 @@ class IamConst(core.Construct):
         self._fargate_role = iam.Role(self,'fargate-role',
             role_name='jhub-fargate-NodeInstanceRole',
             assumed_by= iam.ServicePrincipal('eks-fargate-pods.amazonaws.com'),
-            managed_policies=[]
+            managed_policies=[_fargate_policy]
         )
         core.Tags.of(self._fargate_role).add(
             key='eks/%s/type' % cluster_name, 
             value='fargate-node'
         )
         
-        # # Managed Node Group Instance Role
-        # _managed_node_managed_policies = (
-        #     iam.ManagedPolicy.from_aws_managed_policy_name('AmazonEKSWorkerNodePolicy'),
-        #     iam.ManagedPolicy.from_aws_managed_policy_name('AmazonEKS_CNI_Policy'),
-        #     iam.ManagedPolicy.from_aws_managed_policy_name('AmazonEC2ContainerRegistryReadOnly'),
-        # )
-        # self._managed_node_role = iam.Role(self,'NodeInstance-Role',
-        #     role_name= cluster_name + '-NodeInstanceRole',
-        #     path='/',
-        #     assumed_by=iam.ServicePrincipal('ec2.amazonaws.com'),
-        #     managed_policies=list(_managed_node_managed_policies),
-        # )
+        # Managed Node Group Instance Role
+        _managed_node_managed_policies = (
+            iam.ManagedPolicy.from_aws_managed_policy_name('AmazonEKSWorkerNodePolicy'),
+            iam.ManagedPolicy.from_aws_managed_policy_name('AmazonEKS_CNI_Policy'),
+            iam.ManagedPolicy.from_aws_managed_policy_name('AmazonEC2ContainerRegistryReadOnly'),
+            iam.ManagedPolicy.from_aws_managed_policy_name('CloudWatchAgentServerPolicy'), 
+        )
+        self._managed_node_role = iam.Role(self,'NodeInstance-Role',
+            role_name= cluster_name + '-NodeInstanceRole',
+            path='/',
+            assumed_by=iam.ServicePrincipal('ec2.amazonaws.com'),
+            managed_policies=list(_managed_node_managed_policies),
+        )
         # self._managed_node_role.add_to_policy(
         #     iam.PolicyStatement(
         #         resources=['*'],

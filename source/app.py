@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 from aws_cdk import core
 from lib.config_map import ConfigSectionMap
-from sql_based_etl.base_infra_stack import BaseEksInfraStack
-from sql_based_etl.etl_app_stack import CreateAppStack
+from base_infra_stack import BaseEksInfraStack
+from etl_app_stack import CreateAppStack
 
 app = core.App()
 

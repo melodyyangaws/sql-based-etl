@@ -2,7 +2,7 @@ kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: etl-workflow-role
-  namespace: default
+  namespace: spark
 rules:
   - apiGroups: [""]
     resources: ["pods"]
@@ -22,11 +22,11 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: etl-role-binding
-  namespace: 
+  namespace: spark
 subjects:
   - kind: ServiceAccount
-    name: spark
-    namespace: default
+    name: arcjob
+    namespace: spark
 roleRef:
   kind: Role
   name: etl-workflow-role

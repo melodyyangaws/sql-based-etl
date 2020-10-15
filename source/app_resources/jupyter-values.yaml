@@ -12,44 +12,46 @@ hub:
 
 proxy:
   secretToken: "37d978c42bd042da78a1afa5a32dacaaee863ded4926eca2b30cc3005832d636"
-networkPolicy:
-  ingress:
+
 auth:
   dummy:
     password: "password"
 
-
 singleuser:
   image:
-    name: ghcr.io/tripl-ai/arc-jupyter
-    tag: arc-jupyter_3.6.1_scala_2.12_hadoop_3.2.0_1.1.0
+    name: triplai/arc-jupyter
+    tag: latest
     pullPolicy: IfNotPresent
   serviceAccountName: "{username}"
   storage:
-    capacity: 20G
+    type: none
   memory:
     limit: 4G
-    guarantee: 4G 
+    guarantee: 4G
   extraEnv:
     JAVA_OPTS: -Xmx4G
+  # storage:
+  #   capacity: 50G
+  #   type: dynamic
+  #   dynamic:
+  #     storageClass: csi-sc
   profileList:
-    - display_name: "Small(default) Arc-Jupyter Development Environment"
-      description: |
-        A small fargate instance. 4GB Memory & 1 vCPU. This is the default.
-      default: true
-      kubespawner_override:
-        image: ghcr.io/tripl-ai/arc-jupyter:latest
-        ports:
-          - Port: 80
-        # copy in the notebook customisations
-        lifecycle_hooks:
-          postStart:
-            exec:
-              command: ["cp", "-r", "/opt/.jupyter", "/home/jovyan/.jupyter"]
-        
+  - default: True
+    description: "Small (default): Arc-Jupyter Development Environment"
+    display_name: |
+      A small serverless (Fargate) instance. 4GB Memory & 4vCPUs
+    kubespawner_override:
+      image: 'triplai/arc-jupyter:latest'
+      ports:
+        - containerPort: 8080
+      lifecycle_hooks:
+        postStart:
+          exec:
+            command: ["cp", "-r", "/opt/.jupyter", "/home/jovyan/.jupyter"]
+
     # - display_name: "Big: Arc-Jupyter Development Environment"
     #   description: |
-    #     A big fargate instance. 30GB Memory & 4 vCPUs, no GPU, and 64GB of RAM
+    #     A big serverless (Fargate) instance. 30GB Memory & 4 vCPUs
     #   kubespawner_override:
     #     image: ghcr.io/tripl-ai/arc-jupyter:latest
     #     ports:

@@ -1,5 +1,5 @@
 # SQL based data processing with declarative framework
-This is a project developed with the Python CDK for AWS solution SO0141 - SQL based ETL with a declarative framework.
+This is a project developed with Python CDK for the solution SO0141 - SQL based ETL with a declarative framework.
 
 The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
@@ -35,10 +35,10 @@ Once the virtualenv is activated, you can install the required dependencies.
 $ pip install -r requirements.txt
 ```
 
-At this point you can now synthesize the CloudFormation template for this code with environment ini.
+At this point you can now synthesize the CloudFormation template to be deployed.
 
 ```
-$ cdk synth CreateEKSCluster -c env=develop
+$ cdk synth CreateEKSCluster --require-approval never -c env=develop 
 
 ```
 
@@ -120,4 +120,5 @@ spec:
  * `cdk deploy`      deploy this stack to your default AWS account/region
  * `cdk diff`        compare deployed stack with current state
  * `cdk docs`        open CDK documentation
+ * `cdk destroy`     delete the stack deployed earlier
 

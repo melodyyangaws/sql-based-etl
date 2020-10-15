@@ -1,0 +1,10 @@
+awsRegion: {{region_name}}
+awsVpcID: {{vpc_id}}
+clusterName: {{cluster_name}}
+rbac:
+  create: false
+  serviceAccount:
+    create: false
+    name: alb-ingress-controller
+nodeSelector:
+  app: jupyter

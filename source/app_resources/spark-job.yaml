@@ -2,10 +2,10 @@ apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
   generateName: nyctaxi-job-
-  # namespace: spark
+  namespace: spark
   # name: nyctaxi-job-spark
 spec:
-  serviceAccountName: etl
+  serviceAccountName: arcjob
   entrypoint: nyctaxi-job
   # podGC: 
   #   strategy: OnWorkflowSuccess
@@ -20,7 +20,7 @@ spec:
         - name: step1-query
           templateRef:
             name: arc-spark-clustertemplate
-            template: sparkLocal
+            template: sparkClient
             clusterScope: true   
           arguments:
             parameters:
@@ -41,5 +41,3 @@ spec:
               value: https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes/nyctaxi.ipynb
             - name: parameters
               value: "--ETL_CONF_DATA_URL=s3a://nyc-tlc/trip*data --ETL_CONF_JOB_URL=https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes"
-            - name: sparkConf  
-              value: "--conf spark.hadoop.fs.s3a.aws.credentials.provider=com.amazonaws.auth.WebIdentityTokenCredentialsProvider"

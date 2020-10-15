@@ -16,7 +16,7 @@ setuptools.setup(
     author="meloyang",
 
     package_dir={"": "source/.python"},
-    packages=setuptools.find_packages(where="sql-based-etl"),
+    packages=setuptools.find_packages(where=""),
 
     install_requires=[
         "aws-cdk.core==1.66.0",

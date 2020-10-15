@@ -39,7 +39,7 @@ spec:
       resources:
         requests:
           cpu: "1"
-          memory: "1Gi" 
+          memory: "1Gi"
       image: "{{inputs.parameters.image}}"
       command: ["/bin/sh"]
       source: |
@@ -64,7 +64,7 @@ spec:
         --conf spark.executor.cores={{inputs.parameters.executorCores}} \
         --conf spark.executor.extraJavaOptions="-XX:+UseG1GC" \
         --conf spark.executor.instances={{inputs.parameters.executorInstances}} \
-        --conf spark.executor.memory={{inputs.parameters.executorMemory}}Gi \
+        --conf spark.executor.memory={{inputs.parameters.executorMemory}}G \
         --conf spark.io.encryption.enabled=true \
         --conf spark.kubernetes.authenticate.caCertFile=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
         --conf spark.kubernetes.authenticate.driver.serviceAccountName={{workflow.serviceAccountName}} \

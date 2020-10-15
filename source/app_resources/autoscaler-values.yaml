@@ -1,0 +1,16 @@
+autoDiscovery:
+    clusterName: {{cluster_name}}
+awsRegion: {{region_name}}
+image:
+    tag: v1.18.1
+nodeSelector:
+    app: spark
+podAnnotations:
+    cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
+podLabels:
+    app: spark
+rbac:
+    serviceAccount:
+        create: false
+        name: cluster-autoscaler
+  
