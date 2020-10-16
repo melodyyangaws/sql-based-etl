@@ -1,5 +1,5 @@
 {
-  "app": "python3 source/.python/app.py",
+  "app": "python3 source/app.py",
   "context": {
     "cluster_name": "spark-on-eks",
     "cluster_admin_name":"EKSAdmin",
