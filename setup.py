@@ -15,8 +15,8 @@ setuptools.setup(
     
     author="meloyang",
 
-    package_dir={"": "source/.python"},
-    packages=setuptools.find_packages(where=""),
+    package_dir={"": "source"},
+    packages=setuptools.find_packages(where="source"),
 
     install_requires=[
         "aws-cdk.core==1.67.0",

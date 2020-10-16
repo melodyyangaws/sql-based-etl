@@ -4,14 +4,14 @@ metadata:
   name: arc-jupyter
   namespace: jupyter
 spec:
-  serviceAccountName: [put your service account here]
+  serviceAccountName: arcjob
   containers:
   - name: arc-jupyter
     image: ghcr.io/tripl-ai/arc-jupyter:latest
     imagePullPolicy: Always
     env:
       - name: JAVA_OPTS
-        value: "-Xmx60G"
+        value: "-Xmx4G"
       - name: CONF_NUM_ROWS
         value: "10"
       - name: CONF_STORAGE_LEVEL
@@ -20,5 +20,5 @@ spec:
         value: "io.delta.sql.DeltaSparkSessionExtension"
     resources:
       requests:
-        cpu: "16"
-        memory: "64Gi"
+        cpu: "8"
+        memory: "10Gi"

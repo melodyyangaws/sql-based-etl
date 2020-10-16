@@ -130,7 +130,7 @@ $ argo submit source/app_resources/scd2-job.yaml
 ```
 
 
-8. It solves the incrermtnal data load problem with [Slow Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) in a `Delta Lake` open format. You will find how easy it is to tackle the infamous big data problem in a declarative manner.
+It solves the incrermtnal data load problem with [Slow Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) in a `Delta Lake` open format. You will find how easy it is to tackle the infamous big data problem in a declarative manner.
 
 
 

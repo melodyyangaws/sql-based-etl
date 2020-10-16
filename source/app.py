@@ -2,7 +2,7 @@
 from aws_cdk import core
 from lib.config_map import ConfigSectionMap
 from base_infra_stack import BaseEksInfraStack
-from etl_app_stack import CreateAppStack
+# from etl_app_stack import CreateAppStack
 
 app = core.App()
 
