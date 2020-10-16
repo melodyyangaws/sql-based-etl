@@ -1,18 +1,21 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: hub
+  name: jupyter
   namespace: jupyter
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/success-codes: 200,301
+    external-dns.alpha.kubernetes.io/hostname: jhub.sparkoneks.com  
+  labels:
+    app: jupyter  
 spec:
   rules:
   - http:
       paths:
-      - path: /hub
+      - path: /*
         backend:
-          serviceName: hub
+          serviceName: proxy-public
           servicePort: 8080

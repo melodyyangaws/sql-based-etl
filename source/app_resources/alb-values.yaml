@@ -2,9 +2,9 @@ awsRegion: {{region_name}}
 awsVpcID: {{vpc_id}}
 clusterName: {{cluster_name}}
 rbac:
-  create: false
+  create: True
   serviceAccount:
-    create: false
+    create: False
     name: alb-ingress-controller
 nodeSelector:
   app: jupyter

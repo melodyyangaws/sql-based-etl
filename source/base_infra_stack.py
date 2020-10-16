@@ -63,7 +63,7 @@ class BaseEksInfraStack(core.Stack):
                 "kind": "Namespace",
                 "metadata": { "name": "spark" }
             })
-        _sa = _my_cluster.add_service_account('etl-sa', name='arcjob', namespace='spark')
+        _sa = _my_cluster.add_service_account('ETL-Sa', name='arcjob', namespace='spark')
         _sa.node.add_dependency(_ns)
 
         k8s_rolebinding = eks.KubernetesManifest(self,'etl-rolebinding',
@@ -78,7 +78,7 @@ class BaseEksInfraStack(core.Stack):
             _sa.add_to_principal_policy(iam.PolicyStatement.from_json(statmnt))
 
         # Cluster Auto-scaler service account
-        _scaler_sa = _my_cluster.add_service_account('autoscalerr-sa', 
+        _scaler_sa = _my_cluster.add_service_account('AutoScalerr-Sa', 
             name='cluster-autoscaler', 
             namespace='kube-system'
         )  
@@ -87,14 +87,14 @@ class BaseEksInfraStack(core.Stack):
             _scaler_sa.add_to_principal_policy(iam.PolicyStatement.from_json(statmt))
 
         # ALB Ingress service account
-        _alb_sa = _my_cluster.add_service_account('alb', 
+        _alb_sa = _my_cluster.add_service_account('ALB', 
             name='alb-ingress-controller',
             namespace='kube-system'
         )
-        _alb_rbac = eks.KubernetesManifest(self,'k8s-rbac',
-            cluster=_my_cluster, 
-            manifest=loadYamlRemotely('https://raw.githubusercontent.com/kubernetes-sigs/aws-alb-ingress-controller/v1.1.8/docs/examples/rbac-role.yaml',True)
-        )
+        # _alb_rbac = eks.KubernetesManifest(self,'k8s-rbac',
+        #     cluster=_my_cluster, 
+        #     manifest=loadYamlRemotely('https://raw.githubusercontent.com/kubernetes-sigs/aws-alb-ingress-controller/v1.1.8/docs/examples/rbac-role.yaml',True)
+        # )
         _alb_role = loadYamlLocal('../app_resources/alb-iam-role.yaml')
         for statmt in _alb_role:
             _alb_sa.add_to_principal_policy(iam.PolicyStatement.from_json(statmt))
@@ -108,7 +108,7 @@ class BaseEksInfraStack(core.Stack):
             "{{region_name}}": self.region, 
             "{{cluster_name}}": _my_cluster.cluster_name, 
         }
-        _my_cluster.add_helm_chart('cluster-autoscaler',
+        _scaler_chart = _my_cluster.add_helm_chart('Cluster-AutoScaler',
             chart='cluster-autoscaler-chart',
             repository='https://kubernetes.github.io/autoscaler',
             release='nodescaler',
@@ -116,12 +116,13 @@ class BaseEksInfraStack(core.Stack):
             namespace='kube-system',
             values=loadYamlReplaceVarLocal('../app_resources/autoscaler-values.yaml',dataDict)
         )
+        _scaler_chart.node.add_dependency(_scaler_sa) 
 
 # //*************************************************************************************//
 # //************************ CONTAINER INSIGHT (CLOUDWATCH LOG) ************************//
 # //**********************************************************************************//
 
-        _cw_log = eks.KubernetesManifest(self,'container-insight',
+        _cw_log = eks.KubernetesManifest(self,'Container-Insight',
             cluster=_my_cluster, 
             manifest=loadYamlReplaceVarRemotely('https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/quickstart/cwagent-fluentd-quickstart.yaml', 
                     fields=dataDict,
@@ -139,7 +140,7 @@ class BaseEksInfraStack(core.Stack):
             "{{cluster_name}}": _my_cluster.cluster_name, 
             "{{vpc_id}}": eks_vpc.vpc_id
         }
-        _my_cluster.add_helm_chart('aws-alb-ingress-controller',
+        _alb_chart = _my_cluster.add_helm_chart('aws-alb-ingress-controller',
             chart='aws-alb-ingress-controller',
             repository='http://storage.googleapis.com/kubernetes-charts-incubator',
             release='alb',
@@ -147,38 +148,39 @@ class BaseEksInfraStack(core.Stack):
             namespace='kube-system',
             values=loadYamlReplaceVarLocal('../app_resources/alb-values.yaml',dataMap)
         )
+        _alb_chart.node.add_dependency(_alb_sa)
 
-# # Add EFS for S3A staging commiter for faster S3 access
-#         _csi_driver = _my_cluster.add_manifest('efs-driver', 
-#             loadYamlRemotely('https://raw.githubusercontent.com/kubernetes-sigs/aws-efs-csi-driver/deploy/kubernetes/overlays/stable/ecr/?ref=release-1.0')
-#         )
-#         _k8s_efs = efs.FileSystem(self,'create-efs',
-#             vpc=eks_vpc,encrypted=True,
-#             lifecycle_policy=efs.LifecyclePolicy.AFTER_14_DAYS,
-#             performance_mode=efs.PerformanceMode.MAX_IO,
-#             throughput_mode=efs.ThroughputMode.BURSTING,
-#         )
-        #   _my_cluster.add_manifest('efs-storage',
-        #     manifest=loadYamlLocal('../app_resources/efs-storageclass.yaml')
-#        )
-#         _pv= _my_cluster.add_manifest('pv-workdir-s3a',
-#         manifest={
-#             "apiVersion": "v1"
-#             "kind": "PersistentVolume"
-#             "metadata":{"name": "workdir-pv"}
-#             "spec":{"capacity":{"storage": "5Gi"}}
-#             "volumeMode":"Filesystem"
-#             "accessModes":[{
-#                 "ReadWriteMany"
-#             }]
-#             "persistentVolumeReclaimPolicy": "Retain"
-#             "storageClassName":  "efs-sc"
-#             "csi":{
-#                 "driver": "efs.csi.aws.com",         
-#                 "volumeHandle": _k8s_efs.file_system_id
-#             }
-#         }
-#        _pv.node.add_dependency(_k8s_efs)
+# # # Add EFS for S3A staging commiter for faster S3 access
+# #         _csi_driver = _my_cluster.add_manifest('efs-driver', 
+# #             loadYamlRemotely('https://raw.githubusercontent.com/kubernetes-sigs/aws-efs-csi-driver/deploy/kubernetes/overlays/stable/ecr/?ref=release-1.0')
+# #         )
+# #         _k8s_efs = efs.FileSystem(self,'create-efs',
+# #             vpc=eks_vpc,encrypted=True,
+# #             lifecycle_policy=efs.LifecyclePolicy.AFTER_14_DAYS,
+# #             performance_mode=efs.PerformanceMode.MAX_IO,
+# #             throughput_mode=efs.ThroughputMode.BURSTING,
+# #         )
+#         #   _my_cluster.add_manifest('efs-storage',
+#         #     manifest=loadYamlLocal('../app_resources/efs-storageclass.yaml')
+# #        )
+# #         _pv= _my_cluster.add_manifest('pv-workdir-s3a',
+# #         manifest={
+# #             "apiVersion": "v1"
+# #             "kind": "PersistentVolume"
+# #             "metadata":{"name": "workdir-pv"}
+# #             "spec":{"capacity":{"storage": "5Gi"}}
+# #             "volumeMode":"Filesystem"
+# #             "accessModes":[{
+# #                 "ReadWriteMany"
+# #             }]
+# #             "persistentVolumeReclaimPolicy": "Retain"
+# #             "storageClassName":  "efs-sc"
+# #             "csi":{
+# #                 "driver": "efs.csi.aws.com",         
+# #                 "volumeHandle": _k8s_efs.file_system_id
+# #             }
+# #         }
+# #        _pv.node.add_dependency(_k8s_efs)
 
 # # //*************************************************************************************//
 # # //************************** Setup ARGO WORKFLOW *************************************//
@@ -211,62 +213,63 @@ class BaseEksInfraStack(core.Stack):
         _submit_tmpl.node.add_dependency(_install)
 
 
-# //*************************************************************************************//
-# //********************* Add Farget Node to EKS ***************************************//
-# // *************** Jupyter acts as an IDE for develop/test ETL job ********************//
-# //******* Easy to maintain when it comes to the multi-tenancy, personaliation *******//
-# //**********************************************************************************//
+# # //*************************************************************************************//
+# # //********************* Add Farget Node to EKS ***************************************//
+# # // *************** Jupyter acts as an IDE for develop/test ETL job ********************//
+# # //******* Easy to maintain when it comes to the multi-tenancy, personaliation *******//
+# # //**********************************************************************************//
 
-        _my_cluster.add_fargate_profile('jhub',
-            selectors=[{"namespace": "jupyter"}, {"app":"jupyter"}],
-            fargate_profile_name='jupyterhub',
-            pod_execution_role=iam_role.fargate_role,
-            subnet_selection=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE, one_per_az=True),
-        )
+#         _my_cluster.add_fargate_profile('JhubFargateProfile',
+#             selectors=[{
+#                 "namespace": "jupyter",
+#                 "labels": {"app": "jupyter"}
+#             }],
+#             fargate_profile_name='jupyterhub',
+#             pod_execution_role=iam_role.fargate_role,
+#             subnet_selection=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE, one_per_az=True)
+#         )
 
 # //*********************************************************************//
 # //***************************** Setup Jupyter **************************//
 # //*********************************************************************//
-        _jhub_install=_my_cluster.add_helm_chart('jhub',
+        _jhub_install=_my_cluster.add_helm_chart('JHubChart',
             chart='jupyterhub',
             repository='https://jupyterhub.github.io/helm-chart',
             release='jhub',
-            version='0.9.0',
+            version='0.9.1',
             namespace='jupyter',
             create_namespace=True,
-            values=loadYamlLocal('../app_resources/jupyter-values.yaml'),
-            wait=False
+            values=loadYamlLocal('../app_resources/jupyter-values.yaml')
         )
 
-        # _expose_ui = eks.KubernetesPatch(self,'expose-jhub-ui',
-        #     cluster= _my_cluster,
-        #     resource_name='service/hub',
-        #     apply_patch=loadYamlLocal('../app_resources/jupyter-ingress.yaml'),
-        #     # can't revert back to ClusterIP, a known k8s issue https://github.com/kubernetes/kubernetes/issues/33766
-        #     restore_patch={},
-        #     resource_namespace='jupyter'
-        # )
-
-        # _expose_ui.node.add_dependency(_jhub_install)
+        _expose_hub = eks.KubernetesPatch(self,'JhubIngress',
+            cluster=_my_cluster,
+            resource_name='service/hub',
+            apply_patch={"spec": {"type": "LoadBalancer"}},
+            restore_patch={},
+            resource_namespace='jupyter'
+        )
+        _expose_hub.node.add_dependency(_jhub_install)
 
 
 
-# # # //*********************************************************************//
-# # # //****************** Cloud9 for Private EKS cluster ********************//
-# # # //*********************************************************************//
-# # # 
-# #         # # create a cloud9 ec2 environment in a new VPC
-# #         # c9env = cloud9.Ec2Environment(self, 'Cloud9Env',
-# #         #     vpc=self._network_sg_construct.vpc,
-# #         #     instance_type=ec2.InstanceType('t3.small'),
-# #         #     subnet_selection=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC)
-# #         # )
 
-# #         # # print the Cloud9 IDE URL in the output
-# #         # core.CfnOutput(self, 'URL', value=c9env.ide_url)
+# # # # //*********************************************************************//
+# # # # //****************** Cloud9 for Private EKS cluster ********************//
+# # # # //*********************************************************************//
+# # # # 
+# # #         # # create a cloud9 ec2 environment in a new VPC
+# # #         # c9env = cloud9.Ec2Environment(self, 'Cloud9Env',
+# # #         #     vpc=self._network_sg_construct.vpc,
+# # #         #     instance_type=ec2.InstanceType('t3.small'),
+# # #         #     subnet_selection=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC)
+# # #         # )
+
+# # #         # # print the Cloud9 IDE URL in the output
+# # #         # core.CfnOutput(self, 'URL', value=c9env.ide_url)
 
         argo_url = _my_cluster.get_service_load_balancer_address(service_name='argo-server',namespace='argo')
         core.CfnOutput(self,'_ARGO_URL', value='http://'+ str(argo_url) + ':2746')
 
-        # jupyter_url = _my_cluster.get_service_load_balancer_address(service_name='hub',namespace='jupyter')
-        # core.CfnOutput(self,'_JUPYTER_URL', value='http://'+ str(jupyter_url) + ':80')
+        jupyter_url = _my_cluster.get_service_load_balancer_address(service_name='hub',namespace='jupyter')
+        core.CfnOutput(self,'_JUPYTER_URL', value='http://'+ str(jupyter_url) + ':80')

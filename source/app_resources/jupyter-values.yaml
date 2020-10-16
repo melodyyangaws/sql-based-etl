@@ -12,7 +12,8 @@ hub:
 
 proxy:
   secretToken: "37d978c42bd042da78a1afa5a32dacaaee863ded4926eca2b30cc3005832d636"
-
+  service:
+    type: ClusterIP
 auth:
   dummy:
     password: "password"

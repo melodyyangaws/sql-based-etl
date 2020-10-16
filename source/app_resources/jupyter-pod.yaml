@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: arc-jupyter
+  namespace: jupyter
+spec:
+  serviceAccountName: [put your service account here]
+  containers:
+  - name: arc-jupyter
+    image: ghcr.io/tripl-ai/arc-jupyter:latest
+    imagePullPolicy: Always
+    env:
+      - name: JAVA_OPTS
+        value: "-Xmx60G"
+      - name: CONF_NUM_ROWS
+        value: "10"
+      - name: CONF_STORAGE_LEVEL
+        value: "MEMORY_ONLY_SER"
+      - name: conf_spark_sql_extensions
+        value: "io.delta.sql.DeltaSparkSessionExtension"
+    resources:
+      requests:
+        cpu: "16"
+        memory: "64Gi"

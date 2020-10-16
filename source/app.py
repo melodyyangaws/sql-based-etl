@@ -20,10 +20,10 @@ eks_stack = BaseEksInfraStack(app, 'CreateEKSCluster', eks_name, eksadmin_name, 
 
 # the stack has been merged to infra stack above.
 # Keep it for now just, so we can do app update quickly without touching the infra.
-app_stack = CreateAppStack(app,'CreateETLApplication', eks_name, eksadmin_name, env=env)
+# app_stack = CreateAppStack(app,'CreateETLApplication', eks_name, eksadmin_name, env=env)
 # code_pipeline_stack = AWSAppResourcesPipeline(app, "ResourcesPipelineStack", env=env)
 
 core.Tags.of(eks_stack).add('project', 'sqlbasedetl')
-core.Tags.of(app_stack).add('project', 'sqlbasedetl')
+# core.Tags.of(app_stack).add('project', 'sqlbasedetl')
 
 app.synth()
