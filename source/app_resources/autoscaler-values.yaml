@@ -1,10 +1,8 @@
 autoDiscovery:
-    clusterName: {{cluster_name}}
-awsRegion: {{region_name}}
+    clusterName: eksctl-managed
+awsRegion: us-west-2
 image:
     tag: v1.17.3
-nodeSelector:
-    app: spark
 podAnnotations:
     cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
 podLabels:

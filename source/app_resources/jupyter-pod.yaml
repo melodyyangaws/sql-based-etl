@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: arc-jupyter
-  namespace: jupyter
+  namespace: spark
 spec:
   serviceAccountName: arcjob
   containers:
@@ -20,5 +20,5 @@ spec:
         value: "io.delta.sql.DeltaSparkSessionExtension"
     resources:
       requests:
-        cpu: "8"
+        cpu: "4"
         memory: "10Gi"

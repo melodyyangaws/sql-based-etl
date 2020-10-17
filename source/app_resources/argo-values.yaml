@@ -1,7 +1,9 @@
 images:
-  tag: v2.11.2
+  tag: v2.11.3
 workflow:
   namespace: spark
   serviceAccount:
     create: false
     name: arcjob
+server:
+  serviceType: LoadBalancer

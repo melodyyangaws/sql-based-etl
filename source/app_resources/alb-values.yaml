@@ -1,10 +1,10 @@
+image:
+  tag: v1.1.8
 awsRegion: {{region_name}}
 awsVpcID: {{vpc_id}}
 clusterName: {{cluster_name}}
 rbac:
-  create: True
+  create: true
   serviceAccount:
-    create: False
+    create: false
     name: alb-ingress-controller
-nodeSelector:
-  app: jupyter

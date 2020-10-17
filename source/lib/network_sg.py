@@ -8,6 +8,9 @@ class NetworkSgConst(core.Construct):
     def vpc(self):
         return self._vpc
 
+    def efs_sg(self):
+        return self._eks_efs_sg    
+
     # @property
     # def control_plane_sg(self):
     #     return self._eks_control_plane_sg
@@ -36,6 +39,15 @@ class NetworkSgConst(core.Construct):
 # //******************************************************//
 # //******************* SECURITY GROUP ******************//
 # //****************************************************//
+        self._eks_efs_sg = ec2.SecurityGroup(self,'EFSSg',
+            security_group_name=eksname + '-EFS-sg',
+            vpc=self._vpc,
+            description='NFS access to EFS from EKS worker nodes',
+        )
+        self._eks_efs_sg.add_ingress_rule(self._eks_efs_sg,ec2.Port.tcp(port=2049))
+
+        core.Tags.of(self._eks_efs_sg).add('kubernetes.io/cluster/' + eksname,'owned')
+        core.Tags.of(self._eks_efs_sg).add('Name','EFS-sg')
 
         # self._eks_control_plane_sg = ec2.SecurityGroup(self,'control-plane-sg',
         #     security_group_name= eksname + '-control-plane-sg',

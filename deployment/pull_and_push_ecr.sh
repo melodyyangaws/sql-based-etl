@@ -1,7 +1,8 @@
 #!/bin/bash
 
 echo "Creating repositories and push docker images to ECR"
-
+export REGION=us-west-2
+export ACCOUNTNUMBER=720560070661
 
 echo "Creating ECR repositories"
 aws ecr --region $REGION create-repository --repository-name arc-jupyter  --image-scanning-configuration scanOnPush=true
@@ -25,5 +26,5 @@ docker tag ghcr.io/tripl-ai/arc:arc_3.4.0_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.
 docker push $ACCOUNTNUMBER.dkr.ecr.$REGION.amazonaws.com/arc:latest
 
 echo "Setting up deployment files with new image details"
-sed -i.bak "s/ACCOUNTNUMBER/$ACCOUNTNUMBER/" ./environment.cfg
-sed -i.bak "s/REGION/$REGION/" ./environment.cfg
+sed -i.bak "s/ACCOUNTNUMBER/$ACCOUNTNUMBER/" deployment/environment.cfg
+sed -i.bak "s/REGION/$REGION/" deployment/environment.cfg

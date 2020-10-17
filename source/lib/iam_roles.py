@@ -77,7 +77,7 @@ class IamConst(core.Construct):
         #     )
         # )
         # if WebIdentityTokenCredentials is not working at pod level, we will add the permission to the Node level.
-        # self._statements = loadYamlLocal('../app_resources/s3-iam-role.yaml')
+        # self._statements = loadYamlLocal('../app_resources/etl-iam-role.yaml')
         # for statmnt in self._statements:
         #     self._managed_node_role.add_to_policy(iam.PolicyStatement.from_json(statmnt))
 
