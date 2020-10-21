@@ -5,5 +5,5 @@ workflow:
   serviceAccount:
     create: false
     name: arcjob
-# server:
-#   serviceType: LoadBalancer
+server:
+  serviceType: LoadBalancer

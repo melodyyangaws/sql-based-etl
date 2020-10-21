@@ -219,15 +219,15 @@ class BaseEksInfraStack(core.Stack):
             create_namespace=True,
             values=loadYamlLocal('../app_resources/argo-values.yaml')
         )
-        _expose_ui = eks.KubernetesPatch(self,'ARGOPortForwarding',
-            cluster= _my_cluster,
-            resource_name='service/argo-server',
-            apply_patch=loadYamlLocal('../app_resources/argo-server-svc.yaml'),
-            # can't revert back to ClusterIP, a known k8s issue https://github.com/kubernetes/kubernetes/issues/33766
-            restore_patch={},
-            resource_namespace='argo'
-        )
-        _expose_ui.node.add_dependency(_install)
+        # _expose_ui = eks.KubernetesPatch(self,'ARGOPortForwarding',
+        #     cluster= _my_cluster,
+        #     resource_name='service/argo-server',
+        #     apply_patch=loadYamlLocal('../app_resources/argo-server-svc.yaml'),
+        #     # can't revert back to ClusterIP, a known k8s issue https://github.com/kubernetes/kubernetes/issues/33766
+        #     restore_patch={},
+        #     resource_namespace='argo'
+        # )
+        # _expose_ui.node.add_dependency(_install)
 
         # Submit Spark workflow template
         _submit_tmpl = _my_cluster.add_manifest('SubmitSparkWrktmpl',
