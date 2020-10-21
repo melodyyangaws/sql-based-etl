@@ -76,7 +76,7 @@ class BaseEksInfraStack(core.Stack):
                 "kind": "Namespace",
                 "metadata": { 
                     "name": "spark",
-                    "labels": {"app":"spark"}
+                    "labels": {"name":"spark"}
                 }
             }
         )    
@@ -219,15 +219,15 @@ class BaseEksInfraStack(core.Stack):
             create_namespace=True,
             values=loadYamlLocal('../app_resources/argo-values.yaml')
         )
-        # _expose_ui = eks.KubernetesPatch(self,'ARGOPortForwarding',
-        #     cluster= _my_cluster,
-        #     resource_name='service/argo-server',
-        #     apply_patch=loadYamlLocal('../app_resources/argo-server-svc.yaml'),
-        #     # can't revert back to ClusterIP, a known k8s issue https://github.com/kubernetes/kubernetes/issues/33766
-        #     restore_patch={},
-        #     resource_namespace='argo'
-        # )
-        # _expose_ui.node.add_dependency(_install)
+        _expose_ui = eks.KubernetesPatch(self,'ARGOPortForwarding',
+            cluster= _my_cluster,
+            resource_name='service/argo-server',
+            apply_patch=loadYamlLocal('../app_resources/argo-server-svc.yaml'),
+            # can't revert back to ClusterIP, a known k8s issue https://github.com/kubernetes/kubernetes/issues/33766
+            restore_patch={},
+            resource_namespace='argo'
+        )
+        _expose_ui.node.add_dependency(_install)
 
         # Submit Spark workflow template
         _submit_tmpl = _my_cluster.add_manifest('SubmitSparkWrktmpl',
@@ -279,5 +279,5 @@ class BaseEksInfraStack(core.Stack):
         argo_url = _my_cluster.get_service_load_balancer_address(service_name='argo-server',namespace='argo')
         core.CfnOutput(self,'_ARGO_URL', value='http://'+ str(argo_url) + ':2746')
 
-        jupyter_url = _my_cluster.get_service_load_balancer_address(service_name='hub',namespace='jupyter')
-        core.CfnOutput(self,'_JUPYTER_URL', value='http://'+ str(jupyter_url) + ':8080')
+        jupyter_url = _my_cluster.get_service_load_balancer_address(service_name='proxy-public',namespace='jupyter')
+        core.CfnOutput(self,'_JUPYTER_URL', value='http://'+ str(jupyter_url) + ':80')

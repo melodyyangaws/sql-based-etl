@@ -5,17 +5,21 @@ metadata:
   namespace: spark
 rules:
   - apiGroups: [""]
-    resources: ["pods","pods/exec"]
-    verbs: ["create", "list", "get", "update", "watch", "patch"]
+    resources: ["pods","pods/exec","configmaps","services","endpoints"]
+    verbs: ["*"]
   - apiGroups: [""]
-    resources: ["configmaps"]
+    resources: ["events","pods/log","serviceaccounts"]
     verbs: ["list", "get", "watch"]
   - apiGroups: [""]
     resources: ["persistentvolumeclaims"]
     verbs: ["create", "delete", "get", "list"]
   - apiGroups: ["argoproj.io"]
-    resources: ["workflows"]
-    verbs: ["get", "list", "watch", "update", "patch"]
+    resources: ["workflows","workflows/finalizers"]
+    verbs: ["*"]
+  - apiGroups: ["argoproj.io"]
+    resources: ["workflowtemplates","workflowtemplates/finalizers"]
+    verbs: ["get", "list", "watch"]
+    
   
 ---
 kind: RoleBinding

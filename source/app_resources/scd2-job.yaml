@@ -7,12 +7,14 @@ metadata:
 spec:
   serviceAccountName: arcjob
   entrypoint: scd2-load
+  # delete all pods as soon as they complete
   # podGC: 
-  #   strategy: OnWorkflowSuccess
+  #   strategy: OnPodCompletion
+  # must complete in 8h (28,800 seconds)
+  activeDeadlineSeconds: 28800
+  # keep workflows for 1d (86,400 seconds)
   ttlStrategy:
     secondsAfterCompletion: 86400
-    secondsAfterSuccess: 43200
-    secondsAfterFailure: 86400  
   templates:
   - name: scd2-load
     dag:
@@ -39,5 +41,5 @@ spec:
               value: "project=sqlbasedetl, owner=myang, costcenter=66666"     
             - name: configUri
               value: s3a://testtestmelody/app-code/job/auto_job.ipynb
-            - name: parameters
+           - name: parameters
               value: "--ETL_CONF_DATALAKE_LOC=testtestmelody --ETL_CONF_CURRENT_TIMESTAMP='2020-02-02'"
