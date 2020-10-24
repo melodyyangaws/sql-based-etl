@@ -5,10 +5,12 @@ metadata:
   namespace: spark
 spec:
   serviceAccountName: arcjob
+  securityContext:
+    fsGroup: 65534
   containers:
   - name: arc-jupyter
     image: ghcr.io/tripl-ai/arc-jupyter:latest
-    imagePullPolicy: Always
+    imagePullPolicy: IfNotPresent
     env:
       - name: JAVA_OPTS
         value: "-Xmx4G"
@@ -20,5 +22,5 @@ spec:
         value: "io.delta.sql.DeltaSparkSessionExtension"
     resources:
       requests:
-        cpu: "4"
-        memory: "10Gi"
+        cpu: "1"
+        memory: "5Gi"

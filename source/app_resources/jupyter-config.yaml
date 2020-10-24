@@ -13,7 +13,15 @@ hub:
 proxy:
   secretToken: "37d978c42bd042da78a1afa5a32dacaaee863ded4926eca2b30cc3005832d636"
   service:
-    type: ClusterIP
+    type: LoadBalancer
+    annotations:
+      kubernetes.io/ingress.class: alb
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/success-codes: 200,301,302
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 8080}]'  
+    labels:
+      app: jupyter
 auth:
   dummy:
     password: "password"
@@ -31,6 +39,10 @@ singleuser:
     guarantee: 4G
   extraEnv:
     JAVA_OPTS: -Xmx4G
+  extraSecurityContext:
+    runAsUser: 65534
+    runAsGroup: 65534
+    allowPrivilegeEscalation: false  
   # storage:
   #   capacity: 50G
   #   type: dynamic

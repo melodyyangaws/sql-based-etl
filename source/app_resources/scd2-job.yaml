@@ -3,16 +3,19 @@ kind: Workflow
 metadata:
   generateName: scd2-job-
   namespace: spark
-  # name: scd2-job
+  ## need it when using kubectl , remove it when using ArgoCLI
+  name: scd2-job
 spec:
   serviceAccountName: arcjob
   entrypoint: scd2-load
-  # delete all pods as soon as they complete
+  securityContext:
+    fsGroup: 65534
+  ## delete all pods as soon as they complete
   # podGC: 
   #   strategy: OnPodCompletion
-  # must complete in 8h (28,800 seconds)
+  ## must complete in 8h
   activeDeadlineSeconds: 28800
-  # keep workflows for 1d (86,400 seconds)
+  ## keep workflows for 1d
   ttlStrategy:
     secondsAfterCompletion: 86400
   templates:
@@ -21,25 +24,21 @@ spec:
       tasks:
         - name: delta-load-SCD2
           templateRef:
-            name: arc-spark-clustertemplate
-            template: sparkLocal
+            name: spark-template
+            template: mediumJob
             clusterScope: true 
           arguments:
             parameters:
+            - name: image
+              value: ghcr.io/tripl-ai/arc:arc_3.5.2_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.0.0
             - name: jobId
               value: scd2 
-            # in the sample jupyter notebook, all stages will be run in test and prod only.
+            ## in the sample jupyter notebook, all stages will be run in test and prod only.
             - name: environment
               value: test   
-            - name: executorInstances
-              value: "2"
-            - name: executorCores
-              value: "1"
-            - name: executorMemory
-              value: "10"  
             - name: tags
               value: "project=sqlbasedetl, owner=myang, costcenter=66666"     
             - name: configUri
-              value: s3a://testtestmelody/app-code/job/auto_job.ipynb
-           - name: parameters
-              value: "--ETL_CONF_DATALAKE_LOC=testtestmelody --ETL_CONF_CURRENT_TIMESTAMP='2020-02-02'"
+              value: "s3a://testtestmelody/app-code/job/auto_job.ipynb"
+            - name: parameters
+              value: "--ETL_CONF_DATALAKE_LOC=testtestmelody"

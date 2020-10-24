@@ -3,24 +3,29 @@ kind: Workflow
 metadata:
   generateName: nyctaxi-job-
   namespace: spark
-  # name: nyctaxi-job-spark
+  ## need it if use kubectl to submit the job
+  # name: nyctaxi-job
 spec:
   serviceAccountName: arcjob
-  entrypoint: nyctaxi-job
+  entrypoint: nyctaxi
+  # securityContext:
+  #   fsGroup: 65534
+  # delete all pods as soon as they complete
   # podGC: 
-  #   strategy: OnWorkflowSuccess
+  #   strategy: OnPodCompletion
+  # must complete in 8h (28,800 seconds)
+  activeDeadlineSeconds: 28800
+  # keep workflows for 1d (86,400 seconds)
   ttlStrategy:
     secondsAfterCompletion: 86400
-    secondsAfterSuccess: 43200
-    secondsAfterFailure: 86400  
   templates:
-  - name: nyctaxi-job
+  - name: nyctaxi
     dag:
       tasks:
         - name: step1-query
           templateRef:
-            name: arc-spark-clustertemplate
-            template: sparkClient
+            name: spark-template
+            template: smallJob
             clusterScope: true   
           arguments:
             parameters:
@@ -29,17 +34,9 @@ spec:
             # in a jupyter notebook, each stage associates to env, eg.test & prod. Could skip a stage when env mismatches 
             - name: environment
               value: test    
-            - name: executorInstances
-              value: "1"
-            - name: executorCores
-              value: "1"
-            - name: executorMemory
-              value: "1"  
             - name: tags
               value: "project=sqlbasedetl, owner=myang, costcenter=66666"  
             - name: configUri
               value: https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes/nyctaxi.ipynb
-            - name: sparkConf
-              value: "--conf spark.hadoop.fs.s3a.aws.credentials.provider=com.amazonaws.auth.WebIdentityTokenCredentialsProvider" 
             - name: parameters
               value: "--ETL_CONF_DATA_URL=s3a://nyc-tlc/trip*data --ETL_CONF_JOB_URL=https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes"

@@ -8,6 +8,7 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/success-codes: 200,301,302
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 8080}]'
   labels:
     app: jupyter
 spec:
@@ -17,4 +18,4 @@ spec:
       - path: /*
         backend:
           serviceName: proxy-public
-          servicePort: 80
+          servicePort: 8080

@@ -1,9 +1,23 @@
 images:
-  tag: v2.11.5
+  tag: v2.11.6
 workflow:
   namespace: spark
   serviceAccount:
     create: false
     name: arcjob
 server:
-  serviceType: LoadBalancer
+  ingress:  
+    enabled: true  
+    annotations:    
+      kubernetes.io/ingress.class: alb
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/success-codes: 200,301,302
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 2746}]'
+    hosts:  
+    - ''
+    extraPaths:
+      - path: /*
+        backend:
+          serviceName: argo-server
+          servicePort: 2746

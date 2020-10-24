@@ -1,18 +1,18 @@
 # SQL based data processing with declarative framework
 This is a project developed with Python CDK for the solution SO0141 - SQL based ETL with a declarative framework.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
 
-This project is set up like a standard Python project.  The initialization
-process also creates a virtualenv within this project, stored under the .env
-directory.  To create the virtualenv it assumes that there is a `python3`
-(or `python` for Windows) executable in your path with access to the `venv`
-package. If for any reason the automatic creation of the virtualenv fails,
-you can create the virtualenv manually.
+## Deploy Infrastructure
+
+The `cdk.json` file tells where the application entry point is.
+
+This project is set up like a standard Python project.  The initialization process also creates a virtualenv within this project, stored under the .env
+directory.  To create the virtualenv it assumes that there is a `python3`(or `python` for Windows) executable in your path with access to the `venv`
+package. If for any reason the automatic creation of the virtualenv fails, you can create the virtualenv manually.
 
 To manually create a virtualenv on MacOS and Linux:
 
-```
+``` 
 $ python3 -m venv .env
 ```
 
@@ -42,10 +42,6 @@ $ cdk synth CreateEKSCluster --require-approval never -c env=develop
 
 ```
 
-To add additional dependencies, for example other CDK libraries, just add
-them to your `setup.py` file and rerun the `pip install -r requirements.txt`
-command.
-
 Finally deploy the stacks.
 
 ```
@@ -53,37 +49,21 @@ $ cdk deploy CreateEKSCluster -c env=develop
 
 ```
 
-After everything is created successfully, you can find few userful outputs from the CloudFormation/CDK deployment. Now it's time to visit the `Argo Dashboard WebUI`, and `submit Spark jobs`. 
+## Submit a Spark job via web interface
 
-Firstly, let's find the Argo dashboard URL, something looks like this:
-```
-CreateEKSCluster.ARGOURL = http://<random_string>-<account_id>.<region>.elb.amazonaws.com:2746
-```
+After finished the deployment, we can start to `submit Spark job` on [Argo](https://argoproj.github.io/). Argo is an open source container-native workflow tool to orchestrate parallel jobs on Kubernetes. Argo Workflows is implemented as a Kubernetes CRD (Custom Resource Definition), which triggers time-based and event-based workflows specified by a configuration file.
 
-Alternatively, find the URL via CLI command in 2 steps:
+Take a look at the [sample job](https://github.com/tripl-ai/arc-starter/tree/master/examples/kubernetes/nyctaxi.ipynb) developed in Jupyter Notebook.  It uses a Spark Wrapper called [ARC framework](https://arc.tripl.ai/) to create an ETL job in a codeless, declarative way. The opinionated standard approach enables rapid application deployment, simplifies data pipeline build. Additionally, it makes [self-service analytics](https://github.com/melodyyangaws/aws-service-catalog-reference-architectures/blob/customize_ecs/ecs/README.md) possible to the business.
 
-1. Copy the `aws eks update-kubeconfig` command from the output, which configures kubectl so that you can connect to the newly created Amazon EKS cluster. 
-```
-$ aws eks update-kubeconfig --name <cluster_name> --region <region> --role-arn arn:aws:iam::<account_id>:role/<role_name>
-```
+In this exmaple, we will extract the `New York City Taxi Data` from the [AWS Open Data Registry](https://registry.opendata.aws/), ie. a public s3 bucket `s3://nyc-tlc/trip data`, transform the data from CSV to parquet file format, followed by a SQL-based data validation step, to ensure the typing transformation is done correctly. Finally, query the optimized data filtered by a flag column.
 
-2. Get the ARGO dashboard URL via kubectl tool:
-```
-$ ARGO_URL=$(kubectl -n argo get svc argo-server --template "{{ range (index .status.loadBalancer.ingress 0) }}{{ . }}{{ end }}")
-$ echo ARGO DASHBOARD: http://${ARGO_URL}:2746
-```
+1. Find your Argo dashboard URL from the deployment output, something like this:
+![](/images/0-argo-uri.png)
 
-Now, it's time to submit our Spark jobs to ARGO. 
-
-1. Take a look at the sample job developed in the [Jupyter Notebook](https://github.com/tripl-ai/arc-starter/tree/master/examples/kubernetes/nyctaxi.ipynb).  It uses a Spark Wrapper called [ARC framework](https://arc.tripl.ai/) to create a Spark application in a declarative way. The opinionated standard approach enables rapid app deployment, simplifies data pipeline build. Additionally, It makes self-service ETL & analytics possible to the business.
-
-In this exmaple data pipeline, we will extract "New York City Taxi Data" from the [AWS Open Data Registry](https://registry.opendata.aws/), ie. a public s3 bucket `s3://nyc-tlc/trip\ data`, then transform the data type from CSV to parquet, followed by a SQL-based data validation step, to ensure the typing transformation is done properly. Finally, query the optimized data filtered by a flag column.
-
-2. Go to the ARGO dashboard, Click on `SUBMIT NEW WORKFLOW` button on the top left of ARGO Dashoard.
-
+2. Go to the ARGO dashboard, Click on `SUBMIT NEW WORKFLOW` button on the dashoard.
 ![](/images/1-argoui.png)
 
-3. Copy and paste the `Workflow` to AROG portal, click `SUBMIT`.
+3. Replace the existing manifest by the following job definition, click `SUBMIT`.
 
 ```
 apiVersion: argoproj.io/v1alpha1
@@ -91,18 +71,17 @@ kind: Workflow
 metadata:
   generateName: nyctaxi-job-
   namespace: spark
-  # name: nyctaxi-job-spark
 spec:
   serviceAccountName: arcjob
-  entrypoint: nyctaxi-job
+  entrypoint: nyctaxi
   templates:
-  - name: nyctaxi-job
+  - name: nyctaxi
     dag:
       tasks:
         - name: step1-query
           templateRef:
-            name: arc-spark-clustertemplate
-            template: sparkClient
+            name: spark-template
+            template: smallJob
             clusterScope: true   
           arguments:
             parameters:
@@ -110,28 +89,102 @@ spec:
               value: nyctaxi 
             - name: environment
               value: test   
-            - name: tags
-              value: "project=sqlbasedetl, owner=myang, costcenter=66666"  
             - name: configUri
               value: https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes/nyctaxi.ipynb
             - name: parameters
               value: "--ETL_CONF_DATA_URL=s3a://nyc-tlc/trip*data --ETL_CONF_JOB_URL=https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes"
 
 ```
-
 ![](/images/2-argo-submit.png)
+4. Click a pod (dot) on the dashboard to examine the job status and logs.
 
-4. You can examine the job log with great details, by clicking a dot on the ARGO WebUI.
 ![](/images/3-argo-log.png)
 
-5. A second job example with a real-world problem is also provided in the source code. This time, we can try to use a command line to submit the job:
+
+
+### 2. Submit a Spark job via command line:
+
+We have included a second manifest file and a Jupyter notebook, as an example of a complex Spark job to solve a real-world data problem. Let's submit it via a commmand line this time. 
+<details>
+<summary> 
+[manifest file](/source/app_resources/scd2-job.yaml)</summary>  - defines where the Jupyter notebook file (job configuration) and input data are. 
+</details>
+<details>
+<summary> 
+[Jupyter notebook](/source/app_resources/scd2_job.ipynb)</summary> - specifies what exactly need to do in a data pipeline.
+</details>
+
+In general, a parquet file is immutable in a Data Lake. This exmaple will demostrate how to address the challenge and process data incrermtnally. It uses `Delta Lake`, which is an open source storage layer on top of parquet file, to bring the ACID transactions to Apache Spark and modern big data workloads. In this solution, we will build up a table to meet the [Slow Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) requirement, and prove that how easy it is when ETL with a SQL first approach implemented in a configuration-driven way.
+
+
+1.Clone the project.
+
 ```
-$ argo submit source/app_resources/scd2-job.yaml
+$ git clone https://github.com/melodyyangaws/sql-based-etl.git
+
+# go to the solution directory
+$ cd sql-based-etl
+
+```
+2.Upload the sample [Jupyter notebook](/source/app_resources/scd2_job.ipynb) to your own S3 bucket.
+
+Note: The default region in the project is `Oregon (us-west-2)`. To avoid unnesscerry data transfer fee, ensure your bucket is in the same region as your EKS cluster
+
+```
+$ aws s3 cp /source/app_resources/scd2_job.ipynb s3://<your_bucket_name>/<your_path>
+
+```
+3.By using the fine-grained [IAM roles for service accounts (IRSA)](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html) feature in Amazon EKS, modify the existing IAM role and allow the job access your s3 bucket.
+
+```
+# Replace the bucket name in the file
+$ vi source/app_resources/etl-iam-role.yaml
+
+# Redeploy via CDK
+$ cdk deploy CreateEKSCluster --require-approval never -c env=develop
+
+```
+<details>
+<summary> or directly modify the IAM role `CreateEKSCluster-EksClusterETLSaRole` on [AWS console](https://console.aws.amazon.com/iam/home#/roles) </summary>
+![](/images/4-change-s3-iam.png)
+</details>
+
+4.[Install](https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html) a Kubernetes command tool `kubectl` with version 1.18.
+
+5.Copy the `aws eks update-kubeconfig...` line from your infrastructure deployment output to the command line terminal, so you can connect to the Amazon EKS cluster deployed earlier. Something like this:
+
+![](/images/0-eks-config.png)
+
+6.Submit the job to Argo orchestrator:
+
+```
+$ kubectl apply -f source/app_resources/scd2-job.yaml
+```
+![](/images/1-submit-scdjob.png)
+<details>
+<summary> 
+Alternatively, submit the job via [Argo CLI](https://www.eksworkshop.com/advanced/410_batch/install/). 
+</summary> 
+*** Make sure to comment out a line in the manifest file before your submission. ***
+
+```
+$ argo submit source/app_resources/scd2-job.yaml -n spark --watch
+
 ```
 
+![](/images/2-comment-out.png)
+![](/images/2-argo-scdjob.png)
+</details>
 
-It solves the incrermtnal data load problem with [Slow Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) in a `Delta Lake` open format. You will find how easy it is to tackle the infamous big data problem in a declarative manner.
+7.Run the following to get your ARGO dashboard URL, then copy & paste to your web browser.
 
+```
+$ ARGO_URL=$(kubectl -n argo get ingress argo-server --template "{{ range (index .status.loadBalancer.ingress 0) }}{{ . }}{{ end }}")
+$ echo ARGO DASHBOARD: http://${ARGO_URL}:2746
+```
+
+8.Check your job status and applications logs on the dashboard.
+![](/images/3-argo-log.png)
 
 
 ## Useful commands
@@ -142,4 +195,11 @@ It solves the incrermtnal data load problem with [Slow Changing Dimension Type 2
  * `cdk diff`        compare deployed stack with current state
  * `cdk docs`        open CDK documentation
  * `cdk destroy`     delete the stack deployed earlier
+ * `kubectl get pod -n spark`                         list all jobs running in the Spark namespace
+ * `kubectl get svc -n argo`                          get argo dashboard URL
+ * `kubectl get svc -n jupyter`                       get Jupyterhub's URL
+ * `argo submit source/app_resources/spark-job.yaml`  submit a spark job from a manifest file
+ * `argo list --all-namespaces`                       show jobs from all namespaces
+ * `kubectl delete pod --all -n spark`                delete all jobs submitted in the Spark namespace
+* `kubectl apply -f source/app_resources/spark-template.yaml` submit a reusable job template for Spark applications
 
