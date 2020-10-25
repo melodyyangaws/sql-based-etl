@@ -49,18 +49,18 @@ $ cdk deploy CreateEKSCluster -c env=develop
 
 ```
 
-## Submit a Spark job via web interface
+## Submit a Spark job on a web interface
 
 After finished the deployment, we can start to `submit Spark job` on [Argo](https://argoproj.github.io/). Argo is an open source container-native workflow tool to orchestrate parallel jobs on Kubernetes. Argo Workflows is implemented as a Kubernetes CRD (Custom Resource Definition), which triggers time-based and event-based workflows specified by a configuration file.
 
 Take a look at the [sample job](https://github.com/tripl-ai/arc-starter/tree/master/examples/kubernetes/nyctaxi.ipynb) developed in Jupyter Notebook.  It uses a Spark Wrapper called [ARC framework](https://arc.tripl.ai/) to create an ETL job in a codeless, declarative way. The opinionated standard approach enables rapid application deployment, simplifies data pipeline build. Additionally, it makes [self-service analytics](https://github.com/melodyyangaws/aws-service-catalog-reference-architectures/blob/customize_ecs/ecs/README.md) possible to the business.
 
-In this exmaple, we will extract the `New York City Taxi Data` from the [AWS Open Data Registry](https://registry.opendata.aws/), ie. a public s3 bucket `s3://nyc-tlc/trip data`, transform the data from CSV to parquet file format, followed by a SQL-based data validation step, to ensure the typing transformation is done correctly. Finally, query the optimized data filtered by a flag column.
+In this exmaple, we will extract the `New York City Taxi Data` from the [AWS Open Data Registry](https://registry.opendata.aws/nyc-tlc-trip-records-pds/), ie. a public s3 bucket `s3://nyc-tlc/trip data`, transform the data from CSV to parquet file format, followed by a SQL-based data validation step, to ensure the typing transformation is done correctly. Finally, query the optimized data filtered by a flag column.
 
 1. Find your Argo dashboard URL from the deployment output, something like this:
 ![](/images/0-argo-uri.png)
 
-2. Go to the ARGO dashboard, Click on `SUBMIT NEW WORKFLOW` button on the dashoard.
+2. Go to the ARGO dashboard, Click on the `SUBMIT NEW WORKFLOW` button.
 ![](/images/1-argoui.png)
 
 3. Replace the existing manifest by the following job definition, click `SUBMIT`.
@@ -74,6 +74,9 @@ metadata:
 spec:
   serviceAccountName: arcjob
   entrypoint: nyctaxi
+  ttlStrategy:
+    secondsAfterCompletion: 43200
+    SecondsAfterFailure: 43200
   templates:
   - name: nyctaxi
     dag:
@@ -87,8 +90,8 @@ spec:
             parameters:
             - name: jobId
               value: nyctaxi 
-            - name: environment
-              value: test   
+            - name: image
+              value: ghcr.io/tripl-ai/arc:arc_3.5.2_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.0.0
             - name: configUri
               value: https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes/nyctaxi.ipynb
             - name: parameters
@@ -96,25 +99,25 @@ spec:
 
 ```
 ![](/images/2-argo-submit.png)
-4. Click a pod (dot) on the dashboard to examine the job status and logs.
+4. Click a pod (dot) on the dashboard to examine the job status and application logs.
 
 ![](/images/3-argo-log.png)
 
 
 
-### 2. Submit a Spark job via command line:
+## Submit a Spark job via command line:
 
 We have included a second manifest file and a Jupyter notebook, as an example of a complex Spark job to solve a real-world data problem. Let's submit it via a commmand line this time. 
 <details>
-<summary> 
-[manifest file](/source/app_resources/scd2-job.yaml)</summary>  - defines where the Jupyter notebook file (job configuration) and input data are. 
+<summary>manifest file</summary>
+The [manifest file](/source/app_resources/scd2-job.yaml) defines where the Jupyter notebook file (job configuration) and input data are. 
 </details>
 <details>
-<summary> 
-[Jupyter notebook](/source/app_resources/scd2_job.ipynb)</summary> - specifies what exactly need to do in a data pipeline.
+<summary>Jupyter notebook</summary>
+The [Jupyter notebook](/source/app_resources/scd2_job.ipynb) specifies what exactly need to do in a data pipeline.
 </details>
 
-In general, a parquet file is immutable in a Data Lake. This exmaple will demostrate how to address the challenge and process data incrermtnally. It uses `Delta Lake`, which is an open source storage layer on top of parquet file, to bring the ACID transactions to Apache Spark and modern big data workloads. In this solution, we will build up a table to meet the [Slow Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) requirement, and prove that how easy it is when ETL with a SQL first approach implemented in a configuration-driven way.
+In general, a parquet file is immutable in a Data Lake. This exmaple will demostrate how to address the challenge and process data incrermtnally. It uses `Delta Lake`, which is an open source storage layer on top of parquet file, to bring the ACID transactions to Apache Spark and modern big data workloads. In this solution, we will build up a table to meet the [Slowly Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) requirement, and prove that how easy it is when ETL with a SQL first approach implemented in a configuration-driven way.
 
 
 1.Clone the project.
@@ -134,19 +137,21 @@ Note: The default region in the project is `Oregon (us-west-2)`. To avoid unness
 $ aws s3 cp /source/app_resources/scd2_job.ipynb s3://<your_bucket_name>/<your_path>
 
 ```
-3.By using the fine-grained [IAM roles for service accounts (IRSA)](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html) feature in Amazon EKS, modify the existing IAM role and allow the job access your s3 bucket.
+3.By using the fine-grained [IAM roles for service accounts (IRSA)](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html) feature in Amazon EKS, modify the existing IAM role and allow the job access to your S3 bucket.
 
 ```
-# Replace the bucket name in the file
+# Replace the bucket name in the file by yours
 $ vi source/app_resources/etl-iam-role.yaml
 
-# Redeploy via CDK
+# Redeploy it
 $ cdk deploy CreateEKSCluster --require-approval never -c env=develop
 
 ```
 <details>
-<summary> or directly modify the IAM role `CreateEKSCluster-EksClusterETLSaRole` on [AWS console](https://console.aws.amazon.com/iam/home#/roles) </summary>
-![](/images/4-change-s3-iam.png)
+<summary>Or directly change the IAM role on AWS console</summary> 
+find the role name prefix `CreateEKSCluster-EksClusterETLSaRole` on the IAM console, update it accordingly.
+
+<img src="/images/4-change-s3-iam.png" width="350" title="changerole">
 </details>
 
 4.[Install](https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html) a Kubernetes command tool `kubectl` with version 1.18.
@@ -159,16 +164,23 @@ $ cdk deploy CreateEKSCluster --require-approval never -c env=develop
 
 ```
 $ kubectl apply -f source/app_resources/scd2-job.yaml
+
+# Delete before submit the same job again
+$ kubectl delete -f source/app_resources/scd2-job.yaml
+$ kubectl apply -f source/app_resources/scd2-job.yaml
 ```
 ![](/images/1-submit-scdjob.png)
 <details>
 <summary> 
-Alternatively, submit the job via [Argo CLI](https://www.eksworkshop.com/advanced/410_batch/install/). 
+Alternatively, submit the same job without deletion via [Argo CLI](https://www.eksworkshop.com/advanced/410_batch/install/). 
 </summary> 
 *** Make sure to comment out a line in the manifest file before your submission. ***
 
 ```
 $ argo submit source/app_resources/scd2-job.yaml -n spark --watch
+
+# terminate the job that is running
+$ argo delete scd2-job-<random_string> -n spark
 
 ```
 

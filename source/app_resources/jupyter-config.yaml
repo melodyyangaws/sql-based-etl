@@ -13,22 +13,28 @@ hub:
 proxy:
   secretToken: "37d978c42bd042da78a1afa5a32dacaaee863ded4926eca2b30cc3005832d636"
   service:
-    type: LoadBalancer
-    annotations:
-      kubernetes.io/ingress.class: alb
-      alb.ingress.kubernetes.io/scheme: internet-facing
-      alb.ingress.kubernetes.io/target-type: ip
-      alb.ingress.kubernetes.io/success-codes: 200,301,302
-      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 8080}]'  
-    labels:
-      app: jupyter
+    type: ClusterIP
+   
+ingress:
+  enabled: true
+  hosts:
+    - ""
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/success-codes: 200,301,302
+    alb.ingress.kubernetes.io/listen-ports: "[{\"HTTP\": 8000}]"
+  labels:
+    app: jupyterhub
+
 auth:
   dummy:
     password: "password"
 
 singleuser:
   image:
-    name: 720560070661.dkr.ecr.us-west-2.amazonaws.com/arc-jupyter
+    name: ghcr.io/tripl-ai/arc-jupyter
     tag: latest
     pullPolicy: IfNotPresent
   serviceAccountName: "{username}"
@@ -53,7 +59,7 @@ singleuser:
     display_name: "1. Jupyterhub instance - 4GB Memory & 4vCPUs"
     description: "Small (default): Arc-Jupyter Development Environment"
     kubespawner_override:
-      image: '720560070661.dkr.ecr.us-west-2.amazonaws.com/arc-jupyter:latest'
+      image: 'ghcr.io/tripl-ai/arc-jupyter:latest'
       ports:
         - Port: 8081
       lifecycle_hooks:
@@ -63,7 +69,7 @@ singleuser:
   - display_name: "2. Jupyterhub instance - 30GB Memory & 4 vCPUs"
     description: "Big Arc-Jupyter Development Environment"
     kubespawner_override:
-      image: '720560070661.dkr.ecr.us-west-2.amazonaws.com/arc-jupyter:latest'
+      image: 'ghcr.io/tripl-ai/arc-jupyter:latest'
       ports:
         - Port: 8081
       mem_limit: 30G

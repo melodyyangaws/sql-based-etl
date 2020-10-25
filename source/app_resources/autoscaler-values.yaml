@@ -1,8 +1,8 @@
 autoDiscovery:
-    clusterName: eksctl-managed
-awsRegion: us-west-2
+    clusterName: {{cluster_name}}
+awsRegion: {{region_name}}
 image:
-    tag: v1.17.3
+    tag: v1.18.2
 podAnnotations:
     cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
 podLabels:

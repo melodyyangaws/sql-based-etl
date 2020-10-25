@@ -13,9 +13,9 @@ spec:
   #   strategy: OnPodCompletion
   # must complete in 8h
   activeDeadlineSeconds: 28800
-  # keep workflows for 1 day
+  # keep workflows for 12h
   ttlStrategy:
-    secondsAfterCompletion: 86400
+    secondsAfterCompletion: 43200
   templates:
   - name: testiam
     inputs:
@@ -100,5 +100,5 @@ spec:
         --etl.config.ignoreEnvironments=true \
         --etl.config.job.id={{inputs.parameters.jobId}} \
         --etl.config.tags="service=arc workflowId={{workflow.uid}} pod={{pod.name}} serviceAccount={{workflow.serviceAccountName}} namespace={{workflow.namespace}} {{inputs.parameters.tags}}" \
-        --ETL_CONF_EPOCH=$(date '+%s') --ETL_CONF_CURRENT_TIMESTAMP=$(date -u '+%Y-%m-%dT%H:%M:%SZ') \
+        --ETL_CONF_EPOCH=$(date '+%s') --ETL_CONF_CURRENT_TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S') \
         {{inputs.parameters.parameters}}

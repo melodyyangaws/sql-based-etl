@@ -1,23 +1,20 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
+  # need it if using ArgoCLI
   generateName: scd2-job-
   namespace: spark
-  ## need it when using kubectl , remove it when using ArgoCLI
-  name: scd2-job
+  ## need it if use kubectl
+  # name: scd2-job
 spec:
   serviceAccountName: arcjob
   entrypoint: scd2-load
-  securityContext:
-    fsGroup: 65534
-  ## delete all pods as soon as they complete
-  # podGC: 
-  #   strategy: OnPodCompletion
   ## must complete in 8h
   activeDeadlineSeconds: 28800
-  ## keep workflows for 1d
+  # keep workflows for 12h (43,200 seconds)
   ttlStrategy:
-    secondsAfterCompletion: 86400
+    secondsAfterCompletion: 43200
+    SecondsAfterFailure: 43200
   templates:
   - name: scd2-load
     dag:
@@ -29,10 +26,10 @@ spec:
             clusterScope: true 
           arguments:
             parameters:
-            - name: image
-              value: ghcr.io/tripl-ai/arc:arc_3.5.2_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.0.0
             - name: jobId
               value: scd2 
+            - name: image
+              value: ghcr.io/tripl-ai/arc:arc_3.5.2_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.0.0
             ## in the sample jupyter notebook, all stages will be run in test and prod only.
             - name: environment
               value: test   

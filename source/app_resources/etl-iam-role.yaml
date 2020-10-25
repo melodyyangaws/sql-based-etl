@@ -3,6 +3,7 @@
     Action: s3:ListBucket
     Resource:
     - arn:aws:s3:::testtestmelody
+    - arn:aws:s3:::nyc-tlc
   - Effect: Allow
     Action:
     - s3:PutObject
@@ -10,21 +11,11 @@
     - s3:DeleteObject
     Resource:
     - arn:aws:s3:::testtestmelody/*
+    - arn:aws:s3:::nyc-tlc/*
   - Effect: Allow
     Action: secretsmanager:GetSecretValue
     Resource: 
     - '*'
-  # - Effect: Allow
-  #   Action:
-  #   - cloudwatch:PutMetricData
-  #   - ec2:DescribeVolumes
-  #   - ec2:DescribeTags
-  #   - logs:PutLogEvents
-  #   - logs:DescribeLogStreams
-  #   - logs:DescribeLogGroups
-  #   - logs:CreateLogStream
-  #   - logs:CreateLogGroup
-  #   Resource: "*"
   # - Effect: Allow
   #   Action:
   #   - ssm:GetParameter

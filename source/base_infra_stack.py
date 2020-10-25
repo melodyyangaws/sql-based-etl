@@ -229,15 +229,15 @@ class BaseEksInfraStack(core.Stack):
 # //*********************************************************************//
 # //***************************** Setup Jupyter **************************//
 # //*********************************************************************//
-        # _jhub_install=_my_cluster.add_helm_chart('JHubChart',
-        #     chart='jupyterhub',
-        #     repository='https://jupyterhub.github.io/helm-chart',
-        #     release='jhub',
-        #     version='0.9.1',
-        #     namespace='jupyter',
-        #     create_namespace=True,
-        #     values=loadYamlLocal('../app_resources/jupyter-config.yaml')
-        # )
+        _jhub_install=_my_cluster.add_helm_chart('JHubChart',
+            chart='jupyterhub',
+            repository='https://jupyterhub.github.io/helm-chart',
+            release='jhub',
+            version='0.9.1',
+            namespace='jupyter',
+            create_namespace=True,
+            values=loadYamlLocal('../app_resources/jupyter-config.yaml')
+        )
         # _expose_hub = _my_cluster.add_manifest('JHubIngress',
         #     loadYamlLocal('../app_resources/jupyter-ingress.yaml')
         # )
@@ -254,7 +254,7 @@ class BaseEksInfraStack(core.Stack):
 
 
 # # # # //*********************************************************************//
-# # # # //****************** Cloud9 for Private EKS cluster ********************//
+# # # # //**************** Cloud9 for eksctl in private subnet ****************//
 # # # # //*********************************************************************//
 # # # # 
 # # #         # # create a cloud9 ec2 environment in a new VPC
@@ -267,18 +267,26 @@ class BaseEksInfraStack(core.Stack):
 # # #         # # print the Cloud9 IDE URL in the output
 # # #         # core.CfnOutput(self, 'URL', value=c9env.ide_url)
 
+
+# # # # //*********************************************************************//
+# # # # //*************************** Deployment Output ***********************//
+# # # # //*********************************************************************//
         argo_url=eks.KubernetesObjectValue(self, 'argoALB',
             cluster=_my_cluster,
             json_path='.status.loadBalancer.ingress[0].hostname',
             object_type='ingress',
             object_name='argo-server',
-            object_namespace='argo',
-            timeout=core.Duration.minutes(10)
+            object_namespace='argo'
         )
         argo_url.node.add_dependency(_argo_install)
         core.CfnOutput(self,'_ARGO_URL', value='http://'+ argo_url.value + ':2746')
-
-        # argo_url = _my_cluster.get_service_load_balancer_address(service_name='argo-server',namespace='argo')     
         
-        # jupyter_url = _my_cluster.get_service_load_balancer_address(service_name='proxy-public',namespace='jupyter')
-        # core.CfnOutput(self,'_JUPYTER_URL', value='http://'+ str(jupyter_url) + ':8080')
+        jhub_url=eks.KubernetesObjectValue(self, 'jhubALB',
+            cluster=_my_cluster,
+            json_path='.status.loadBalancer.ingress[0].hostname',
+            object_type='ingress',
+            object_name='jupyterhub',
+            object_namespace='jupyter'
+        )
+        jhub_url.node.add_dependency(_jhub_install)
+        core.CfnOutput(self,'_JUPYTER_URL', value='http://'+ jhub_url.value + ':8000')

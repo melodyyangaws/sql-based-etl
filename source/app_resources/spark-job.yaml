@@ -8,16 +8,12 @@ metadata:
 spec:
   serviceAccountName: arcjob
   entrypoint: nyctaxi
-  # securityContext:
-  #   fsGroup: 65534
-  # delete all pods as soon as they complete
-  # podGC: 
-  #   strategy: OnPodCompletion
   # must complete in 8h (28,800 seconds)
   activeDeadlineSeconds: 28800
-  # keep workflows for 1d (86,400 seconds)
+  # keep workflows for 12h (43,200 seconds)
   ttlStrategy:
-    secondsAfterCompletion: 86400
+    secondsAfterCompletion: 43200
+    SecondsAfterFailure: 43200
   templates:
   - name: nyctaxi
     dag:
@@ -31,6 +27,8 @@ spec:
             parameters:
             - name: jobId
               value: nyctaxi 
+            - name: image
+              value: ghcr.io/tripl-ai/arc:arc_3.5.2_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.0.0  
             # in a jupyter notebook, each stage associates to env, eg.test & prod. Could skip a stage when env mismatches 
             - name: environment
               value: test    
