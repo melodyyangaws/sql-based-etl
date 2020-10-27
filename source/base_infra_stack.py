@@ -220,7 +220,7 @@ class BaseEksInfraStack(core.Stack):
             values=loadYamlLocal('../app_resources/argo-values.yaml')
         )
 
-        # Submit Spark workflow template
+        # Create a Spark workflow template, manually submit jobs based on the template later.
         _submit_tmpl = _my_cluster.add_manifest('SubmitSparkWrktmpl',
             loadYamlLocal('../app_resources/spark-template.yaml')
         )
@@ -238,19 +238,10 @@ class BaseEksInfraStack(core.Stack):
             create_namespace=True,
             values=loadYamlLocal('../app_resources/jupyter-config.yaml')
         )
-        # _expose_hub = _my_cluster.add_manifest('JHubIngress',
-        #     loadYamlLocal('../app_resources/jupyter-ingress.yaml')
-        # )
-        # _expose_hub = eks.KubernetesPatch(self,'JhubIngress',
-        #     cluster=_my_cluster,
-        #     resource_name='service/proxy-public',
-        #     apply_patch=loadYamlLocal('../app_resources/jupyter-service.yaml'),
-        #     restore_patch={},
-        #     resource_namespace='jupyter'
-        # )
-        # _expose_hub.node.add_dependency(_jhub_install)
-
-
+        _expose_hub = _my_cluster.add_manifest('JHubIngress',
+            loadYamlLocal('../app_resources/jupyter-ingress.yaml')
+        )
+        _expose_hub.node.add_dependency(_jhub_install)
 
 
 # # # # //*********************************************************************//
@@ -288,5 +279,5 @@ class BaseEksInfraStack(core.Stack):
             object_name='jupyterhub',
             object_namespace='jupyter'
         )
-        jhub_url.node.add_dependency(_jhub_install)
+        jhub_url.node.add_dependency(_expose_hub)
         core.CfnOutput(self,'_JUPYTER_URL', value='http://'+ jhub_url.value + ':8000')

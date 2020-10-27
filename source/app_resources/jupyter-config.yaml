@@ -15,40 +15,49 @@ proxy:
   service:
     type: ClusterIP
    
-ingress:
-  enabled: true
-  hosts:
-    - ""
-  annotations:
-    kubernetes.io/ingress.class: alb
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/success-codes: 200,301,302
-    alb.ingress.kubernetes.io/listen-ports: "[{\"HTTP\": 8000}]"
-  labels:
-    app: jupyterhub
+# ingress:
+#   enabled: true
+#   hosts:
+#     - ""
+#   annotations:
+#     kubernetes.io/ingress.class: alb
+#     alb.ingress.kubernetes.io/scheme: internet-facing
+#     alb.ingress.kubernetes.io/target-type: ip
+#     alb.ingress.kubernetes.io/success-codes: 200,301,302
+#     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 8000}]'
+#   labels:
+#     app: jupyterhub
 
 auth:
   dummy:
     password: "password"
 
 singleuser:
+  defaultUrl: "/lab"
   image:
     name: ghcr.io/tripl-ai/arc-jupyter
     tag: latest
     pullPolicy: IfNotPresent
+  lifecycle_hooks:
+    postStart:
+      exec:
+        command: ["cp", "-r", "/opt/.jupyter", "/home/jovyan/.jupyter"]  
   serviceAccountName: "{username}"
   storage:
     type: none
+  # Default Resource Limits/Guarantees
+  cpu:
+    guarantee: 0.25
+    limit: 0.5
   memory:
-    limit: 4G
     guarantee: 4G
+    limit: 4G
   extraEnv:
     JAVA_OPTS: -Xmx4G
-  extraSecurityContext:
-    runAsUser: 65534
-    runAsGroup: 65534
-    allowPrivilegeEscalation: false  
+  # extraSecurityContext:
+  #   runAsUser: 65534
+  #   fsGroup: 65534
+  #   allowPrivilegeEscalation: false  
   # storage:
   #   capacity: 50G
   #   type: dynamic
@@ -56,28 +65,17 @@ singleuser:
   #     storageClass: csi-sc
   profileList:
   - default: True
-    display_name: "1. Jupyterhub instance - 4GB Memory & 4vCPUs"
+    display_name: "1. 4GB Memory & 1vCPUs"
     description: "Small (default): Arc-Jupyter Development Environment"
     kubespawner_override:
-      image: 'ghcr.io/tripl-ai/arc-jupyter:latest'
-      ports:
-        - Port: 8081
-      lifecycle_hooks:
-        postStart:
-          exec:
-            command: ["cp", "-r", "/opt/.jupyter", "/home/jovyan/.jupyter"]
-  - display_name: "2. Jupyterhub instance - 30GB Memory & 4 vCPUs"
+      cpu_guarantee: 0.5
+      cpu_limit: 1
+      mem_guarantee: 4G
+      mem_limit: 15G
+  - display_name: "2. 15GB Memory & 2vCPUs"
     description: "Big Arc-Jupyter Development Environment"
     kubespawner_override:
-      image: 'ghcr.io/tripl-ai/arc-jupyter:latest'
-      ports:
-        - Port: 8081
-      mem_limit: 30G
-      mem_guaranttee: 30G
-      extra_resource_limits:
-        JAVA_OPTS: -Xmx8G
-      # copy in the notebook customisations
-      lifecycle_hooks:
-        postStart:
-          exec:
-            command: ["cp", "-r", "/opt/.jupyter", "/home/jovyan/.jupyter"]
+      cpu_guarantee: 0.5
+      cpu_limit: 2
+      mem_guarantee: 10G
+      mem_limit: 15G

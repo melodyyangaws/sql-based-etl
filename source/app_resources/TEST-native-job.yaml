@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: test-spot-
+  namespace: spark
+spec:
+  serviceAccountName: default
+  entrypoint: spotinterruption
+  activeDeadlineSeconds: 28800
+  ttlStrategy:
+    secondsAfterCompletion: 43200
+  templates:
+  - name: spotinterruption
+    inputs:
+      parameters:
+      - name: image
+        value: ghcr.io/tripl-ai/arc:arc_3.5.2_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.0.0
+    script:
+      image: "{{inputs.parameters.image}}"
+      resources:
+        requests:
+          cpu: "1"
+          memory: "1Gi"
+      command: ["/bin/sh"]
+      source: |
+        # verbose logging
+        set -ex
+
+        # submit job
+        bin/spark-submit \
+        --master k8s://kubernetes.default.svc:443 \
+        --deploy-mode cluster \
+        --name 'Word Count' \
+        --conf spark.executor.instances=3 \
+        --conf spark.kubernetes.allocation.batch.size=10 \
+        --conf spark.kubernetes.container.image=ghcr.io/tripl-ai/arc:latest \
+        --conf spark.kubernetes.container.image.pullPolicy=Always \
+        --conf spark.kubernetes.driver.podTemplateFile='/Users/meloyang/environment/driver-pod-template.yaml' \
+        --conf spark.kubernetes.executor.podTemplateFile='/Users/meloyang/environment/executor-pod-template.yaml' \
+        --conf spark.kubernetes.authenticate.driver.serviceAccountName=spark \
+        --conf spark.driver.memory=8g \
+        --conf spark.kubernetes.driver.request.cores=1 \
+        --conf spark.kubernetes.driver.limit.cores=1 \
+        --conf spark.executor.memory=8g \
+        --conf spark.kubernetes.executor.request.cores=2 \
+        --conf spark.kubernetes.executor.limit.cores=3 \
+        --conf spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem \
+        --conf spark.hadoop.fs.s3a.connection.ssl.enabled=false \
+        --conf spark.hadoop.fs.s3a.fast.upload=true \
+        s3a://testtestmelody/app-code/job/wordcount.py \
+        s3a://testtestmelody/output

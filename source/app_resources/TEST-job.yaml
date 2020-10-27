@@ -3,17 +3,10 @@ kind: Workflow
 metadata:
   generateName: test-iam-
   namespace: spark
-  # need the name if use kubectl to submit the job
-  # name: test-argo-wrfw
 spec:
   serviceAccountName: arcjob
   entrypoint: testiam
-  # delete all pods as soon as they complete
-  # podGC: 
-  #   strategy: OnPodCompletion
-  # must complete in 8h
   activeDeadlineSeconds: 28800
-  # keep workflows for 12h
   ttlStrategy:
     secondsAfterCompletion: 43200
   templates:
@@ -29,18 +22,17 @@ spec:
       - name: executorInstances
         value: "2"
       - name: executorCores
-        value: "1"
+        value: "2"
       - name: executorMemory
-        value: "5"
+        value: "10"
       - name: sparkConf
         value: ""
       - name: tags
-        value: ""
+        value: "app=test-iam-for-sa"
       - name: parameters
         value: "--ETL_CONF_DATALAKE_LOC=testtestmelody"
       - name: pullPolicy
         value: IfNotPresent
-      # to exec each stages at a jupyter notebook, we can controle it by matching the environment. Some stages may not required in prod env.   
       - name: environment
         value: test  
     metadata:
