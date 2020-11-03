@@ -9,7 +9,7 @@ spec:
       # serviceAccountName: nativejob
       containers:
       - name: test-spot-executor
-        image: 720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest
+        image: ${ACCOUNT}.dkr.ecr.us-west-2.amazonaws.com/arc:latest
         command: [
         "/bin/sh",
         "-c",
@@ -24,8 +24,7 @@ spec:
         --conf spark.executor.memory=8g \
         --conf spark.kubernetes.executor.request.cores=2 \
         --conf spark.kubernetes.executor.limit.cores=4 \
-        --conf spark.sql.shuffle.partitions=60 \
-        --conf spark.kubernetes.container.image=720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest \
+        --conf spark.kubernetes.container.image=${ACCOUNT}.dkr.ecr.us-west-2.amazonaws.com/arc:latest \
         --conf spark.kubernetes.container.image.pullPolicy=Always \
         --conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' \
         --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml' \
