@@ -9,6 +9,7 @@ ENV/
 env.bak/
 venv.bak/
 deploymemnt/environment.cfg
+deployment/pull_and_push_ecr.sh 
 
 # CDK Context & Staging files
 .cdk.staging/

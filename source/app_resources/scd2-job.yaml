@@ -29,7 +29,7 @@ spec:
             - name: jobId
               value: scd2 
             - name: image
-              value: ghcr.io/tripl-ai/arc:arc_3.5.2_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.0.0
+              value: ghcr.io/tripl-ai/arc:latest
             ## in the sample jupyter notebook, all stages will be run in test and prod only.
             - name: environment
               value: test   

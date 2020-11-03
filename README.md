@@ -38,14 +38,14 @@ $ pip install -r requirements.txt
 At this point you can now synthesize the CloudFormation template to be deployed.
 
 ```
-$ cdk synth CreateEKSCluster --require-approval never -c env=develop 
+$ cdk synth SparkOnEKS --require-approval never -c env=develop
 
 ```
 
 Finally deploy the stacks.
 
 ```
-$ cdk deploy CreateEKSCluster -c env=develop
+$ cdk deploy SparkOnEKS -c env=develop --require-approval never -c env=develop --parameters jhubusername=<jupyer_login_name>
 
 ```
 
@@ -91,7 +91,7 @@ spec:
             - name: jobId
               value: nyctaxi 
             - name: image
-              value: ghcr.io/tripl-ai/arc:arc_3.5.2_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.0.0
+              value: ghcr.io/tripl-ai/arc:latest
             - name: configUri
               value: https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes/nyctaxi.ipynb
             - name: parameters
@@ -198,7 +198,30 @@ $ echo ARGO DASHBOARD: http://${ARGO_URL}:2746
 8.Check your job status and applications logs on the dashboard.
 ![](/images/3-argo-log.png)
 
+## Submit a native Spark job across managed instance (Driver) & spot instance (executor)
 
+1.Build a docker image and push to ECR
+Replace the region and account to your own AWS enviroment.
+
+```
+ bash deployment/pull_and_push_ecr.sh <region> <account_number> repo_name=arc build=1
+```
+2.Run a dummy container to check
+```
+$ kubectl run --generator=run-pod/v1 jump-pod --rm -i --tty --serviceaccount=nativejob --namespace=spark --image <account_number>.dkr.ecr.<region>.amazonaws.com/arc:latest sh
+
+# after login to the container, validate the pod template file
+# make sure the service account is `nativejob` and the lifecycle value is `onDemamnd` in the driver template
+sh-5.0# ls 
+sh-5.0# cat driver-pod-template.yaml
+sh-5.0# exit
+
+```
+3.Submit the native Spark job
+```
+$kubectl apply -f source/app_resources/TEST-native-job.yaml
+
+```
 ## Useful commands
 
  * `cdk ls`          list all stacks in the app

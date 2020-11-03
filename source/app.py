@@ -2,7 +2,7 @@
 from aws_cdk import core
 from lib.config_map import ConfigSectionMap
 from base_infra_stack import BaseEksInfraStack
-# from etl_app_stack import CreateAppStack
+from native_spark_stack import NativeSparkStack
 
 app = core.App()
 
@@ -16,14 +16,11 @@ eks_name = app.node.try_get_context('cluster_name') + '-' + ConfigSectionMap(tar
 eksadmin_name = app.node.try_get_context('cluster_admin_name')
 
 # Spin up CDK stacks
-eks_stack = BaseEksInfraStack(app, 'CreateEKSCluster', eks_name, eksadmin_name, env=env)
-
-# the stack has been merged to infra stack above.
-# Keep it for now just, so we can do app update quickly without touching the infra.
-# app_stack = CreateAppStack(app,'CreateETLApplication', eks_name, eksadmin_name, env=env)
+eks_stack = BaseEksInfraStack(app, 'SparkOnEKS', eks_name, eksadmin_name, env=env)
+# app_stack = NativeSparkStack(app,'NativeSpark', eks_name, eksadmin_name, eks_stack.appcode_bucket, env=env)
 # code_pipeline_stack = AWSAppResourcesPipeline(app, "ResourcesPipelineStack", env=env)
 
 core.Tags.of(eks_stack).add('project', 'sqlbasedetl')
-# core.Tags.of(app_stack).add('project', 'sqlbasedetl')
+# core.Tags.of(app_stack).add('project', 'NativeSpark')
 
 app.synth()

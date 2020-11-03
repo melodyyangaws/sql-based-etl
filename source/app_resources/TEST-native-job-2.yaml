@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: test-spot-
+  namespace: spark
+spec:
+  serviceAccountName: nativejob
+  entrypoint: spotinterruption
+  activeDeadlineSeconds: 28800
+  ttlStrategy:
+    secondsAfterCompletion: 43200
+  templates:
+  - name: spotinterruption
+    inputs:
+      parameters:
+      - name: image
+        value: 720560070661.dkr.ecr.us-west-2.amazonaws.com/arc
+    script:
+      image: "{{inputs.parameters.image}}"
+      resources:
+        requests:
+          cpu: "1"
+          memory: "1Gi"
+      command: ["/bin/sh"]
+      source: |
+        # verbose logging
+        set -ex
+
+        # submit job
+        /opt/spark/bin/spark-submit \
+        --master k8s://kubernetes.default.svc:443 \
+        --deploy-mode master \
+        --name 'Word Count' \
+        --conf spark.kubernetes.allocation.batch.size=10 \
+        --conf spark.kubernetes.container.image=720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest \
+        --conf spark.kubernetes.container.image.pullPolicy=Always \
+        --conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' \
+        --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml' \
+        --conf spark.kubernetes.authenticate.driver.serviceAccountName=nativejob \
+        --conf spark.kubernetes.namespace=spark \
+        --conf spark.driver.memory=1g \
+        --conf spark.kubernetes.driver.request.cores=2 \
+        --conf spark.kubernetes.driver.limit.cores=3 \
+        --conf spark.executor.instances=20 \
+        --conf spark.executor.memory=8g \
+        --conf spark.kubernetes.executor.request.cores=2 \
+        --conf spark.kubernetes.executor.limit.cores=3\
+        --conf spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem \
+        --conf spark.hadoop.fs.s3a.fast.upload=true \
+        wordcount.py \
+        "s3a://${DATALAKE_BUCKET}/output"

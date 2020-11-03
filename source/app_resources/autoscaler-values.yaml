@@ -3,12 +3,15 @@ autoDiscovery:
 awsRegion: {{region_name}}
 image:
     tag: v1.18.2
+nodeSelector:
+    app: spark    
 podAnnotations:
     cluster-autoscaler.kubernetes.io/safe-to-evict: 'false'
-podLabels:
-    app: spark
+extraArgs:
+    skip-nodes-with-system-pods: false
 rbac:
     serviceAccount:
         create: false
         name: cluster-autoscaler
+
   

@@ -5,10 +5,13 @@ metadata:
   namespace: spark
 rules:
   - apiGroups: [""]
-    resources: ["pods","pods/exec","configmaps","services","endpoints"]
-    verbs: ["*"]
+    resources: ["pods","pods/exec","configmaps","services"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["batch", "extensions"]
+    resources: ["jobs"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]  
   - apiGroups: [""]
-    resources: ["events","pods/log","serviceaccounts"]
+    resources: ["events","pods/log","serviceaccounts", "secrets","endpoints"]
     verbs: ["list", "get", "watch"]
   - apiGroups: [""]
     resources: ["persistentvolumeclaims"]
@@ -25,11 +28,11 @@ rules:
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: etl-role-binding
+  name: {{MY_SA}}-role-binding
   namespace: spark
 subjects:
   - kind: ServiceAccount
-    name: arcjob
+    name: {{MY_SA}}
     namespace: spark
 roleRef:
   kind: Role

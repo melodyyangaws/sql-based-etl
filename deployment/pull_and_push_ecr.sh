@@ -1,30 +1,41 @@
 #!/bin/bash
 
-echo "Creating repositories and push docker images to ECR"
-export REGION=us-west-2
-export ACCOUNTNUMBER=720560070661
 
-echo "Creating ECR repositories"
-aws ecr --region $REGION create-repository --repository-name arc-jupyter  --image-scanning-configuration scanOnPush=true
-aws ecr --region $REGION create-repository --repository-name arc  --image-scanning-configuration scanOnPush=true
+if [ $# -eq 0 ]; then
+    echo "No argument is supplied. Skip the ECR step."
+	echo "USAGE1: pull_and_push_ecr.sh region=region AcctName=account repo_name=arc build=1"
+	echo "USAGE2: pull_and_push_ecr.sh region=region AcctName=account repo_name=arc-jupyter"
+else
 
+	export REGION=${1}
+	export ACCOUNTNUMBER=${2}
 
-echo "Logging into ECR"
-$(aws --region $REGION ecr get-login --no-include-email)
-if [[ $? -ne 0 ]];then
-	aws ecr get-login-password --region REGION | docker login --username AWS --password-stdin $ACCOUNTNUMBER.dkr.ecr.$REGION.amazonaws.com
-fi
+	echo "Creating repositories and push docker images to ECR"
+	REPO_NAME=${3}
 
-echo "Pull and push image for arc-jupyter"
-docker pull ghcr.io/tripl-ai/arc-jupyter:arc-jupyter_3.6.0_scala_2.12_hadoop_3.2.0_1.0.0
-docker tag ghcr.io/tripl-ai/arc-jupyter:arc-jupyter_3.6.0_scala_2.12_hadoop_3.2.0_1.0.0 $ACCOUNTNUMBER.dkr.ecr.$REGION.amazonaws.com/arc-jupyter:latest
-docker push $ACCOUNTNUMBER.dkr.ecr.$REGION.amazonaws.com/arc-jupyter:latest
+	echo "Creating ECR repositories"
+	aws ecr describe-repositories --repository-names $REPO_NAME --region $REGION || aws ecr --region $REGION create-repository --repository-name $REPO_NAME --image-scanning-configuration scanOnPush=true
+	
 
-echo "Pull and push image for arc"
-docker pull ghcr.io/tripl-ai/arc:arc_3.4.0_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.0.0
-docker tag ghcr.io/tripl-ai/arc:arc_3.4.0_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.0.0 $ACCOUNTNUMBER.dkr.ecr.$REGION.amazonaws.com/arc:latest
-docker push $ACCOUNTNUMBER.dkr.ecr.$REGION.amazonaws.com/arc:latest
+	echo "Logging into ECR"
+	aws ecr get-login-password --region $REGION | docker login --username AWS --password-stdin $ACCOUNTNUMBER.dkr.ecr.$REGION.amazonaws.com
 
-echo "Setting up deployment files with new image details"
-sed -i.bak "s/ACCOUNTNUMBER/$ACCOUNTNUMBER/" deployment/environment.cfg
-sed -i.bak "s/REGION/$REGION/" deployment/environment.cfg
+	if [[ $4 != '' ]]; then
+		echo "Build image ${REPO_NAME}"
+		docker build -t $ACCOUNTNUMBER.dkr.ecr.$REGION.amazonaws.com/$REPO_NAME .
+	else
+		echo "Pull image ${REPO_NAME}"
+		docker pull ghcr.io/tripl-ai/$REPO_NAME:latest
+		docker tag ghcr.io/tripl-ai/$REPO_NAME:latest $ACCOUNTNUMBER.dkr.ecr.$REGION.amazonaws.com/$REPO_NAME:latest
+	fi
+
+	echo "Push image ${REPO_NAME}"
+	docker push $ACCOUNTNUMBER.dkr.ecr.$REGION.amazonaws.com/$REPO_NAME:latest
+	echo "The image $REPO_NAME is pushed to ECR"
+	
+fi	
+
+echo "Setting up deployment files"
+sed -i.bak "s/\ACCOUNTNUMBER\b/$ACCOUNTNUMBER/" deployment/environment.cfg
+sed -i.bak "s/\REGION\b/$REGION/" deployment/environment.cfg
+find . -type f -name "*.bak" -delete

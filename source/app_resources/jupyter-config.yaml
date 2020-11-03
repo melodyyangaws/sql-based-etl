@@ -10,30 +10,29 @@ hub:
 
       c.KubeSpawner.pre_spawn_hook = override_service_account_hook
 
+  nodeSelector:
+    lifecycle: Ec2Spot
+  readinessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+          
 proxy:
   secretToken: "37d978c42bd042da78a1afa5a32dacaaee863ded4926eca2b30cc3005832d636"
   service:
     type: ClusterIP
-   
-# ingress:
-#   enabled: true
-#   hosts:
-#     - ""
-#   annotations:
-#     kubernetes.io/ingress.class: alb
-#     alb.ingress.kubernetes.io/scheme: internet-facing
-#     alb.ingress.kubernetes.io/target-type: ip
-#     alb.ingress.kubernetes.io/success-codes: 200,301,302
-#     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 8000}]'
-#   labels:
-#     app: jupyterhub
+  # chp:
+  #   nodeSelector:
+  #     lifecycle: Ec2Spot    
 
+  
 auth:
   dummy:
-    password: "password"
+    password: "supersecret!"
 
 singleuser:
   defaultUrl: "/lab"
+  nodeSelector:
+    lifecycle: Ec2Spot
   image:
     name: ghcr.io/tripl-ai/arc-jupyter
     tag: latest
@@ -45,15 +44,27 @@ singleuser:
   serviceAccountName: "{username}"
   storage:
     type: none
-  # Default Resource Limits/Guarantees
   cpu:
     guarantee: 0.25
     limit: 0.5
   memory:
     guarantee: 4G
     limit: 4G
+  # extraEnvSecrets:
+  #   - name: extraenv_name1
+  #     valueFrom:
+  #       secretKeyRef:
+  #         name: name-secrets1
+  #         key: ATHENA_ETL_CONF_S3A_ACCESS_KEY
   extraEnv:
     JAVA_OPTS: -Xmx4G
+    ETL_CONF_DATALAKE_LOC: {{codeBucket}}  
+  # extraNodeAffinity:
+  #   required:
+  #     - matchExpressions:
+  #       - key: lifecycle
+  #         operator: In
+  #         values: [Ec2Spot]
   # extraSecurityContext:
   #   runAsUser: 65534
   #   fsGroup: 65534
@@ -62,20 +73,34 @@ singleuser:
   #   capacity: 50G
   #   type: dynamic
   #   dynamic:
-  #     storageClass: csi-sc
+      # storageClass: csi-sc
+      # subPath: '{username}'
+
   profileList:
   - default: True
-    display_name: "1. 4GB Memory & 1vCPUs"
-    description: "Small (default): Arc-Jupyter Development Environment"
+    display_name: "Small (default): Arc-Jupyter Development Environment"
+    description: "4GB Memory & 1vCPUs"
     kubespawner_override:
       cpu_guarantee: 0.5
       cpu_limit: 1
       mem_guarantee: 4G
-      mem_limit: 15G
-  - display_name: "2. 15GB Memory & 2vCPUs"
-    description: "Big Arc-Jupyter Development Environment"
+      mem_limit: 10G
+  - display_name: "Big Arc-Jupyter Development Environment"
+    description: "15GB Memory & 2vCPUs"
     kubespawner_override:
       cpu_guarantee: 0.5
       cpu_limit: 2
       mem_guarantee: 10G
       mem_limit: 15G
+
+prePuller:
+  hook:
+    enabled: false     
+
+# scheduling:
+#   userScheduler:
+#     enabled: true
+#     replicas: 1
+
+debug:
+  enabled: true      

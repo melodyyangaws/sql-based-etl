@@ -129,24 +129,24 @@ class IamConst(core.Construct):
         #     principal=iam.AccountRootPrincipal(),
         # )
 
-        # # Creating Amazon EKS External Secret Role
-        # self.external_secrets_role = iam.Role(
-        #     scope=self,
-        #     id='external-secrets',
-        #     role_name=id + '-external-secrets',
-        #     assumed_by=iam.ServicePrincipal('ec2.amazonaws.com'),
-        # )
+        # Creating Amazon EKS External Secret Role
+        self.external_secrets_role = iam.Role(
+            scope=self,
+            id='external-secrets',
+            role_name=cluster_name+'-external-secrets',
+            assumed_by=iam.ServicePrincipal('ec2.amazonaws.com'),
+        )
 
-        # self.external_secrets_role.add_to_policy(
-        #     iam.PolicyStatement(
-        #         resources=['*'],
-        #         actions=['secretsmanager:GetSecretValue', 'secretsmanager:ListSecrets',
-        #                  'secretsmanager:GetResourcePolicy', 'secretsmanager:DescribeSecret',
-        #                  'secretsmanager:ListSecretVersionIds', 'ssm:GetParameters',
-        #                  'ssm:GetParameter', 'ssm:GetParametersByPath',
-        #                  'ssm:GetParameterHistory']
-        #     )
-        # )
+        self.external_secrets_role.add_to_policy(
+            iam.PolicyStatement(
+                resources=['*'],
+                actions=['secretsmanager:GetSecretValue', 'secretsmanager:ListSecrets',
+                         'secretsmanager:GetResourcePolicy', 'secretsmanager:DescribeSecret',
+                         'secretsmanager:ListSecretVersionIds', 'ssm:GetParameters',
+                         'ssm:GetParameter', 'ssm:GetParametersByPath',
+                         'ssm:GetParameterHistory']
+            )
+        )
  
         # self._cluster.aws_auth.add_masters_role(
         #     role=clusterAdminRole,
