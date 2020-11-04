@@ -41,7 +41,7 @@ singleuser:
     postStart:
       exec:
         command: ["cp", "-r", "/opt/.jupyter", "/home/jovyan/.jupyter"]  
-  serviceAccountName: "{username}"
+  serviceAccountName: "{unescaped_username}"
   storage:
     type: none
   cpu:

@@ -9,7 +9,7 @@ spec:
       # serviceAccountName: nativejob
       containers:
       - name: test-spot-executor
-        image: ${ACCOUNT}.dkr.ecr.us-west-2.amazonaws.com/arc:latest
+        image: 720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest
         command: [
         "/bin/sh",
         "-c",
@@ -17,14 +17,14 @@ spec:
         --master k8s://kubernetes.default.svc:443 \
         --deploy-mode client \
         --name 'Word Count' \  
-        --conf spark.executor.instances=20 \
+        --conf spark.executor.instances=10 \
         --conf spark.kubernetes.allocation.batch.size=10 \ 
         --conf spark.kubernetes.driver.request.cores=2 \
         --conf spark.kubernetes.driver.limit.cores=4 \
-        --conf spark.executor.memory=8g \
+        --conf spark.executor.memory=10g \
         --conf spark.kubernetes.executor.request.cores=2 \
         --conf spark.kubernetes.executor.limit.cores=4 \
-        --conf spark.kubernetes.container.image=${ACCOUNT}.dkr.ecr.us-west-2.amazonaws.com/arc:latest \
+        --conf spark.kubernetes.container.image=720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest \
         --conf spark.kubernetes.container.image.pullPolicy=Always \
         --conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' \
         --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml' \
@@ -34,7 +34,7 @@ spec:
         --conf spark.hadoop.fs.s3a.fast.upload=true \
         --conf spark.hadoop.fs.s3a.aws.credentials.provider=com.amazonaws.auth.WebIdentityTokenCredentialsProvider \
         wordcount.py \
-        \"s3a://${DATALAKE_BUCKET}/output\""
+        \"s3a://sparkoneks-codebucket9d8d5b72-ovk2068zqidl/output\""
         ]
       serviceAccountName: nativejob
       restartPolicy: Never 

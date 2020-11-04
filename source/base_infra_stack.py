@@ -287,7 +287,8 @@ class BaseEksInfraStack(core.Stack):
 
         # Create a login user name determined by a CFN input param
         login_name = core.CfnParameter(self, "jhubuser", type="String",
-            description="The username login to jupyter hub"
+            description="The username login to jupyter hub",
+            default="sparkoneks"
         )
         _hub_sa = self._my_cluster.add_service_account('jhubServiceAcct', 
             name=login_name.value_as_string,

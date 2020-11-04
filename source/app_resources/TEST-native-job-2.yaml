@@ -29,7 +29,7 @@ spec:
         # submit job
         /opt/spark/bin/spark-submit \
         --master k8s://kubernetes.default.svc:443 \
-        --deploy-mode client \
+        --deploy-mode cluster \
         --name 'Word Count' \
         --conf spark.kubernetes.allocation.batch.size=10 \
         --conf spark.kubernetes.container.image=720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest \
@@ -41,8 +41,8 @@ spec:
         --conf spark.driver.memory=1g \
         --conf spark.kubernetes.driver.request.cores=2 \
         --conf spark.kubernetes.driver.limit.cores=3 \
-        --conf spark.executor.instances=10 \
-        --conf spark.executor.memory=8g \
+        --conf spark.executor.instances=5 \
+        --conf spark.executor.memory=10g \
         --conf spark.kubernetes.executor.request.cores=2 \
         --conf spark.kubernetes.executor.limit.cores=3 \
         --conf spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem \
