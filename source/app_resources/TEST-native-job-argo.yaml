@@ -6,7 +6,9 @@ metadata:
 spec:
   serviceAccountName: nativejob
   entrypoint: spotinterruption
+  # must complete in 8h
   activeDeadlineSeconds: 28800
+  # keep workflows for 12h (43200 seconds)
   ttlStrategy:
     secondsAfterCompletion: 43200
   templates:
@@ -14,7 +16,7 @@ spec:
     inputs:
       parameters:
       - name: image
-        value: 720560070661.dkr.ecr.us-west-2.amazonaws.com/arc
+        value: <YOUR_ACCOUNT>.dkr.ecr.us-west-2.amazonaws.com/spark-k8
     script:
       image: "{{inputs.parameters.image}}"
       resources:
@@ -32,7 +34,7 @@ spec:
         --deploy-mode cluster \
         --name 'Word Count' \
         --conf spark.kubernetes.allocation.batch.size=10 \
-        --conf spark.kubernetes.container.image=720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest \
+        --conf spark.kubernetes.container.image=<YOUR_ACCOUNT>.dkr.ecr.us-west-2.amazonaws.com/spark-k8:latest \
         --conf spark.kubernetes.container.image.pullPolicy=Always \
         --conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' \
         --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml' \
@@ -41,7 +43,7 @@ spec:
         --conf spark.driver.memory=1g \
         --conf spark.kubernetes.driver.request.cores=2 \
         --conf spark.kubernetes.driver.limit.cores=3 \
-        --conf spark.executor.instances=5 \
+        --conf spark.executor.instances=20 \
         --conf spark.executor.memory=10g \
         --conf spark.kubernetes.executor.request.cores=2 \
         --conf spark.kubernetes.executor.limit.cores=3 \
@@ -49,4 +51,4 @@ spec:
         --conf spark.hadoop.fs.s3a.fast.upload=true \
         --conf spark.hadoop.fs.s3a.aws.credentials.provider=com.amazonaws.auth.WebIdentityTokenCredentialsProvider \
         wordcount.py \
-        "s3a://sparkoneks-codebucket9d8d5b72-ovk2068zqidl/output"
+        "s3a://sparkoneks-codebucket9d8d5b72-1fdsh6fsy4xol/output"

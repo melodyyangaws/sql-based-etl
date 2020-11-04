@@ -23,15 +23,15 @@ class NativeSparkStack(core.Stack):
 # # //*************************************************************************************//
 # # //************ Create service account for native Spark jobs  **************************//
 # # //***********************************************************************************//
-        _spark_sa = cluster.add_manifest('nativeSparkSA', loadYamlLocal('../app_resources/native-spark-sa.yaml'))
+        # _spark_sa = cluster.add_manifest('nativeSparkSA', loadYamlLocal('../app_resources/native-spark-sa.yaml'))
         
-        _setting = {"{{MY_SA}}": _spark_sa.service_account_name}
-        _spark_rb = cluster.add_manifest('sparkRoleBinding',
-            loadYamlReplaceVarLocal('../app_resources/native-spark-rbac.yaml',fields= _setting)
-        )
-        _spark_rb.node.add_dependency(_spark_sa)
+        # _setting = {"{{MY_SA}}": _spark_sa.service_account_name}
+        # _spark_rb = cluster.add_manifest('sparkRoleBinding',
+        #     loadYamlReplaceVarLocal('../app_resources/native-spark-rbac.yaml',fields= _setting)
+        # )
+        # _spark_rb.node.add_dependency(_spark_sa)
 
-        _setting={"{{codeBucket}}": bucket_name}
-        _spark_iam = loadYamlReplaceVarLocal('../app_resources/native-spark-iam-role.yaml',fields=_setting)
-        for statmnt in _spark_iam:
-            _spark_sa.add_to_principal_policy(iam.PolicyStatement.from_json(statmnt))
+        # _setting={"{{codeBucket}}": bucket_name}
+        # _spark_iam = loadYamlReplaceVarLocal('../app_resources/native-spark-iam-role.yaml',fields=_setting)
+        # for statmnt in _spark_iam:
+        #     _spark_sa.add_to_principal_policy(iam.PolicyStatement.from_json(statmnt))

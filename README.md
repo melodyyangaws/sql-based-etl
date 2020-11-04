@@ -35,6 +35,16 @@ Once the virtualenv is activated, you can install the required dependencies.
 $ pip install -r requirements.txt
 ```
 
+Install kubectl & jq tools
+
+```
+$ sudo curl --silent --location -o /usr/local/bin/kubectl \
+   https://amazon-eks.s3.us-west-2.amazonaws.com/1.17.11/2020-09-18/bin/linux/amd64/kubectl
+$ sudo chmod +x /usr/local/bin/kubectl
+
+$ sudo yum -y install jq
+```
+
 At this point you can now synthesize the CloudFormation template to be deployed.
 
 ```
@@ -42,14 +52,17 @@ $ cdk synth SparkOnEKS --require-approval never -c env=develop
 
 ```
 
-Finally deploy the stacks. It takes two optional parameters `jhubuser` & `datalakebucket`.
+Finally deploy the stack. It takes two optional parameters `jhubuser` & `datalakebucket`.
 
 ```
-$ cdk deploy SparkOnEKS -c env=develop --require-approval never -c env=develop
+# Without parameter intput, use default settings
+$ cdk deploy SparkOnEKS -c env=develop --require-approval never -c env=develop 
 
-# Or key in an arbitrary login username or an existing S3 bucket name, the deployment will create the login and bucket access based on the input.
+# Or key in an arbitrary username, the login will be created based on the input.
+$ cdk deploy SparkOnEKS -c env=develop --require-approval never -c env=develop --parameters jhubuser=<random_login_name>
 
-$ cdk deploy SparkOnEKS -c env=develop --require-approval never -c env=develop --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
+# Or add an existing S3 bucket allowing Jupyter Notebook to access.
+$ cdk deploy SparkOnEKS -c env=develop --require-approval never -c env=develop  --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
 
 ```
 
@@ -109,7 +122,7 @@ spec:
 
 
 
-## Submit a Spark job via command line:
+## Submit a Spark job via command line
 
 We have included a second manifest file and a Jupyter notebook, as an example of a complex Spark job to solve a real-world data problem. Let's submit it via a commmand line this time. 
 <details>
@@ -121,7 +134,7 @@ The [manifest file](/source/app_resources/scd2-job.yaml) defines where the Jupyt
 The [Jupyter notebook](/source/app_resources/scd2_job.ipynb) specifies what exactly need to do in a data pipeline.
 </details>
 
-In general, a parquet file is immutable in a Data Lake. This exmaple will demostrate how to address the challenge and process data incrermtnally. It uses `Delta Lake`, which is an open source storage layer on top of parquet file, to bring the ACID transactions to Apache Spark and modern big data workloads. In this solution, we will build up a table to meet the [Slowly Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) requirement, and prove that how easy it is when ETL with a SQL first approach implemented in a configuration-driven way.
+In general, a parquet file is immutable in a Data Lake. This exmaple will demostrate how to address the challenge and process data incrermtnally. It uses `Delta Lake`, which is an open source storage layer on top of parquet file, to bring the ACID transactions to Apache Spark and modern big data workloads. In this solution, we will build up a table to meet the [Slowly Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) requirement, and prove that how easy it is when ETL with a SQL first approach implemented in a configuration-driven architecture.
 
 
 1.Clone the project.
@@ -202,17 +215,18 @@ $ echo ARGO DASHBOARD: http://${ARGO_URL}:2746
 8.Check your job status and applications logs on the dashboard.
 ![](/images/3-argo-log.png)
 
-## Create or test Spark job in Jupyter Hub
+## Create / test Spark job in Jupyter notebook
 Apart from orchestrating Spark jobs with a declarative approach, we introduce a configuration-driven design for increasing data process productivity, by leveraging an open-source [data framework ARC](https://arc.tripl.ai/) for a SQL-centric ETL solution. We take considerations of the needs and expected skills from our customers in data, and accelerate their interaction with ETL practice in order to foster simplicity, while maximizing efficiency.
 
 1.Login to Jupyter Hub via a default username `sparkoneks` or your own one created during the dpeloyment. The default password is `supersecret!`
+
 ```
 $JHUB_URL=$(kubectl -n jupyter get ingress -o json | jq -r '.items[] | [.status.loadBalancer.ingress[0].hostname] | @tsv')
 $echo jupyter hub login: http://${JHUB_URL}:8000
 
 ```
 
-2.Start the default JupyterHub. Can use the larger dev environment to author your ETL job if you prefer.
+2.Start the default JupyterHub instance. Use the larger dev environment to author your ETL job if you prefer.
 
 ![](/images/3-jhub-login.png)
 
@@ -221,44 +235,62 @@ $echo jupyter hub login: http://${JHUB_URL}:8000
 
 ![](/images/3-jhub-open-notebook.png)
 
-4.Execute each blocks and examine the result. 
+4.Execute each blocks and observe results.
 
-NOTE: the variable ${ETL_CONF_DATALAKE_LOC} is set to a source code bucket created by the deployment, and the IAM role attached to the Jupyter Hub is restricted to the S3 bucket access only. If you would like to play with an existing bucket that contains your data, please key in the name at the deployment or simply add the bucket to the IAM role.
+NOTE: the variable `${ETL_CONF_DATALAKE_LOC}` is set to a source code bucket created by the deployment, and the IAM role attached to the Jupyter Hub is restricted to this S3 bucket. If you would like to play with an existing bucket that contains your data, please input your `datalakebucket` name as a deployment parameter or simply add the bucket ARN to the IAM role with a name prefix 'SparkOnEKS-EksClusterjhubServiceAcctRole'.
 
 
 ## Submit a native Spark job with Spot instance
-As an addition of the solution, to meet customers preference of running native Spark jobs, we wil demostrate how easy to submit a regular job in EKS.
+As an addition of the solution, to meet customer's preference of running native Spark jobs, we wil demostrate how easy to submit a job in EKS. In this case, the Jupyter notebook still can be used, as an interactive development enviroment for PySpark applications. 
 
-Tip: In Spark, driver is a single point of failure in data processing. If driver dies, all other linked components will be discarded as well. In this case, we will run the driver on a reliable managed instance, and the rest of executors will be on spot instances, to achieve the optimal performance and cost.
+In Spark, driver is a single point of failure in data processing. If driver dies, all other linked components will be discarded as well. So we will run the driver on a reliable managed EC2 instance on EKS, and the rest of executors will be on spot instances, to achieve the optimal performance and cost.
 
 1.Build a docker image and push to ECR
 Replace the region and account to your own AWS enviroment.
 
 ```
- bash deployment/pull_and_push_ecr.sh <region> <account_number> repo_name=arc build=1
+$ bash deployment/pull_and_push_ecr.sh <region> <account_number> <repo_name> <build_or_nobuild>
+ 
+
+# For example:
+$ bash deployment/pull_and_push_ecr.sh 'us-west-2' 1234567 'spark-k8' 1
 ```
 
-2.Run a dummy container to check
+2.[OPTIONAL] Run a dummy container to check source code files.
+
 ```
 $ kubectl run --generator=run-pod/v1 jump-pod --rm -i --tty --serviceaccount=nativejob --namespace=spark --image <account_number>.dkr.ecr.<region>.amazonaws.com/arc:latest sh
 
-# after login to the container, validate the pod template file
-# make sure the service account is `nativejob` and the lifecycle value is `onDemamnd` in the driver template
+# after login to the container, validate the files
+# make sure the service account is `nativejob` and the lifecycle value is `Ec2Spot` in the executor template
 sh-5.0# ls 
-sh-5.0# cat driver-pod-template.yaml
+sh-5.0# cat executor-pod-template.yaml
 sh-5.0# exit
 
 ```
-3.Submit the native Spark job
-```
-$kubectl apply -f source/app_resources/TEST-native-job.yaml
+3.Copy the S3 bucket name from the deployment output
+![](/images/4-cfn-output.png)
+
+4.Modify the Spark job manifest file `TEST-native-job.yaml` 
+change the destination S3 bucket
+![](/images/4-spark-output-s3.png)
+
+replace the account number placeholder in ECR URI.
+![](/images/4-spark-ecr.png)
+
+5.Submit the native Spark job
 
 ```
-4.Check job progress performance tuning via SparkUI
-```
-$kubectl port-forward <driver_pod_name> 4040:4040 -n spark
+$ kubectl apply -f source/app_resources/TEST-native-job.yaml
 
-# go to your web browser, key in `localhost:4040`
+```
+6.Go to SparkUI to check your job progress and resource usage
+
+```
+$ driver=$(kubectl get pod -n spark -l spark-role=driver -o json | jq -r '.items[] | [.metadata.name] | @tsv')
+$ kubectl port-forward $driver 4040:4040 -n spark
+
+# go to your web browser, type in `localhost:4040`
 
 ```
 ## Useful commands

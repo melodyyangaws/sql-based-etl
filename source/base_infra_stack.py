@@ -362,7 +362,7 @@ class BaseEksInfraStack(core.Stack):
             timeout=core.Duration.minutes(10)
         )
         argo_url.node.add_dependency(_argo_install)
-        core.CfnOutput(self,'_ARGO_URL', value='http://'+ argo_url.value + ':2746')
+        core.CfnOutput(self,'ARGO_URL', value='http://'+ argo_url.value + ':2746')
         
         jhub_url=eks.KubernetesObjectValue(self, 'jhubALB',
             cluster=self._my_cluster,
@@ -373,4 +373,6 @@ class BaseEksInfraStack(core.Stack):
             timeout=core.Duration.minutes(10)
         )
         jhub_url.node.add_dependency(_expose_hub)
-        core.CfnOutput(self,'_JUPYTER_URL', value='http://'+ jhub_url.value + ':8000')
+        core.CfnOutput(self,'JUPYTER_URL', value='http://'+ jhub_url.value + ':8000')
+
+        core.CfnOutput(self,'CODE_BUCKET', value=code_bucket)
