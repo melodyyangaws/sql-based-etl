@@ -35,6 +35,15 @@ Once the virtualenv is activated, you can install the required dependencies.
 $ pip install -r requirements.txt
 ```
 
+Install kubectl
+
+```
+sudo curl --silent --location -o /usr/local/bin/kubectl \
+   https://amazon-eks.s3.us-west-2.amazonaws.com/1.17.11/2020-09-18/bin/linux/amd64/kubectl
+
+sudo chmod +x /usr/local/bin/kubectl
+```
+
 At this point you can now synthesize the CloudFormation template to be deployed.
 
 ```
