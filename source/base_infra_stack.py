@@ -39,7 +39,7 @@ class BaseEksInfraStack(core.Stack):
             destination_bucket=self._artifact_bucket,
         )
 
-        bucket_name = self._artifact_bucket.bucket_name
+        code_bucket = self._artifact_bucket.bucket_name
 
 # //**********************************************************************//
 # //******************* EKS CLUSTER WITH NO NODE GROUP *******************//
@@ -134,8 +134,16 @@ class BaseEksInfraStack(core.Stack):
         _etl_k8s_rb.node.add_dependency(_etl_sa)
 
         # Associate AWS IAM role to K8s Service Account
-        _etl_bucket={"{{codeBucket}}": bucket_name}
-        _etl_s3_statements = loadYamlReplaceVarLocal('../app_resources/etl-iam-role.yaml', fields=_etl_bucket)
+        datalake_bucket = core.CfnParameter(self, "datalakebucket", type="String",
+            description="Your existing S3 bucket name to be accessed by Jupyter Notebook and ETL job",
+            default=""
+        )
+        _etl_bucket= code_bucket if datalake_bucket =="" else datalake_bucket.value_as_string
+        _etl_s3_statements = loadYamlReplaceVarLocal('../app_resources/etl-iam-role.yaml', 
+            fields={
+                "{{codeBucket}}": _etl_bucket
+                }
+        )
         for statmnt in _etl_s3_statements:
             _etl_sa.add_to_principal_policy(iam.PolicyStatement.from_json(statmnt))
 
@@ -278,7 +286,11 @@ class BaseEksInfraStack(core.Stack):
             version='0.10.2',
             namespace='jupyter',
             create_namespace=True,
-            values=loadYamlReplaceVarLocal('../app_resources/jupyter-config.yaml', fields=_etl_bucket)
+            values=loadYamlReplaceVarLocal('../app_resources/jupyter-config.yaml', 
+                fields={
+                    "{{codeBucket}}": _etl_bucket
+                    }
+                )
         )
         _expose_hub = self._my_cluster.add_manifest('JHubIngress',
             loadYamlLocal('../app_resources/jupyter-ingress.yaml')
@@ -318,7 +330,7 @@ class BaseEksInfraStack(core.Stack):
         )
         _spark_rb.node.add_dependency(_spark_sa)
 
-        _setting={"{{codeBucket}}": bucket_name}
+        _setting={"{{codeBucket}}": code_bucket}
         _spark_iam = loadYamlReplaceVarLocal('../app_resources/native-spark-iam-role.yaml',fields=_setting)
         for statmnt in _spark_iam:
             _spark_sa.add_to_principal_policy(iam.PolicyStatement.from_json(statmnt))

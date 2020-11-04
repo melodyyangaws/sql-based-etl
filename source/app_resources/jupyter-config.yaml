@@ -3,7 +3,7 @@ hub:
     type: sqlite-memory
   extraConfig:
     overrideServiceAccount: |
-      # this script allows serviceAccountName to use dynamic naming based on {username}"
+      # this script allows serviceAccountName to use dynamic naming based on {unescaped_username}"
       async def override_service_account_hook(kube_spawner):
         if kube_spawner.service_account is not None:
           kube_spawner.service_account = kube_spawner._expand_user_properties(kube_spawner.service_account)

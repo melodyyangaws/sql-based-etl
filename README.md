@@ -42,14 +42,14 @@ $ cdk synth SparkOnEKS --require-approval never -c env=develop
 
 ```
 
-Finally deploy the stacks. It takes one input parameter `jupyer_login_name`, which has a default value `sparkoneks`.
+Finally deploy the stacks. It takes two optional parameters `jhubuser` & `datalakebucket`.
 
 ```
 $ cdk deploy SparkOnEKS -c env=develop --require-approval never -c env=develop
 
-# Or key in your own username, the deployment will create the login based on your input.
+# Or key in an arbitrary login username or an existing S3 bucket name, the deployment will create the login and bucket access based on the input.
 
-$ cdk deploy SparkOnEKS -c env=develop --require-approval never -c env=develop --parameters jhubusername=<jupyer_login_name>
+$ cdk deploy SparkOnEKS -c env=develop --require-approval never -c env=develop --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
 
 ```
 
@@ -223,7 +223,7 @@ $echo jupyter hub login: http://${JHUB_URL}:8000
 
 4.Execute each blocks and examine the result. 
 
-NOTE: the variable ${ETL_CONF_DATALAKE_LOC} is set to a source code bucket created by the deployment, and the IAM role attached to the Jupyter Hub is restricted to the S3 bucket access only. If you would like to play with an existing bucket that contains your data, please key in the name at the deployment.
+NOTE: the variable ${ETL_CONF_DATALAKE_LOC} is set to a source code bucket created by the deployment, and the IAM role attached to the Jupyter Hub is restricted to the S3 bucket access only. If you would like to play with an existing bucket that contains your data, please key in the name at the deployment or simply add the bucket to the IAM role.
 
 
 ## Submit a native Spark job with Spot instance

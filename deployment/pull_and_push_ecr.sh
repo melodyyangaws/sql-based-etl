@@ -3,8 +3,9 @@
 
 if [ $# -eq 0 ]; then
     echo "No argument is supplied. Skip the ECR step."
-	echo "USAGE1: pull_and_push_ecr.sh region=region AcctName=account repo_name=arc build=1"
-	echo "USAGE2: pull_and_push_ecr.sh region=region AcctName=account repo_name=arc-jupyter"
+	echo "USAGE: pull_and_push_ecr.sh <region> <acct_name> <repo_name> <optional:build the image or not>"
+	echo "EXAMPLE1: pull_and_push_ecr.sh 'us-west-2' 123456789 'arc' 1 "
+	echo "EXAMPLE2: pull_and_push_ecr.sh 'us-west-2' 123456789 'arc-jupyter'"
 else
 
 	export REGION=${1}
@@ -36,6 +37,6 @@ else
 fi	
 
 echo "Setting up deployment files"
-sed -i.bak "s/\ACCOUNTNUMBER\b/$ACCOUNTNUMBER/" deployment/environment.cfg
-sed -i.bak "s/\REGION\b/$REGION/" deployment/environment.cfg
+sed -i.bak "s/ACCOUNTNUMBER/$ACCOUNTNUMBER/" deployment/environment.cfg
+sed -i.bak "s/REGION/$REGION/" deployment/environment.cfg
 find . -type f -name "*.bak" -delete
