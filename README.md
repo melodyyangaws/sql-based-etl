@@ -45,7 +45,7 @@ $ cdk synth SparkOnEKS --require-approval never -c env=develop
 Finally deploy the stacks.
 
 ```
-$ cdk deploy SparkOnEKS -c env=develop --require-approval never -c env=develop --parameters jhubusername=<jupyer_login_name>
+$ cdk deploy SparkOnEKS -c env=develop --require-approval never -c env=develop --parameters jhubuser=jadmin
 
 ```
 
