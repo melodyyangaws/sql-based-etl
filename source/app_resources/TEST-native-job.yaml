@@ -4,7 +4,7 @@ metadata:
   name: test-spot
   namespace: spark
 spec:
-  backoffLimit: 5
+  # backoffLimit: 5
   template:
     spec:
       serviceAccountName: nativejob
@@ -17,7 +17,7 @@ spec:
         "-c",
         "/opt/spark/bin/spark-submit \
         --master k8s://kubernetes.default.svc:443 \
-        --deploy-mode client \
+        --deploy-mode cluster \
         --name 'Word Count' \  
         --conf spark.executor.instances=10 \
         --conf spark.kubernetes.allocation.batch.size=10 \ 
@@ -35,6 +35,6 @@ spec:
         --conf spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem \
         --conf spark.hadoop.fs.s3a.fast.upload=true \
         --conf spark.hadoop.fs.s3a.aws.credentials.provider=com.amazonaws.auth.WebIdentityTokenCredentialsProvider \
-        wordcount.py \
+        \"s3a://sparkoneks-codebucket9d8d5b72-1fdsh6fsy4xol/wordcount.py\" \
         \"s3a://sparkoneks-codebucket9d8d5b72-1fdsh6fsy4xol/output\""
         ]
