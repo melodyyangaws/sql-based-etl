@@ -15,3 +15,6 @@ spec:
                 operator: In 
                 values: 
                 - Ec2Spot
+              - key: "topology.kubernetes.io/zone"
+                operator: In
+                values: ["us-west-2b"]

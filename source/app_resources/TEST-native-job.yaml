@@ -19,13 +19,13 @@ spec:
         --master k8s://kubernetes.default.svc:443 \
         --deploy-mode cluster \
         --name 'Word Count' \  
-        --conf spark.executor.instances=10 \
+        --conf spark.executor.instances=5 \
         --conf spark.kubernetes.allocation.batch.size=10 \ 
         --conf spark.kubernetes.driver.request.cores=2 \
-        --conf spark.kubernetes.driver.limit.cores=4 \
+        --conf spark.kubernetes.driver.limit.cores=3 \
         --conf spark.executor.memory=10g \
         --conf spark.kubernetes.executor.request.cores=2 \
-        --conf spark.kubernetes.executor.limit.cores=4 \
+        --conf spark.kubernetes.executor.limit.cores=3 \
         --conf spark.kubernetes.container.image=720560070661.dkr.ecr.us-west-2.amazonaws.com/spark-k8:latest \
         --conf spark.kubernetes.container.image.pullPolicy=Always \
         --conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' \
@@ -35,6 +35,6 @@ spec:
         --conf spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem \
         --conf spark.hadoop.fs.s3a.fast.upload=true \
         --conf spark.hadoop.fs.s3a.aws.credentials.provider=com.amazonaws.auth.WebIdentityTokenCredentialsProvider \
-        \"s3a://sparkoneks-codebucket9d8d5b72-1fdsh6fsy4xol/wordcount.py\" \
-        \"s3a://sparkoneks-codebucket9d8d5b72-1fdsh6fsy4xol/output\""
+        wordcount.py \
+        \"s3a://<S3_BUCKET>/output\""
         ]

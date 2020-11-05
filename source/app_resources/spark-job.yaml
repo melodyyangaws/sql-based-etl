@@ -28,8 +28,8 @@ spec:
             - name: jobId
               value: nyctaxi 
             - name: image
-              value: ghcr.io/tripl-ai/arc:latest
-            # in a jupyter notebook, each stage associates to env, eg.test & prod. Could skip a stage when env mismatches 
+              value: 720560070661.dkr.ecr.us-west-2.amazonaws.com/spark-k8:latest
+            # in Jupyter notebook, each stage associates to an env, eg.test.A stage could be skipped when env mismatches 
             - name: environment
               value: test    
             - name: tags
@@ -38,3 +38,5 @@ spec:
               value: https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes/nyctaxi.ipynb
             - name: parameters
               value: "--ETL_CONF_DATA_URL=s3a://nyc-tlc/trip*data --ETL_CONF_JOB_URL=https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes"
+            - name: sparkConf
+              value: "--conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml'" 

@@ -146,38 +146,16 @@ $ git clone https://github.com/melodyyangaws/sql-based-etl.git
 $ cd sql-based-etl
 
 ```
-2.Upload the sample [Jupyter notebook](/source/app_resources/scd2_job.ipynb) to your own S3 bucket.
+2.Locate the job manifest file at `source/app_resources/scd2_job.yaml`, replace the S3 bucket name in `ConfigURI` & `ETL_CONF_DATALAKE_LOC` by your code bucket name from the deployment output.
+![](/images/4-cfn-output.png)
 
-Note: The default region in the project is `Oregon (us-west-2)`. To avoid unnesscerry data transfer fee, ensure your bucket is in the same region as your EKS cluster
+![](/images/3-scd-bucket.png)
 
-```
-$ aws s3 cp /source/app_resources/scd2_job.ipynb s3://<your_bucket_name>/<your_path>
-
-```
-3.By using the fine-grained [IAM roles for service accounts (IRSA)](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html) feature in Amazon EKS, modify the existing IAM role and allow the job access to your S3 bucket.
-
-```
-# Replace the bucket name in the file by yours
-$ vi source/app_resources/etl-iam-role.yaml
-
-# Redeploy it
-$ cdk deploy CreateEKSCluster --require-approval never -c env=develop
-
-```
-<details>
-<summary>Or directly change the IAM role on AWS console</summary> 
-find the role name prefix `CreateEKSCluster-EksClusterETLSaRole` on the IAM console, update it accordingly.
-
-<img src="/images/4-change-s3-iam.png" width="350" title="changerole">
-</details>
-
-4.[Install](https://docs.aws.amazon.com/eks/latest/userguide/install-kubectl.html) a Kubernetes command tool `kubectl` with version 1.18.
-
-5.Copy the `aws eks update-kubeconfig...` line from your infrastructure deployment output to the command line terminal, so you can connect to the Amazon EKS cluster deployed earlier. Something like this:
+3.Copy the `aws eks update-kubeconfig...` line from your infrastructure deployment output to the command line terminal, so you can connect to the Amazon EKS cluster deployed earlier. Something like this:
 
 ![](/images/0-eks-config.png)
 
-6.Submit the job to Argo orchestrator:
+4.Submit the job to Argo orchestrator:
 
 ```
 $ kubectl apply -f source/app_resources/scd2-job.yaml
@@ -205,14 +183,14 @@ $ argo delete scd2-job-<random_string> -n spark
 ![](/images/2-argo-scdjob.png)
 </details>
 
-7.Run the following to get your ARGO dashboard URL, then copy & paste to your web browser.
+5.Run the following to get your ARGO dashboard URL, then copy & paste to your web browser. Or simply get the URL from your deployment output.
 
 ```
 $ ARGO_URL=$(kubectl -n argo get ingress argo-server --template "{{ range (index .status.loadBalancer.ingress 0) }}{{ . }}{{ end }}")
 $ echo ARGO DASHBOARD: http://${ARGO_URL}:2746
 ```
 
-8.Check your job status and applications logs on the dashboard.
+6.Check your job status and applications logs on the dashboard.
 ![](/images/3-argo-log.png)
 
 ## Create / test Spark job in Jupyter notebook

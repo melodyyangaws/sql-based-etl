@@ -51,7 +51,7 @@ spec:
         hostname -I
 
         # submit job
-        bin/spark-submit \
+        /opt/spark/bin/spark-submit \
         --master k8s://kubernetes.default.svc:443 \
         --deploy-mode client \
         --class ai.tripl.arc.ARC \
@@ -138,7 +138,7 @@ spec:
         hostname -I
 
         # submit job
-        bin/spark-submit \
+        /opt/spark/bin/spark-submit \
         --master k8s://kubernetes.default.svc:443 \
         --deploy-mode client \
         --class ai.tripl.arc.ARC \
@@ -225,7 +225,7 @@ spec:
         hostname -I
 
         # submit job
-        bin/spark-submit \
+        /opt/spark/bin/spark-submit \
         --master k8s://kubernetes.default.svc:443 \
         --deploy-mode client \
         --class ai.tripl.arc.ARC \
@@ -315,7 +315,7 @@ spec:
 
         # submit job
         # driver memory is set at 90% of executorMemory
-        bin/spark-submit \
+        /opt/spark/bin/spark-submit \
         --master local[{{inputs.parameters.executorCores}}] \
         --driver-memory $(({{inputs.parameters.executorMemory}} * 1024 * 90/100))m \
         --driver-java-options "-XX:+UseG1GC" \
