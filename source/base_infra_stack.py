@@ -138,7 +138,7 @@ class BaseEksInfraStack(core.Stack):
             description="Your existing S3 bucket name to be accessed by Jupyter Notebook and ETL job",
             default=""
         )
-        _etl_bucket= code_bucket if datalake_bucket =="" else datalake_bucket.value_as_string
+        _etl_bucket = code_bucket if datalake_bucket.value_as_string=="" else datalake_bucket.value_as_string
         _etl_s3_statements = loadYamlReplaceVarLocal('../app_resources/etl-iam-role.yaml', 
             fields={
                 "{{codeBucket}}": _etl_bucket

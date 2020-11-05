@@ -16,7 +16,7 @@ spec:
     inputs:
       parameters:
       - name: image
-        value: <YOUR_ACCOUNT>.dkr.ecr.us-west-2.amazonaws.com/spark-k8
+        value: {{ACCOUNTNUMBER}}.dkr.ecr.us-west-2.amazonaws.com/arc:latest
     script:
       image: "{{inputs.parameters.image}}"
       resources:
@@ -34,7 +34,7 @@ spec:
         --deploy-mode cluster \
         --name 'Word Count' \
         --conf spark.kubernetes.allocation.batch.size=10 \
-        --conf spark.kubernetes.container.image=<YOUR_ACCOUNT>.dkr.ecr.us-west-2.amazonaws.com/spark-k8:latest \
+        --conf spark.kubernetes.container.image={{inputs.parameters.image}}  \
         --conf spark.kubernetes.container.image.pullPolicy=Always \
         --conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' \
         --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml' \
@@ -43,7 +43,7 @@ spec:
         --conf spark.driver.memory=1g \
         --conf spark.kubernetes.driver.request.cores=2 \
         --conf spark.kubernetes.driver.limit.cores=3 \
-        --conf spark.executor.instances=20 \
+        --conf spark.executor.instances=5 \
         --conf spark.executor.memory=10g \
         --conf spark.kubernetes.executor.request.cores=2 \
         --conf spark.kubernetes.executor.limit.cores=3 \

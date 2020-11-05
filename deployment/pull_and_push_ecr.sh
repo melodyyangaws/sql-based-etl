@@ -37,6 +37,10 @@ else
 fi	
 
 echo "Setting up deployment files"
-sed -i.bak "s/ACCOUNTNUMBER/$ACCOUNTNUMBER/" deployment/environment.cfg
-sed -i.bak "s/REGION/$REGION/" deployment/environment.cfg
+sed -i.bak "s/{{ACCOUNTNUMBER}}/$ACCOUNTNUMBER/" deployment/environment.cfg
+sed -i.bak "s/{{REGION}}/$REGION/" deployment/environment.cfg
+
+echo "Replace account number in job configuration files"
+sed -i.bak "s/{{ACCOUNTNUMBER}}/$ACCOUNTNUMBER/" source/app_resources/*-job.yaml
+
 find . -type f -name "*.bak" -delete

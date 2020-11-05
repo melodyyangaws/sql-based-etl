@@ -8,10 +8,10 @@ metadata:
 spec:
   serviceAccountName: arcjob
   entrypoint: nyctaxi
-  # must complete in 8h (28,800 seconds)
+  # must complete in 8h
   activeDeadlineSeconds: 28800
-  # keep workflows for 12h (43,200 seconds)
   ttlStrategy:
+    # keep workflows for 12h
     secondsAfterCompletion: 43200
     SecondsAfterFailure: 43200
   templates:
@@ -28,7 +28,7 @@ spec:
             - name: jobId
               value: nyctaxi 
             - name: image
-              value: 720560070661.dkr.ecr.us-west-2.amazonaws.com/spark-k8:latest
+              value: {{ACCOUNTNUMBER}}.dkr.ecr.us-west-2.amazonaws.com/arc:latest
             # in Jupyter notebook, each stage associates to an env, eg.test.A stage could be skipped when env mismatches 
             - name: environment
               value: test    
@@ -38,5 +38,3 @@ spec:
               value: https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes/nyctaxi.ipynb
             - name: parameters
               value: "--ETL_CONF_DATA_URL=s3a://nyc-tlc/trip*data --ETL_CONF_JOB_URL=https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes"
-            - name: sparkConf
-              value: "--conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml'" 

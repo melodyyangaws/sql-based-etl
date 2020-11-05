@@ -2,17 +2,17 @@ apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
   # need it if using ArgoCLI
-  generateName: scd2-job-
+  # generateName: scd2-job-
   namespace: spark
   ## need it if use kubectl
-  # name: scd2-job
+  name: scd2-job
 spec:
   serviceAccountName: arcjob
   entrypoint: scd2-load
   ## must complete in 8h
   activeDeadlineSeconds: 28800
-  # keep workflows for 12h (43,200 seconds)
   ttlStrategy:
+    # keep workflows for 12h
     secondsAfterCompletion: 43200
     SecondsAfterFailure: 43200
   templates:
@@ -29,7 +29,7 @@ spec:
             - name: jobId
               value: scd2 
             - name: image
-              value: ghcr.io/tripl-ai/arc:latest
+              value: {{ACCOUNTNUMBER}}.dkr.ecr.us-west-2.amazonaws.com/arc:latest
             ## in the sample jupyter notebook, all stages will be run in test and prod only.
             - name: environment
               value: test   
@@ -37,6 +37,8 @@ spec:
               value: "project=sqlbasedetl, owner=myang, costcenter=66666"     
             # Refer to the jupyter notebook from deployed to code repo or a S3 bucket  
             - name: configUri
-              value: "s3a://<S3_BUCKET>/job/scd2_job.ipynb"
+              value: "s3a://sparkoneks-codebucket/job/scd2_job.ipynb"
             - name: parameters
-              value: "--ETL_CONF_DATALAKE_LOC=<S3_BUCKET>"
+              value: "--ETL_CONF_DATALAKE_LOC=sparkoneks-codebucket"
+            - name: sparkConf
+              value: "--conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml'"   

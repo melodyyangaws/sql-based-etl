@@ -86,7 +86,7 @@ spec:
         --etl.config.uri={{inputs.parameters.configUri}} \
         --etl.config.job.id={{inputs.parameters.jobId}} \
         --etl.config.environment={{inputs.parameters.environment}} \
-        --etl.config.ignoreEnvironments=true \
+        --etl.config.ignoreEnvironments=false \
         --etl.config.tags="service=arc workflowId={{workflow.uid}} pod={{pod.name}} serviceAccount={{workflow.serviceAccountName}} namespace={{workflow.namespace}} {{inputs.parameters.tags}}" \
         --ETL_CONF_EPOCH=$(date '+%s') --ETL_CONF_CURRENT_TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S') \
         {{inputs.parameters.parameters}}
@@ -173,7 +173,7 @@ spec:
         --etl.config.uri={{inputs.parameters.configUri}} \
         --etl.config.job.id={{inputs.parameters.jobId}} \
         --etl.config.environment={{inputs.parameters.environment}} \
-        --etl.config.ignoreEnvironments=true \
+        --etl.config.ignoreEnvironments=false \
         --etl.config.tags="service=arc workflowId={{workflow.uid}} pod={{pod.name}} serviceAccount={{workflow.serviceAccountName}} namespace={{workflow.namespace}} {{inputs.parameters.tags}}" \
         --ETL_CONF_EPOCH=$(date '+%s') --ETL_CONF_CURRENT_TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S') \
         {{inputs.parameters.parameters}}
@@ -260,7 +260,7 @@ spec:
         --etl.config.uri={{inputs.parameters.configUri}} \
         --etl.config.job.id={{inputs.parameters.jobId}} \
         --etl.config.environment={{inputs.parameters.environment}} \
-        --etl.config.ignoreEnvironments=true \
+        --etl.config.ignoreEnvironments=false \
         --etl.config.tags="service=arc workflowId={{workflow.uid}} pod={{pod.name}} serviceAccount={{workflow.serviceAccountName}} namespace={{workflow.namespace}} {{inputs.parameters.tags}}" \
         --ETL_CONF_EPOCH=$(date '+%s') --ETL_CONF_CURRENT_TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S') \
         {{inputs.parameters.parameters}}
@@ -332,7 +332,7 @@ spec:
         --etl.config.uri={{inputs.parameters.configUri}} \
         --etl.config.job.id={{inputs.parameters.jobId}} \
         --etl.config.environment={{inputs.parameters.environment}} \
-        --etl.config.ignoreEnvironments=true \
+        --etl.config.ignoreEnvironments=fales \
         --etl.config.tags="service=arc workflowId={{workflow.uid}} pod={{pod.name}} serviceAccount={{workflow.serviceAccountName}} namespace={{workflow.namespace}} {{inputs.parameters.tags}}" \
         --ETL_CONF_EPOCH=$(date '+%s') --ETL_CONF_CURRENT_TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S') \
         {{inputs.parameters.parameters}}
