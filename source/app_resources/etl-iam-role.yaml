@@ -21,9 +21,10 @@
     - kms:Encrypt
     - kms:GenerateDataKey*
     - athena:StartQueryExecution
-    - athena:GetQueryExecution,
+    - athena:GetQueryExecution
+    - athena:GetQueryResults
     - glue:CreateTable
-    - glue:CreateDatabase,
+    - glue:CreateDatabase
     - glue:CreatePartition
     - glue:UpdatePartition
     Resource:

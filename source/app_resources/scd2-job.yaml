@@ -29,13 +29,13 @@ spec:
             - name: jobId
               value: scd2 
             - name: image
-              value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
+              value: 720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest
             ## in the sample jupyter notebook, all stages will be run in test and prod only.
             - name: environment
               value: test   
             - name: tags
               value: "project=sqlbasedetl, owner=myang, costcenter=66666"     
-            # Refer to the jupyter notebook from deployed to code repo or a S3 bucket  
+            # Refer to the jupyter notebook
             - name: configUri
               value: "s3a://sparkoneks-codebucket9d8d5b72-1fdsh6fsy4xol/job/scd2_job.ipynb"
             - name: parameters
