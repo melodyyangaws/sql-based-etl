@@ -24,7 +24,7 @@ class DeploymentPipeline(core.Stack):
         build_project = codebuild.PipelineProject(
             self, "BuildProject",
             role=codebuild_role,
-            build_spec=codebuild.BuildSpec.from_source_filename("aws-app-resources/buildspec.yml")
+            build_spec=codebuild.BuildSpec.from_source_filename("../../buildspec.yml")
         )
 
         # Create CodePipeline
@@ -39,10 +39,10 @@ class DeploymentPipeline(core.Stack):
         pipeline.add_stage(
             stage_name="Source",
             actions=[
-                codepipeline_actions.GitHubSourceAction(
+                codepipeline_actions.CodeCommitSourceAction(
                     action_name="SourceCodeRepo",
-                    owner="jasonumiker",
-                    repo="k8s-plus-aws-gitops",
+                    owner="meloyang",
+                    repo="sql-based-etl-on-eks",
                     output=artifact,
                     oauth_token=core.SecretValue.secrets_manager('github-token')
                 )

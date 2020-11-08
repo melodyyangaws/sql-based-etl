@@ -29,7 +29,7 @@ spec:
             - name: jobId
               value: scd2 
             - name: image
-              value: {{ACCOUNTNUMBER}}.dkr.ecr.us-west-2.amazonaws.com/arc:latest
+              value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
             ## in the sample jupyter notebook, all stages will be run in test and prod only.
             - name: environment
               value: test   
@@ -37,8 +37,8 @@ spec:
               value: "project=sqlbasedetl, owner=myang, costcenter=66666"     
             # Refer to the jupyter notebook from deployed to code repo or a S3 bucket  
             - name: configUri
-              value: "s3a://sparkoneks-codebucket/job/scd2_job.ipynb"
+              value: "s3a://sparkoneks-codebucket9d8d5b72-1fdsh6fsy4xol/job/scd2_job.ipynb"
             - name: parameters
-              value: "--ETL_CONF_DATALAKE_LOC=sparkoneks-codebucket"
+              value: "--ETL_CONF_DATALAKE_LOC=sparkoneks-codebucket9d8d5b72-1fdsh6fsy4xol"
             - name: sparkConf
               value: "--conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml'"   

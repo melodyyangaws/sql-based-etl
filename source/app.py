@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 from aws_cdk import core
-from lib.config_map import ConfigSectionMap
-from base_infra_stack import BaseEksInfraStack
-from native_spark_stack import NativeSparkStack
+from bin.config_map import ConfigSectionMap
+from lib.base_infra_stack import BaseEksInfraStack
+from lib.native_spark_stack import NativeSparkStack
 
 app = core.App()
 

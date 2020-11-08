@@ -10,46 +10,29 @@ phases:
       - pip3 install .
   pre_build:
     commands:
+      - export REGION=$(aws configure get region)
+      - export ACCOUNTNUMBER=$(aws sts get-caller-identity --query Account --output text)
       - echo Logging in to Amazon ECR...
-      - aws --version
-      - $(aws ecr get-login --region $AWS_DEFAULT_REGION --no-include-email)
-      - ARC_REPOSITORY_URI=${ACCOUNTNUMBER}.dkr.ecr.${REGION}.amazonaws.com/arc
-      - JHUB_REPOSITORY_URI=${ACCOUNTNUMBER}.dkr.ecr.us-east-1.amazonaws.com/arc-jupyter
-      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - IMAGE_TAG=${COMMIT_HASH:=latest}
-
-      - echo "Installing dependencies and executing unit tests - `pwd`"
-      - cd deployment
-      - chmod +x ./pull_and_push_ecr.sh && ./run-all-tests.sh
+      - bash deployment/pull_and_push_ecr.sh $REGION $ACCOUNTNUMBER 'arc' 1 
+      - bash deployment/pull_and_push_ecr.sh $REGION $ACCOUNTNUMBER 'arc-jupyter'
       - echo "Docker images pull and push are completed `date`"
   build:
     commands:
       - echo Build started on `date`
       - cd deployment
       - echo "Starting deploy docker images `date` in `pwd`"
-      - export REGION=$(aws configure get region)
-      - export ACCOUNTNUMBER=$(aws sts get-caller-identity --query Account --output text)
-      # - chmod +x ./pull_and_push_ecr.sh && ./pull_and_push_ecr.sh
-      # - echo "Images are pushed `date`"
       - cd ../
       - echo "Starting deploy CDK `date` in `pwd`"
-      - pip install -r requirements.txt
-      - cdk deploy -c env=develop
+      - pip install -r source/requirements.txt
+      - cdk synth SparkOnEKS --require-approval never -c env=develop
       - echo "CDK deployment is completed `date`"
   post_build:
     commands:
       - echo Build completed on `date`
-      - echo Pushing the Docker images...
-      - docker push $ARC_REPOSITORY_URI:latest
-      - docker push $ARC_REPOSITORY_URI:$IMAGE_TAG
-      - docker push $JHUB_REPOSITORY_URI:latest
-      - docker push $JHUB_REPOSITORY_URI:$IMAGE_TAG
-
       - echo "Retrieving next stage buildspec `date` in `pwd`"
       - aws s3 cp s3://solutions-build-assets/changelog-spec.yml ../buildspec.yml
       - echo "Retrieving next stage buildspec complete"
       - echo "Post build completed on `date`"
-
 
 artifacts:
   files:

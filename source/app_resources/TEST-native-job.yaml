@@ -10,7 +10,7 @@ spec:
       restartPolicy: Never 
       containers:
       - name: word-count
-        image: {{ACCOUNTNUMBER}}.dkr.ecr.us-west-2.amazonaws.com/arc:latest
+        image: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
         command: [
         "/bin/sh",
         "-c",
@@ -25,7 +25,7 @@ spec:
         --conf spark.executor.memory=10g \
         --conf spark.kubernetes.executor.request.cores=2 \
         --conf spark.kubernetes.executor.limit.cores=3 \
-        --conf spark.kubernetes.container.image=720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest \
+        --conf spark.kubernetes.container.image={{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest \
         --conf spark.kubernetes.container.image.pullPolicy=Always \
         --conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' \
         --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml' \

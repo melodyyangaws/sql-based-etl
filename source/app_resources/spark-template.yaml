@@ -100,7 +100,7 @@ spec:
       - name: jobId
       - name: configUri
       - name: image
-        value: 720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest
+        value: ghcr.io/tripl-ai/arc:latest
       - name: pullPolicy
         value: "Always"    
       - name: executorInstances

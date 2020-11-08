@@ -3,9 +3,9 @@ CREATE EXTERNAL TABLE IF NOT EXISTS ${table_name}(
   ,`name` string
   ,`email` string
   ,`state` string
-  ,`valid_from` string
-  ,`valid_to` string
-  ,`iscurrent` boolean
+  ,`valid_from` timestamp
+  ,`valid_to` timestamp
+  ,`iscurrent` tinyint
   ,`checksum` string
 )
 ROW FORMAT SERDE 'org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe'

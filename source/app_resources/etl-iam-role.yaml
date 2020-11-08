@@ -1,4 +1,3 @@
-
   - Effect: Allow
     Action: s3:ListBucket
     Resource:
@@ -21,9 +20,11 @@
     - kms:Decrypt
     - kms:Encrypt
     - kms:GenerateDataKey*
+    - athena:StartQueryExecution
+    - athena:GetQueryExecution,
+    - glue:CreateTable
+    - glue:CreateDatabase,
+    - glue:CreatePartition
+    - glue:UpdatePartition
     Resource:
     - '*'  
-  - Effect: Allow
-    Action: secretsmanager:GetSecretValue
-    Resource: 
-    - '*'

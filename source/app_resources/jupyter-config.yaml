@@ -34,7 +34,7 @@ singleuser:
   nodeSelector:
     lifecycle: Ec2Spot
   image:
-    name: ghcr.io/tripl-ai/arc-jupyter
+    name: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc-jupyter
     tag: latest
     pullPolicy: IfNotPresent
   lifecycle_hooks:
@@ -50,12 +50,6 @@ singleuser:
   memory:
     guarantee: 4G
     limit: 4G
-  # extraEnvSecrets:
-  #   - name: extraenv_name1
-  #     valueFrom:
-  #       secretKeyRef:
-  #         name: name-secrets1
-  #         key: ATHENA_ETL_CONF_S3A_ACCESS_KEY
   extraEnv:
     JAVA_OPTS: -Xmx4G
     ETL_CONF_DATALAKE_LOC: {{codeBucket}}  

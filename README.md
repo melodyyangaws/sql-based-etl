@@ -4,7 +4,7 @@ This is a project developed with Python CDK for the solution SO0141 - SQL based 
 
 ## Deploy Infrastructure
 
-Clone the project
+Clone the project.
 
 ```
 $ git clone https://github.com/melodyyangaws/sql-based-etl.git
@@ -12,9 +12,8 @@ $ cd sql-based-etl
 
 ```
 
-Replace the `region` & `account_number` to your AWS enviroment. Build an Arc docker image and push to ECR. arc-jupyter doesn't need image build, just pull from public and push to ECR. 
-
-As a result, the {{account_number}} in `deployment/environment.cfg` and sample job config files under `source/app_resources/` will be updated to your account.
+Build docker image and push to ECR via a bash script. 
+arc-jupyter doesn't need image build, just pull it from public and push to ECR. The {{account_number}} in `deployment/environment.cfg` and sample job config files under `source/app_resources/` will be updated to your account.
 
 ```
 $ bash deployment/pull_and_push_ecr.sh <region> <account_number> <ecr_repo_name> <build_or_not>
@@ -44,7 +43,7 @@ $ source .env/bin/activate
 Once the virtualenv is activated, you can install the required dependencies.
 
 ```
-$ pip install -r requirements.txt
+$ pip install -r source/requirements.txt
 ```
 
 Install kubectl & jq tools
@@ -173,7 +172,7 @@ $ kubectl apply -f source/app_resources/scd2-job.yaml
 $ kubectl delete -f source/app_resources/scd2-job.yaml
 $ kubectl apply -f source/app_resources/scd2-job.yaml
 ```
-![](/images/1-submit-scdjob.png)
+
 <details>
 <summary> 
 Alternatively, submit the same job without deletion via [Argo CLI](https://www.eksworkshop.com/advanced/410_batch/install/). 
@@ -188,7 +187,7 @@ $ argo delete scd2-job-<random_string> -n spark
 
 ```
 
-![](/images/2-comment-out.png)
+![](/images/2-comment-out.png | width=80)
 ![](/images/2-argo-scdjob.png)
 </details>
 

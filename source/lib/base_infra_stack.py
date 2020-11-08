@@ -8,9 +8,9 @@ from aws_cdk import (
     aws_s3_deployment as s3deploy
 )
 
-from lib.network_sg import NetworkSgConst
-from lib.iam_roles import IamConst
-from lib.manifest_reader import *
+from bin.network_sg import NetworkSgConst
+from bin.iam_roles import IamConst
+from bin.manifest_reader import *
 
 
 class BaseEksInfraStack(core.Stack):
@@ -341,7 +341,7 @@ class BaseEksInfraStack(core.Stack):
 # # # # 
 # # #         # # create a cloud9 ec2 environment in a new VPC
 # # #         # c9env = cloud9.Ec2Environment(self, 'Cloud9Env',
-# # #         #     vpc=NetworkSgConst.vpc,
+# # #         #     vpc=eks_vpc,
 # # #         #     instance_type=ec2.InstanceType('t3.small'),
 # # #         #     subnet_selection=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PUBLIC)
 # # #         # )

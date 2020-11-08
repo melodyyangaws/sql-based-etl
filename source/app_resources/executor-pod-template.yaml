@@ -15,12 +15,3 @@ spec:
                 operator: In 
                 values: 
                 - Ec2Spot
-      podAffinity:          
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                - key: lifecycle
-                  operator: In
-                  values:
-                  - Ec2Spot
-              topologyKey: topology.kubernetes.io/zone
