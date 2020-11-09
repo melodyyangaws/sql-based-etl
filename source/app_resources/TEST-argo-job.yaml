@@ -16,7 +16,7 @@ spec:
     inputs:
       parameters:
       - name: image
-        value: 720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest
+        value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
     script:
       image: "{{inputs.parameters.image}}"
       resources:
@@ -51,4 +51,4 @@ spec:
         --conf spark.hadoop.fs.s3a.fast.upload=true \
         --conf spark.hadoop.fs.s3a.aws.credentials.provider=com.amazonaws.auth.WebIdentityTokenCredentialsProvider \
         wordcount.py \
-        "s3a://sparkoneks-codebucket9d8d5b72-1fdsh6fsy4xol/output"
+        "s3a://{{CODE_BUCKET}}/app_code/output"

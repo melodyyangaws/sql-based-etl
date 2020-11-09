@@ -34,9 +34,9 @@ singleuser:
   nodeSelector:
     lifecycle: Ec2Spot
   image:
-    name: 720560070661.dkr.ecr.us-west-2.amazonaws.com/arc-jupyter
+    name: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc-jupyter
     tag: latest
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
   lifecycle_hooks:
     postStart:
       exec:

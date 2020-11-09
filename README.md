@@ -59,7 +59,7 @@ $ sudo yum -y install jq
 At this point you can now synthesize the CloudFormation template to be deployed.
 
 ```
-$ cdk synth SparkOnEKS --require-approval never -c env=develop
+$ cdk synth SparkOnEKS --require-approval never -c env=develop -o cdk.out
 
 ```
 
@@ -72,10 +72,14 @@ $ cdk deploy SparkOnEKS -c env=develop --require-approval never -c env=develop
 # Scenario2: use an arbitrary username as the Jupyter Hub login.
 $ cdk deploy SparkOnEKS -c env=develop --require-approval never -c env=develop --parameters jhubuser=<random_login_name>
 
-# Scenario3: by default, the `datalakebucket` is set to the solution deployment S3 bucket, if using an existing bucket that contains real data, add the parameter to your deployment, so that an IAM role can be create for Jupyter Notebook and ETL process access.
+# Scenario3: by default, the `datalakebucket` is set to the solution deployment S3 bucket, if you want to use an existing bucket that contains real data, add the parameter to the command line, so an IAM role can be created for Jupyter Notebook and ETL process.
 $ cdk deploy SparkOnEKS -c env=develop --require-approval never -c env=develop  --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
 
 ```
+## Manually fix EKS node group security groups
+Due to the issue https://github.com/aws/aws-cdk/issues/10884 , we will have to manually amend the SG for now.
+1. Go to EC2 console and locate the instance `Spot-spark-on-eks-dev`, find an inbound rule the source is from `eks-cluster-sg-spark-on-eks-dev`, change the `Type` to `All Traffic`. If the rule entry doesn't exist, add a new rule for it.
+2. Go back to the EC2 instances menu, find the managed node instance, which `Name` field is empty. similiar to the step above, change the inbound rule with the `SparkOnEKS-EksClusterspotInstanceSecurityGroup` as the source. Modify the rule to the `All Traffic` Type. 
 
 ## Submit a Spark job on a web interface
 
@@ -102,9 +106,6 @@ metadata:
 spec:
   serviceAccountName: arcjob
   entrypoint: nyctaxi
-  ttlStrategy:
-    secondsAfterCompletion: 43200
-    SecondsAfterFailure: 43200
   templates:
   - name: nyctaxi
     dag:
@@ -147,58 +148,56 @@ The [Jupyter notebook](/deployment/app_code/job/scd2_job.ipynb) specifies what e
 In general, a parquet file is immutable in a Data Lake. This exmaple will demostrate how to address the challenge and process data incrermtnally. It uses `Delta Lake`, which is an open source storage layer on top of parquet file, to bring the ACID transactions to Apache Spark and modern big data workloads. In this solution, we will build up a table to meet the [Slowly Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) requirement, and prove that how easy it is when ETL with a SQL first approach implemented in a configuration-driven architecture.
 
 
-1.Open the `scd2 job` manifest file, replace the S3 bucket by your bucket name, either the deployment code bucket or an existing datalake s3 bucket passed in as a deployment parameter.
+1.Open the `scd2 workflow job` manifest file, replace the S3 bucket by a correct name at each task sections. Either the code bucket name from your deployment output, or an existing datalake bucket passed in as a deployment parameter.
 
 ```
-$ vi source/app_resources/scd2_job.yaml
+$ vi source/app_resources/scd2-workflow-job.yaml
 ```
 ![](/images/4-cfn-output.png)
 
 ![](/images/3-scd-bucket.png)
 
-2.Connect to the Amazon EKS cluster deployed earlier. Something like this:
+2.Before running command lines, you need to connect to the Amazon EKS cluster firstly. Get the connection command from the deployment output, something like this:
 
 ```
-aws eks update-kubeconfig --name spark-on-eks-dev --region us-west-2 --role-arn arn:aws:iam::<account_number>:role/EKSAdmin
+aws eks update-kubeconfig --name <EKS_cluster_name> --region <region> --role-arn arn:aws:iam::<account_number>:role/<role_name>
 ```
 ![](/images/0-eks-config.png)
 
 3.Submit Arc Spark job
 
 ```
-$ kubectl apply -f source/app_resources/scd2-job.yaml
+$ kubectl apply -f source/app_resources/scd2-workflow-job.yaml
 
 # Delete before submit the same job again
-$ kubectl delete -f source/app_resources/scd2-job.yaml
-$ kubectl apply -f source/app_resources/scd2-job.yaml
+$ kubectl delete -f source/app_resources/scd2-workflow-job.yaml
+$ kubectl apply -f source/app_resources/scd2-workflow-job.yaml
 ```
 
 <details>
 <summary> 
-Alternatively, submit the same job without deletion via [Argo CLI](https://www.eksworkshop.com/advanced/410_batch/install/). 
+Alternatively, submit the job without the extra deletion step by [Argo CLI](https://www.eksworkshop.com/advanced/410_batch/install/). 
 </summary> 
-*** Make sure to comment out a line in the manifest file before your submission. ***
-
 ```
-$ argo submit source/app_resources/scd2-job.yaml -n spark --watch
+$ argo submit source/app_resources/scd2-workflow-job.yaml -n spark --watch
 
 # terminate the job that is running
 $ argo delete scd2-job-<random_string> -n spark
 
 ```
-
-![](/images/2-comment-out.png | width=80)
+*** Make sure to comment out a line in the manifest file before your submission. ***
+![](/images/2-comment-out.png)
 ![](/images/2-argo-scdjob.png)
 </details>
 
-4.Go to the Argo dashboard. Can get the URL from your deployment output as well.
+4.Go to your Argo dashboard by running the folowing command. Or copy the URL directy from your deployment output.
 
 ```
 $ ARGO_URL=$(kubectl -n argo get ingress argo-server --template "{{ range (index .status.loadBalancer.ingress 0) }}{{ . }}{{ end }}")
 $ echo ARGO DASHBOARD: http://${ARGO_URL}:2746
 ```
 
-5.Check your job status and applications logs on the dashboard.
+5.Check the job status and applications logs on the dashboard.
 ![](/images/3-argo-log.png)
 
 

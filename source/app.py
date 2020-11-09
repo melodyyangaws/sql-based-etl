@@ -2,7 +2,6 @@
 from aws_cdk import core
 from bin.config_map import ConfigSectionMap
 from lib.base_infra_stack import BaseEksInfraStack
-from lib.native_spark_stack import NativeSparkStack
 
 app = core.App()
 

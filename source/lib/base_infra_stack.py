@@ -32,14 +32,24 @@ class BaseEksInfraStack(core.Stack):
 # //**********************************************************************//
 # //******************* Upload app code to S3 bucket *********************//
 # //*********************************************************************//
-        self._artifact_bucket = s3.Bucket(self, "codeBucket",encryption=s3.BucketEncryption.KMS_MANAGED)
-
-        s3deploy.BucketDeployment(self, "DeployCode",
-            sources=[s3deploy.Source.asset("deployment/app_code")],
-            destination_bucket=self._artifact_bucket,
+        datalake_bucket = core.CfnParameter(self, "datalakebucket", type="String",
+            description="An existing S3 bucket to be accessed by Jupyter Notebook and ETL job",
+            default=""
         )
 
-        code_bucket = self._artifact_bucket.bucket_name
+        if len(datalake_bucket.value_as_string) > 0: 
+            self._etl_bucket = s3.Bucket.from_bucket_attributes(self, "ImportedExistingBucket",
+                bucket_arn="arn:aws:s3:::"+datalake_bucket.value_as_string
+            )
+        else:
+            self._etl_bucket = s3.Bucket(self, "codeBucket",encryption=s3.BucketEncryption.KMS_MANAGED)     
+        
+        s3deploy.BucketDeployment(self, "DeployCode",
+            sources=[s3deploy.Source.asset("deployment/app_code")],
+            destination_bucket=self._etl_bucket,
+            destination_key_prefix="app_code"
+        )
+        code_bucket = self._etl_bucket.bucket_name
 
 # //**********************************************************************//
 # //******************* EKS CLUSTER WITH NO NODE GROUP *******************//
@@ -134,14 +144,9 @@ class BaseEksInfraStack(core.Stack):
         _etl_k8s_rb.node.add_dependency(_etl_sa)
 
         # Associate AWS IAM role to K8s Service Account
-        datalake_bucket = core.CfnParameter(self, "datalakebucket", type="String",
-            description="Your existing S3 bucket name to be accessed by Jupyter Notebook and ETL job",
-            default=""
-        )
-        _etl_bucket = code_bucket if datalake_bucket.value_as_string=="" else datalake_bucket.value_as_string
         _etl_s3_statements = loadYamlReplaceVarLocal('../app_resources/etl-iam-role.yaml', 
             fields={
-                "{{codeBucket}}": _etl_bucket
+                "{{codeBucket}}": code_bucket
                 }
         )
         for statmnt in _etl_s3_statements:
@@ -288,7 +293,7 @@ class BaseEksInfraStack(core.Stack):
             create_namespace=True,
             values=loadYamlReplaceVarLocal('../app_resources/jupyter-config.yaml', 
                 fields={
-                    "{{codeBucket}}": _etl_bucket
+                    "{{codeBucket}}": code_bucket
                     }
                 )
         )

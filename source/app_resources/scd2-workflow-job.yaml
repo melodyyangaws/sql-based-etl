@@ -1,0 +1,72 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  # need it if using ArgoCLI
+  generateName: scd2-job-
+  namespace: spark
+  ## need it if use kubectl
+  # name: scd2-job
+spec:
+  serviceAccountName: arcjob
+  entrypoint: scd2-process
+  ## must complete in 8h
+  activeDeadlineSeconds: 28800
+  ttlStrategy:
+    # keep workflows for 12h
+    secondsAfterCompletion: 43200
+    SecondsAfterFailure: 43200
+  templates:
+  - name: scd2-process
+    dag:
+      tasks:
+        - name: initial-load
+          templateRef:
+            name: spark-template
+            template: sparkLocal
+            clusterScope: true 
+          arguments:
+            parameters:
+            - name: jobId
+              value: initial-load
+            - name: image
+              value: 720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest
+            # Refer to the jupyter notebook  
+            - name: configUri
+              value: "s3a://testtestmelody/app_code/job/initial_load.ipynb"
+            - name: parameters
+              value: "--ETL_CONF_DATALAKE_LOC=testtestmelody"
+
+        - name: delta-load
+          templateRef:
+            name: spark-template
+            template: sparkLocal
+            clusterScope: true 
+          arguments:
+            parameters:
+            - name: jobId
+              value: delta-load 
+            - name: image
+              value: 720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest
+            - name: configUri
+              value: "s3a://testtestmelody/app_code/job/delta_load.ipynb"
+            - name: parameters
+              value: "--ETL_CONF_DATALAKE_LOC=testtestmelody" 
+
+        - name: SCD2-merge
+          dependencies: [initial-load, delta-load]
+          templateRef:
+            name: spark-template
+            template: mediumJob
+            clusterScope: true 
+          arguments:
+            parameters:
+            - name: jobId
+              value: SCD2-merge 
+            - name: image
+              value: 720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest
+            - name: configUri
+              value: "s3a://testtestmelody/app_code/job/SCD2_merge.ipynb"
+            - name: parameters
+              value: "--ETL_CONF_DATALAKE_LOC=testtestmelody"           
+            - name: sparkConf
+              value: "--conf spark.sql.shuffle.partitions=24 --conf spark.databricks.delta.merge.repartitionBeforeWrite.enabled=true --conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml'"   
