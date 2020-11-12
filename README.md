@@ -295,7 +295,7 @@ by changing the destination bucket.
 4.Submit the native Spark job
 
 ```
-$ kubectl apply -f source/app_resources/TEST-native-job.yaml
+$ kubectl apply -f source/app_resources/native-spark-job.yaml
 
 ```
 5.Go to SparkUI to check the job progress and performance
@@ -310,7 +310,9 @@ $ kubectl port-forward $driver 4040:4040 -n spark
 6. Examine the auto-scaling and multiAZs
 
 ```
-# watch the number of EC2 instances. The job requests 5 executors with 5 new Spot instances. The auto-scaling will be triggered across multiple zones and different instance types.
+# watch the number of EC2 instances. The job requests 5 executors with 5 new Spot instances. 
+# the auto-scaling will be triggered across multiple AZs.
+
 $ kubectl get node --label-columns=lifecycle,topology.kubernetes.io/zone
 $ kubectl get pod -n spark
 ```
