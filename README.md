@@ -211,6 +211,7 @@ $ kubectl apply -f source/app_resources/scd2-workflow-job.yaml
 <summary> 
 Alternatively, submit the job without the extra deletion step by [Argo CLI](https://www.eksworkshop.com/advanced/410_batch/install/). 
 </summary> 
+
 ```
 $ argo submit source/app_resources/scd2-workflow-job.yaml -n spark --watch
 
