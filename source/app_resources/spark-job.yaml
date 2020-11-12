@@ -28,7 +28,7 @@ spec:
             - name: jobId
               value: nyctaxi 
             - name: image
-              value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
+              value: 720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest
             # in Jupyter notebook, each stage associates to an env, eg.test.A stage could be skipped when env mismatches 
             - name: environment
               value: test    

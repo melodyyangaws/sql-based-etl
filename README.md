@@ -67,13 +67,20 @@ Finally deploy the stack. It takes two optional parameters `jhubuser` & `datalak
 
 ```
 # Scenario1: the recommended way is to deploy the default settings
-$ cdk deploy SparkOnEKS --require-approval never
 
-# Scenario2: give an arbitrary username as your Jupyter Hub login. Otherwise, login with a default user.
-$ cdk deploy SparkOnEKS --require-approval never --parameters jhubuser=<random_login_name>
+$ cdk deploy SparkOnEKS --require-approval never -c env=develop
 
-# Scenario3: by default, the `datalakebucket` is set to the solution deployment S3 bucket, if you want to use an existing bucket that contains real data, add the parameter to the command line, so an IAM role can be mapped to the S3 bucket for Jupyter Notebook and ETL jobs. NOTE: the bucket must be in the same region of your infrastructure deployment.
-$ cdk deploy SparkOnEKS --require-approval never --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
+# Scenario2: give an arbitrary username as your Jupyter Hub login. 
+# Otherwise, login with a default user.
+
+$ cdk deploy SparkOnEKS --require-approval never -c env=develop --parameters jhubuser=<random_login_name>
+
+# Scenario3: by default, the `datalakebucket` is set to the solution deployment S3 bucket, 
+# if you want to use an existing bucket that contains real data, add the parameter to the command line
+# an IAM role will be mapped to the existing S3 bucket for Jupyter Notebook and ETL job access. 
+# NOTE: the bucket must be in the same region as your infrastructure deployment.
+
+$ cdk deploy SparkOnEKS --require-approval never -c env=develop --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
 
 ```
 ## Manually fix EKS node group security groups
