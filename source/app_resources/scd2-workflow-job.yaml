@@ -48,7 +48,7 @@ spec:
             - name: jobId
               value: delta-load 
             - name: image
-              value: 720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest
+              value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
             - name: configUri
               value: "s3a://sparkoneks-codebucket9d8d5b72-1jbcpk8cmjklu/app_code/job/delta_load.ipynb"
             - name: parameters
@@ -68,11 +68,12 @@ spec:
             - name: jobId
               value: SCD2-merge 
             - name: image
-              value: 720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest
+              value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
             - name: configUri
               value: "s3a://{{codeBucket}}/app_code/job/SCD2_merge.ipynb"
             - name: parameters
               value: "--ETL_CONF_DATALAKE_LOC={{codeBucket}}"           
             - name: sparkConf
               value: "--conf spark.databricks.delta.merge.repartitionBeforeWrite.enabled=true \
-              --conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml'"   
+              --conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' \
+              --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml'"   

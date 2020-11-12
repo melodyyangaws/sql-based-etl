@@ -1,6 +1,11 @@
 # SQL based data processing with declarative framework
 This is a project developed with Python CDK for the solution SO0141 - SQL based ETL with a declarative framework.
 
+## Prerequisites 
+Python is needed in this project. Specifically, you will need version 3.6 or later. You can find information about downloading and installing Python [here](https://www.python.org/downloads/). Additionally you will need to have the Python package installer (pip) installed. See installation instructions [here](https://pypi.org/project/pip/).
+
+If you use Windows, be sure Python is on your PATH. 
+
 
 ## Deploy Infrastructure
 
@@ -83,6 +88,19 @@ $ cdk deploy SparkOnEKS --require-approval never -c env=develop --parameters jhu
 $ cdk deploy SparkOnEKS --require-approval never -c env=develop --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
 
 ```
+## Troubleshooting
+
+1. If you see the issue `[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1123)`, most likely it means no default certificate authority for your Python installation on OSX. Refer to the [answer](https://stackoverflow.com/questions/52805115/certificate-verify-failed-unable-to-get-local-issuer-certificate) and installing `Install Certificates.command` should fix your local environment.
+
+2. If an error says `SparkOnEKS failed: Error: This stack uses assets, so the toolkit stack must be deployed to the environment (Run "cdk bootstrap aws://YOUR_ACCOUNT_NUMBER/REGION")` , it means it is the first time you deploy an AWS CDK app into an environment (account/region), you’ll need to install a “bootstrap stack”. This stack includes resources that are needed for the toolkit’s operation. For example, the stack includes an S3 bucket that is used to store templates and assets during the deployment process.
+
+You can use the cdk bootstrap command to install the bootstrap stack into an environment:
+
+```
+cdk bootstrap aws://YOUR_ACCOUNT_NUMBER/REGION -c develop
+```
+
+
 ## Manually fix EKS node group security groups
 Due to the issue https://github.com/aws/aws-cdk/issues/10884 , we will have to manually amend the SG for now.
 1. Go to EC2 console and locate the instance `Spot-spark-on-eks-dev`, find an inbound rule which has the source from `eks-cluster-sg-spark-on-eks-dev` and port is 443, then change the `Type` to `All Traffic`. If the rule entry doesn't exist, add a new rule for it.

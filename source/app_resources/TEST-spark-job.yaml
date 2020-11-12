@@ -15,7 +15,7 @@ spec:
     inputs:
       parameters:
       - name: image
-        value: 720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest 
+        value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest 
     script:
       image: "{{inputs.parameters.image}}"
       resources:
