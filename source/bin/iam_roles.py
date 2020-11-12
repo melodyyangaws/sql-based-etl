@@ -17,9 +17,9 @@ class IamConst(core.Construct):
     def managed_node_role(self):
         return self._managed_node_role
 
-    @property
-    def fargate_role(self):
-        return self._fargate_role
+    # @property
+    # def fargate_role(self):
+    #     return self._fargate_role
 
     def __init__(self,scope: core.Construct, id:str, 
         cluster_name:str,
@@ -42,20 +42,20 @@ class IamConst(core.Construct):
             value='admin-role'
         )
 
-        # fargate role
-        _fargate_policy = (
-            iam.ManagedPolicy.from_aws_managed_policy_name('AmazonEKSFargatePodExecutionRolePolicy')
-        )
+        # # fargate role
+        # _fargate_policy = (
+        #     iam.ManagedPolicy.from_aws_managed_policy_name('AmazonEKSFargatePodExecutionRolePolicy')
+        # )
 
-        self._fargate_role = iam.Role(self,'fargate-role',
-            role_name='jhub-fargate-NodeInstanceRole',
-            assumed_by= iam.ServicePrincipal('eks-fargate-pods.amazonaws.com'),
-            managed_policies=[_fargate_policy]
-        )
-        core.Tags.of(self._fargate_role).add(
-            key='eks/%s/type' % cluster_name, 
-            value='fargate-node'
-        )
+        # self._fargate_role = iam.Role(self,'fargate-role',
+        #     role_name='jhub-fargate-NodeInstanceRole',
+        #     assumed_by= iam.ServicePrincipal('eks-fargate-pods.amazonaws.com'),
+        #     managed_policies=[_fargate_policy]
+        # )
+        # core.Tags.of(self._fargate_role).add(
+        #     key='eks/%s/type' % cluster_name, 
+        #     value='fargate-node'
+        # )
         
         # Managed Node Group Instance Role
         _managed_node_managed_policies = (
@@ -70,23 +70,7 @@ class IamConst(core.Construct):
             assumed_by=iam.ServicePrincipal('ec2.amazonaws.com'),
             managed_policies=list(_managed_node_managed_policies),
         )
-        # self._managed_node_role.add_to_policy(
-        #     iam.PolicyStatement(
-        #         resources=['*'],
-        #         actions=['secretsmanager:GetSecretValue']
-        #     )
-        # )
-        # if WebIdentityTokenCredentials is not working at pod level, we will add the permission to the Node level.
-        # self._statements = loadYamlLocal('../app_resources/etl-iam-role.yaml')
-        # for statmnt in self._statements:
-        #     self._managed_node_role.add_to_policy(iam.PolicyStatement.from_json(statmnt))
-
-        # core.Tags.of(self._managed_node_role).add(
-        #     key='eks' + cluster_name + 'type',
-        #     value='NodeInstanceRole'
-        # )
                 
-
         # _managed_policy = (
         #     iam.ManagedPolicy.from_aws_managed_policy_name('AmazonEKSClusterPolicy'),
         #     iam.ManagedPolicy.from_aws_managed_policy_name('AmazonEKSVPCResourceController') 
@@ -129,24 +113,24 @@ class IamConst(core.Construct):
         #     principal=iam.AccountRootPrincipal(),
         # )
 
-        # Creating Amazon EKS External Secret Role
-        self.external_secrets_role = iam.Role(
-            scope=self,
-            id='external-secrets',
-            role_name=cluster_name+'-external-secrets',
-            assumed_by=iam.ServicePrincipal('ec2.amazonaws.com'),
-        )
+        # # Creating Amazon EKS External Secret Role
+        # self.external_secrets_role = iam.Role(
+        #     scope=self,
+        #     id='external-secrets',
+        #     role_name=cluster_name+'-external-secrets',
+        #     assumed_by=iam.ServicePrincipal('ec2.amazonaws.com'),
+        # )
 
-        self.external_secrets_role.add_to_policy(
-            iam.PolicyStatement(
-                resources=['*'],
-                actions=['secretsmanager:GetSecretValue', 'secretsmanager:ListSecrets',
-                         'secretsmanager:GetResourcePolicy', 'secretsmanager:DescribeSecret',
-                         'secretsmanager:ListSecretVersionIds', 'ssm:GetParameters',
-                         'ssm:GetParameter', 'ssm:GetParametersByPath',
-                         'ssm:GetParameterHistory']
-            )
-        )
+        # self.external_secrets_role.add_to_policy(
+        #     iam.PolicyStatement(
+        #         resources=['*'],
+        #         actions=['secretsmanager:GetSecretValue', 'secretsmanager:ListSecrets',
+        #                  'secretsmanager:GetResourcePolicy', 'secretsmanager:DescribeSecret',
+        #                  'secretsmanager:ListSecretVersionIds', 'ssm:GetParameters',
+        #                  'ssm:GetParameter', 'ssm:GetParametersByPath',
+        #                  'ssm:GetParameterHistory']
+        #     )
+        # )
  
         # self._cluster.aws_auth.add_masters_role(
         #     role=clusterAdminRole,

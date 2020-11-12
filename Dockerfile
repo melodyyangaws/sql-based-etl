@@ -5,4 +5,3 @@ RUN mkdir -p $SPARK_HOME/work-dir
 WORKDIR $SPARK_HOME/work-dir
 COPY source/app_resources/driver-pod-template.yaml ./
 COPY source/app_resources/executor-pod-template.yaml ./
-COPY source/app_resources/wordcount.py ./

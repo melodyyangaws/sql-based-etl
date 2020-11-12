@@ -8,15 +8,14 @@ spec:
   entrypoint: spotinterruption
   # must complete in 8h
   activeDeadlineSeconds: 28800
-  # keep workflows for 12h (43200 seconds)
   ttlStrategy:
-    secondsAfterCompletion: 43200
+    secondsAfterCompletion: 28800
   templates:
   - name: spotinterruption
     inputs:
       parameters:
       - name: image
-        value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
+        value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest 
     script:
       image: "{{inputs.parameters.image}}"
       resources:
@@ -50,5 +49,5 @@ spec:
         --conf spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem \
         --conf spark.hadoop.fs.s3a.fast.upload=true \
         --conf spark.hadoop.fs.s3a.aws.credentials.provider=com.amazonaws.auth.WebIdentityTokenCredentialsProvider \
-        wordcount.py \
-        "s3a://{{CODE_BUCKET}}/app_code/output"
+        "s3a://{{codeBucket}}/app_code/job/wordcount.py" \
+        "s3a://{{codeBucket}}/app_code/output"

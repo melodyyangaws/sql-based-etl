@@ -16,10 +16,8 @@ eksadmin_name = app.node.try_get_context('cluster_admin_name')
 
 # Spin up CDK stacks
 eks_stack = BaseEksInfraStack(app, 'SparkOnEKS', eks_name, eksadmin_name, env=env)
-# app_stack = NativeSparkStack(app,'NativeSpark', eks_name, eksadmin_name, eks_stack.appcode_bucket, env=env)
 # code_pipeline_stack = AWSAppResourcesPipeline(app, "ResourcesPipelineStack", env=env)
 
 core.Tags.of(eks_stack).add('project', 'sqlbasedetl')
-# core.Tags.of(app_stack).add('project', 'NativeSpark')
 
 app.synth()

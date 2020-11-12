@@ -66,20 +66,26 @@ $ cdk synth SparkOnEKS --require-approval never -c env=develop -o cdk.out
 Finally deploy the stack. It takes two optional parameters `jhubuser` & `datalakebucket`.
 
 ```
-# Scenario1: without input parameters, use the default setting
-$ cdk deploy SparkOnEKS -c env=develop --require-approval never -c env=develop 
+# Scenario1: the recommended way is to deploy the default settings
+$ cdk deploy SparkOnEKS --require-approval never -c env=develop 
 
 # Scenario2: use an arbitrary username as the Jupyter Hub login.
-$ cdk deploy SparkOnEKS -c env=develop --require-approval never -c env=develop --parameters jhubuser=<random_login_name>
+$ cdk deploy SparkOnEKS --require-approval never -c env=develop --parameters jhubuser=<random_login_name>
 
-# Scenario3: by default, the `datalakebucket` is set to the solution deployment S3 bucket, if you want to use an existing bucket that contains real data, add the parameter to the command line, so an IAM role can be created for Jupyter Notebook and ETL process.
-$ cdk deploy SparkOnEKS -c env=develop --require-approval never -c env=develop  --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
+# Scenario3: by default, the `datalakebucket` is set to the solution deployment S3 bucket, if you want to use an existing bucket that contains real data, add the parameter to the command line, so an IAM role can be mapped to the S3 bucket for Jupyter Notebook and ETL jobs. NOTE: the bucket must be in the same region of your infrastructure deployment.
+$ cdk deploy SparkOnEKS --require-approval never -c env=develop  --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
 
 ```
 ## Manually fix EKS node group security groups
 Due to the issue https://github.com/aws/aws-cdk/issues/10884 , we will have to manually amend the SG for now.
-1. Go to EC2 console and locate the instance `Spot-spark-on-eks-dev`, find an inbound rule the source is from `eks-cluster-sg-spark-on-eks-dev`, change the `Type` to `All Traffic`. If the rule entry doesn't exist, add a new rule for it.
-2. Go back to the EC2 instances menu, find the managed node instance, which `Name` field is empty. similiar to the step above, change the inbound rule with the `SparkOnEKS-EksClusterspotInstanceSecurityGroup` as the source. Modify the rule to the `All Traffic` Type. 
+1. Go to EC2 console and locate the instance `Spot-spark-on-eks-dev`, find an inbound rule which has the source from `eks-cluster-sg-spark-on-eks-dev` and port is 443, then change the `Type` to `All Traffic`. If the rule entry doesn't exist, add a new rule for it.
+2. Find the managed node EC2 instance, which has the empty `Name` field and the value of the tag `eks:nodegroup-name` is `etl-job`. Similiar to the previous step, change the inbound rule which has the source from `SparkOnEKS-EksClusterspotInstanceSecurityGroup` and port is 443, ie. modify the `Type` from `HTTPS` to `All Traffic`. 
+3. restart any broken pods in Jupyter namespace, such as `hub` pod.
+
+```
+$ kubectl get pod -n jupyter
+$ kubectl delete pod <hub-random-string>  -n jupyter
+```
 
 ## Submit a Spark job on a web interface
 
@@ -252,8 +258,8 @@ sh-5.0# exit
 
 ![](/images/4-cfn-output.png)
 
-3.Modify the job manifest file `TEST-native-job.yaml` 
-change the destination bucket.
+3.Modify the job manifest file `native-spark-job.yaml` 
+by changing the destination bucket.
 
 ![](/images/4-spark-output-s3.png)
 

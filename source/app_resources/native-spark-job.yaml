@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: k8s-job
+  name: word-count
   namespace: spark
 spec:
   template:
@@ -34,6 +34,9 @@ spec:
         --conf spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem \
         --conf spark.hadoop.fs.s3a.fast.upload=true \
         --conf spark.hadoop.fs.s3a.aws.credentials.provider=com.amazonaws.auth.WebIdentityTokenCredentialsProvider \
-        wordcount.py \
-        \"s3a://{{CODE_BUCKET}}/app_code/output\""
+        --conf spark.hadoop.mapreduce.outputcommitter.factory.scheme.s3a=org.apache.hadoop.fs.s3a.commit.S3ACommitterFactory \
+        --conf spark.hadoop.fs.s3a.committer.name=directory \
+        --conf spark.hadoop.fs.s3a.committer.staging.conflict-mode=append \
+        \"s3a://{{codeBucket}}/wordcount.py\" \
+        \"s3a://{{codeBucket}}/app_code/output/native\""
         ]

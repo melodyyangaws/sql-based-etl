@@ -15,14 +15,6 @@ from bin.manifest_reader import *
 
 class BaseEksInfraStack(core.Stack):
 
-    # @property
-    # def appcode_bucket(self):
-    #     return self._artifact_bucket.bucket_name 
-
-    # @property    
-    # def eks_cluster(self):
-    #     return self._my_cluster
-
     def __init__(self, scope: core.Construct, id: str, eksname: str, admin_name: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
@@ -32,25 +24,16 @@ class BaseEksInfraStack(core.Stack):
 # //**********************************************************************//
 # //******************* Upload app code to S3 bucket *********************//
 # //*********************************************************************//
-        datalake_bucket = core.CfnParameter(self, "datalakebucket", type="String",
-            description="An existing S3 bucket to be accessed by Jupyter Notebook and ETL job",
-            default=""
-        )
 
-        if len(datalake_bucket.value_as_string) > 0: 
-            self._etl_bucket = s3.Bucket.from_bucket_attributes(self, "ImportedExistingBucket",
-                bucket_arn="arn:aws:s3:::"+datalake_bucket.value_as_string
-            )
-        else:
-            self._etl_bucket = s3.Bucket(self, "codeBucket",encryption=s3.BucketEncryption.KMS_MANAGED)     
-        
+        _artifact_bucket=s3.Bucket(self, "codeBucket",encryption=s3.BucketEncryption.KMS_MANAGED)  
+
         s3deploy.BucketDeployment(self, "DeployCode",
             sources=[s3deploy.Source.asset("deployment/app_code")],
-            destination_bucket=self._etl_bucket,
+            destination_bucket= _artifact_bucket,
             destination_key_prefix="app_code"
         )
-        code_bucket = self._etl_bucket.bucket_name
-
+        code_bucket = _artifact_bucket.bucket_name
+        
 # //**********************************************************************//
 # //******************* EKS CLUSTER WITH NO NODE GROUP *******************//
 # //*********************************************************************//
@@ -144,11 +127,16 @@ class BaseEksInfraStack(core.Stack):
         _etl_k8s_rb.node.add_dependency(_etl_sa)
 
         # Associate AWS IAM role to K8s Service Account
-        _etl_s3_statements = loadYamlReplaceVarLocal('../app_resources/etl-iam-role.yaml', 
-            fields={
-                "{{codeBucket}}": code_bucket
-                }
+        datalake_bucket = core.CfnParameter(self, "datalakebucket", type="String",
+            description="An existing S3 bucket to be accessed by Jupyter Notebook and ETL job",
+            default=""
         )
+
+        _bucket_setting = {
+                "{{codeBucket}}": code_bucket,
+                "{{datalakeBucket}}": datalake_bucket.value_as_string
+        }
+        _etl_s3_statements = loadYamlReplaceVarLocal('../app_resources/etl-iam-role.yaml', fields=_bucket_setting)
         for statmnt in _etl_s3_statements:
             _etl_sa.add_to_principal_policy(iam.PolicyStatement.from_json(statmnt))
 
@@ -335,8 +323,7 @@ class BaseEksInfraStack(core.Stack):
         )
         _spark_rb.node.add_dependency(_spark_sa)
 
-        _setting={"{{codeBucket}}": code_bucket}
-        _spark_iam = loadYamlReplaceVarLocal('../app_resources/native-spark-iam-role.yaml',fields=_setting)
+        _spark_iam = loadYamlReplaceVarLocal('../app_resources/native-spark-iam-role.yaml',fields=_bucket_setting)
         for statmnt in _spark_iam:
             _spark_sa.add_to_principal_policy(iam.PolicyStatement.from_json(statmnt))
 
@@ -381,3 +368,4 @@ class BaseEksInfraStack(core.Stack):
         core.CfnOutput(self,'JUPYTER_URL', value='http://'+ jhub_url.value + ':8000')
 
         core.CfnOutput(self,'CODE_BUCKET', value=code_bucket)
+        

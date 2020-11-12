@@ -1,7 +1,10 @@
   - Effect: Allow
-    Action: s3:ListBucket
+    Action: 
+    - s3:ListBucket
+    - s3:GetBucketLocation
     Resource:
     - arn:aws:s3:::{{codeBucket}}
+    - arn:aws:s3:::{{datalakeBucket}}
     - arn:aws:s3:::nyc-tlc
   - Effect: Allow
     Action:
@@ -9,6 +12,7 @@
     - s3:GetObject
     Resource:
     - arn:aws:s3:::{{codeBucket}}/*
+    - arn:aws:s3:::{{datalakeBucket}}/*
     - arn:aws:s3:::nyc-tlc/*
   - Effect: Allow
     Action:

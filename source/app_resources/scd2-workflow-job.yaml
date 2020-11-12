@@ -22,7 +22,7 @@ spec:
         - name: initial-load
           templateRef:
             name: spark-template
-            template: sparkLocal
+            template: smallJob
             clusterScope: true 
           arguments:
             parameters:
@@ -32,14 +32,16 @@ spec:
               value: 720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest
             # Refer to the jupyter notebook  
             - name: configUri
-              value: "s3a://testtestmelody/app_code/job/initial_load.ipynb"
+              value: "s3a://sparkoneks-codebucket9d8d5b72-1jbcpk8cmjklu/app_code/job/initial_load.ipynb"
             - name: parameters
-              value: "--ETL_CONF_DATALAKE_LOC=testtestmelody"
+              value: "--ETL_CONF_DATALAKE_LOC=sparkoneks-codebucket9d8d5b72-1jbcpk8cmjklu"
+            - name: sparkConf
+              value: "--conf spark.hadoop.mapreduce.outputcommitter.factory.scheme.s3a=org.apache.hadoop.fs.s3a.commit.S3ACommitterFactory --conf spark.sql.sources.commitProtocolClass=org.apache.spark.internal.io.cloud.PathOutputCommitProtocol --conf spark.sql.parquet.output.committer.class=org.apache.hadoop.mapreduce.lib.output.BindingPathOutputCommitter"   
 
         - name: delta-load
           templateRef:
             name: spark-template
-            template: sparkLocal
+            template: smallJob
             clusterScope: true 
           arguments:
             parameters:
@@ -48,9 +50,12 @@ spec:
             - name: image
               value: 720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest
             - name: configUri
-              value: "s3a://testtestmelody/app_code/job/delta_load.ipynb"
+              value: "s3a://sparkoneks-codebucket9d8d5b72-1jbcpk8cmjklu/app_code/job/delta_load.ipynb"
             - name: parameters
-              value: "--ETL_CONF_DATALAKE_LOC=testtestmelody" 
+              value: "--ETL_CONF_DATALAKE_LOC=sparkoneks-codebucket9d8d5b72-1jbcpk8cmjklu" 
+            - name: sparkConf
+              value: "--conf spark.hadoop.mapreduce.outputcommitter.factory.scheme.s3a=org.apache.hadoop.fs.s3a.commit.S3ACommitterFactory --conf spark.sql.sources.commitProtocolClass=org.apache.spark.internal.io.cloud.PathOutputCommitProtocol --conf spark.sql.parquet.output.committer.class=org.apache.hadoop.mapreduce.lib.output.BindingPathOutputCommitter"   
+  
 
         - name: SCD2-merge
           dependencies: [initial-load, delta-load]
@@ -63,10 +68,11 @@ spec:
             - name: jobId
               value: SCD2-merge 
             - name: image
-              value: 720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest
+              value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
             - name: configUri
-              value: "s3a://testtestmelody/app_code/job/SCD2_merge.ipynb"
+              value: "s3a://{{codeBucket}}/app_code/job/SCD2_merge.ipynb"
             - name: parameters
-              value: "--ETL_CONF_DATALAKE_LOC=testtestmelody"           
+              value: "--ETL_CONF_DATALAKE_LOC={{codeBucket}}"           
             - name: sparkConf
-              value: "--conf spark.sql.shuffle.partitions=24 --conf spark.databricks.delta.merge.repartitionBeforeWrite.enabled=true --conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml'"   
+              value: "--conf spark.databricks.delta.merge.repartitionBeforeWrite.enabled=true \
+              --conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml'"   
