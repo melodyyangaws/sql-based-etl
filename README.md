@@ -13,7 +13,7 @@ $ cd sql-based-etl
 ```
 
 Build docker image and push to ECR via a bash script. 
-arc-jupyter doesn't need image build, just pull it from public and push to ECR. The {{account_number}} in `deployment/environment.cfg` and sample job config files under `source/app_resources/` will be updated to your account.
+arc-jupyter doesn't need image build, just pull it from public and push to ECR. The {{account_number}} in `deployment/environment.cfg` and sample job files under `source/app_resources/` will be updated by your input.
 
 ```
 $ bash deployment/pull_and_push_ecr.sh <region> <account_number> <ecr_repo_name> <build_or_not>
@@ -67,13 +67,13 @@ Finally deploy the stack. It takes two optional parameters `jhubuser` & `datalak
 
 ```
 # Scenario1: the recommended way is to deploy the default settings
-$ cdk deploy SparkOnEKS --require-approval never -c env=develop 
+$ cdk deploy SparkOnEKS --require-approval never
 
-# Scenario2: use an arbitrary username as the Jupyter Hub login.
-$ cdk deploy SparkOnEKS --require-approval never -c env=develop --parameters jhubuser=<random_login_name>
+# Scenario2: give an arbitrary username as your Jupyter Hub login. Otherwise, login with a default user.
+$ cdk deploy SparkOnEKS --require-approval never --parameters jhubuser=<random_login_name>
 
 # Scenario3: by default, the `datalakebucket` is set to the solution deployment S3 bucket, if you want to use an existing bucket that contains real data, add the parameter to the command line, so an IAM role can be mapped to the S3 bucket for Jupyter Notebook and ETL jobs. NOTE: the bucket must be in the same region of your infrastructure deployment.
-$ cdk deploy SparkOnEKS --require-approval never -c env=develop  --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
+$ cdk deploy SparkOnEKS --require-approval never --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
 
 ```
 ## Manually fix EKS node group security groups
