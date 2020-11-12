@@ -29,14 +29,12 @@ spec:
             - name: jobId
               value: initial-load
             - name: image
-              value: 720560070661.dkr.ecr.us-west-2.amazonaws.com/arc:latest
+              value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
             # Refer to the jupyter notebook  
             - name: configUri
-              value: "s3a://sparkoneks-codebucket9d8d5b72-1jbcpk8cmjklu/app_code/job/initial_load.ipynb"
+              value: "s3a://{{codeBucket}}/app_code/job/initial_load.ipynb"
             - name: parameters
-              value: "--ETL_CONF_DATALAKE_LOC=sparkoneks-codebucket9d8d5b72-1jbcpk8cmjklu"
-            - name: sparkConf
-              value: "--conf spark.hadoop.mapreduce.outputcommitter.factory.scheme.s3a=org.apache.hadoop.fs.s3a.commit.S3ACommitterFactory --conf spark.sql.sources.commitProtocolClass=org.apache.spark.internal.io.cloud.PathOutputCommitProtocol --conf spark.sql.parquet.output.committer.class=org.apache.hadoop.mapreduce.lib.output.BindingPathOutputCommitter"   
+              value: "--ETL_CONF_DATALAKE_LOC={{codeBucket}}"
 
         - name: delta-load
           templateRef:
@@ -50,11 +48,9 @@ spec:
             - name: image
               value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
             - name: configUri
-              value: "s3a://sparkoneks-codebucket9d8d5b72-1jbcpk8cmjklu/app_code/job/delta_load.ipynb"
+              value: "s3a://{{codeBucket}}/app_code/job/delta_load.ipynb"
             - name: parameters
-              value: "--ETL_CONF_DATALAKE_LOC=sparkoneks-codebucket9d8d5b72-1jbcpk8cmjklu" 
-            - name: sparkConf
-              value: "--conf spark.hadoop.mapreduce.outputcommitter.factory.scheme.s3a=org.apache.hadoop.fs.s3a.commit.S3ACommitterFactory --conf spark.sql.sources.commitProtocolClass=org.apache.spark.internal.io.cloud.PathOutputCommitProtocol --conf spark.sql.parquet.output.committer.class=org.apache.hadoop.mapreduce.lib.output.BindingPathOutputCommitter"   
+              value: "--ETL_CONF_DATALAKE_LOC={{codeBucket}}"  
   
 
         - name: SCD2-merge
