@@ -42,9 +42,9 @@ class DeploymentPipeline(core.Stack):
                 codepipeline_actions.CodeCommitSourceAction(
                     action_name="SourceCodeRepo",
                     owner="meloyang",
-                    repo="sql-based-etl-on-eks",
+                    repo="sql-based-etl",
                     output=artifact,
-                    oauth_token=core.SecretValue.secrets_manager('github-token')
+                    # oauth_token=core.SecretValue.secrets_manager('github-token')
                 )
             ]
         )

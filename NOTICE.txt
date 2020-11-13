@@ -12,3 +12,5 @@ THIRD PARTY COMPONENTS
 This software includes third party software subject to the following copyrights:
 
 AWS SDK under the Apache License Version 2.0
+Apache Spark under the Apache License Version 2.0
+Arc is released under the MIT License

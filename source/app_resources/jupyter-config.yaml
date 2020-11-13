@@ -52,7 +52,7 @@ singleuser:
     limit: 4G
   extraEnv:
     JAVA_OPTS: -Xmx4G
-    ETL_CONF_DATALAKE_LOC: {{codeBucket}}  
+    ETL_CONF_DATALAKE_LOC: {{codeBucket}}
   # extraNodeAffinity:
   #   required:
   #     - matchExpressions:

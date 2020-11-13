@@ -19,5 +19,6 @@ eks_stack = BaseEksInfraStack(app, 'SparkOnEKS', eks_name, eksadmin_name, env=en
 # code_pipeline_stack = AWSAppResourcesPipeline(app, "ResourcesPipelineStack", env=env)
 
 core.Tags.of(eks_stack).add('project', 'sqlbasedetl')
+# core.Tags.of(code_pipeline_stack).add('project', 'sqlbasedetl')
 
 app.synth()

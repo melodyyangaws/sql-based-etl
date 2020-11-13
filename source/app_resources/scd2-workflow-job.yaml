@@ -2,19 +2,19 @@ apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
   # need it if using ArgoCLI
-  # generateName: scd2-job-
+  generateName: scd2-job-
   namespace: spark
   ## need it if use kubectl
-  name: scd2-job
+  # name: scd2-job
 spec:
   serviceAccountName: arcjob
   entrypoint: scd2-process
-  ## must complete in 8h
-  activeDeadlineSeconds: 28800
+  ## must complete in 4h
+  activeDeadlineSeconds: 14400
   ttlStrategy:
-    # keep workflows for 12h
-    secondsAfterCompletion: 43200
-    SecondsAfterFailure: 43200
+    # keep workflows for 8h
+    secondsAfterCompletion: 28800
+    SecondsAfterFailure: 28800
   templates:
   - name: scd2-process
     dag:
@@ -29,12 +29,11 @@ spec:
             - name: jobId
               value: initial-load
             - name: image
-              value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com//arc:latest
-            # Refer to the jupyter notebook  
+              value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
             - name: configUri
               value: "s3a://{{codeBucket}}/app_code/job/initial_load.ipynb"
             - name: parameters
-              value: "--ETL_CONF_DATALAKE_LOC={{codeBucket}}"
+              value: "--ETL_CONF_DATALAKE_LOC=sparkoneks-codebucket9d8d5b72-1jbcpk8cmjklu"
 
         - name: delta-load
           templateRef:
@@ -50,14 +49,14 @@ spec:
             - name: configUri
               value: "s3a://{{codeBucket}}/app_code/job/delta_load.ipynb"
             - name: parameters
-              value: "--ETL_CONF_DATALAKE_LOC={{codeBucket}}"  
+              value: "--ETL_CONF_DATALAKE_LOC=sparkoneks-codebucket9d8d5b72-1jbcpk8cmjklu"  
   
 
         - name: SCD2-merge
           dependencies: [initial-load, delta-load]
           templateRef:
             name: spark-template
-            template: mediumJob
+            template: smallJob
             clusterScope: true 
           arguments:
             parameters:
