@@ -1,7 +1,8 @@
 
 from aws_cdk import (
     core,
-    aws_codecommit,
+    aws_iam as iam,
+    aws_codebuild as codebuild,
     aws_codepipeline as codepipeline,
     aws_codepipeline_actions as codepipeline_actions,
 )
@@ -12,8 +13,7 @@ class DeploymentPipeline(core.Stack):
         super().__init__(scope, id, **kwargs)
         
         # Create IAM Role For CodeBuild
-        codebuild_role = iam.Role(
-            self, "BuildRole",
+        codebuild_role = iam.Role(self, "BuildRole",
             assumed_by=iam.ServicePrincipal("codebuild.amazonaws.com"),
             managed_policies=[
                 iam.ManagedPolicy.from_aws_managed_policy_name("AdministratorAccess")
@@ -21,16 +21,23 @@ class DeploymentPipeline(core.Stack):
         )
 
         # Create CodeBuild PipelineProject
-        build_project = codebuild.PipelineProject(
-            self, "BuildProject",
+        build_project = codebuild.PipelineProject(self, "BuildProject",
             role=codebuild_role,
-            build_spec=codebuild.BuildSpec.from_source_filename("../../buildspec.yml")
+            build_spec=codebuild.BuildSpec.from_source_filename("../../buildspec.yml"),
+            environment=codebuild.BuildEnvironment(
+                privileged=True,
+            ),
+            # pass env into the codebuild project so codebuild knows where to push
+            environment_variables={
+                'REGION': codebuild.BuildEnvironmentVariable(
+                    value=env.REGION),
+                'ACCOUNTNUMBER': codebuild.BuildEnvironmentVariable(
+                    value=env.ACCOUNTNUMBER)
+            },
         )
 
         # Create CodePipeline
-        pipeline = codepipeline.Pipeline(
-            self, "Pipeline"
-        )
+        pipeline = codepipeline.Pipeline(self, "Pipeline")
 
         # Create Artifact
         artifact = codepipeline.Artifact()
@@ -41,10 +48,9 @@ class DeploymentPipeline(core.Stack):
             actions=[
                 codepipeline_actions.CodeCommitSourceAction(
                     action_name="SourceCodeRepo",
-                    owner="meloyang",
-                    repo="sql-based-etl",
-                    output=artifact,
-                    # oauth_token=core.SecretValue.secrets_manager('github-token')
+                    repository="sql-based-etl",
+                    branch="master",
+                    output=artifact
                 )
             ]
         )

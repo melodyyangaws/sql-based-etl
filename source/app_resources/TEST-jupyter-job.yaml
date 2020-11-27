@@ -9,7 +9,7 @@ spec:
     fsGroup: 65534
   containers:
   - name: arc-jupyter
-    image: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc-jupyter:latest 
+    image: ghcr.io/tripl-ai/arc-jupyter:latest 
     imagePullPolicy: IfNotPresent
     env:
       - name: JAVA_OPTS

@@ -11,7 +11,7 @@ spec:
   # must complete in 8h
   activeDeadlineSeconds: 28800
   ttlStrategy:
-    # keep workflows for 12h
+    # keep the workflow for 12h
     secondsAfterCompletion: 43200
     SecondsAfterFailure: 43200
   templates:
@@ -28,8 +28,8 @@ spec:
             - name: jobId
               value: nyctaxi 
             - name: image
-              value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
-            # in Jupyter notebook, each stage associates to an env, eg.test.A stage could be skipped when env mismatches 
+              value: ghcr.io/tripl-ai/arc:latest
+            # in Jupyter notebook, each ETL step associates to an env. So a test step could be skipped if env mismatches 
             - name: environment
               value: test    
             - name: tags

@@ -1,100 +1,51 @@
-hub:
-  db:
-    type: sqlite-memory
-  extraConfig:
-    overrideServiceAccount: |
-      # this script allows serviceAccountName to use dynamic naming based on {unescaped_username}"
-      async def override_service_account_hook(kube_spawner):
-        if kube_spawner.service_account is not None:
-          kube_spawner.service_account = kube_spawner._expand_user_properties(kube_spawner.service_account)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{MY_SA}}-role-binding
+  namespace: jupyter
+subjects:
+  - kind: ServiceAccount
+    name: {{MY_SA}}
+    namespace: jupyter
+roleRef:
+  kind: Role
+  name: hub
+  apiGroup: rbac.authorization.k8s.io
 
-      c.KubeSpawner.pre_spawn_hook = override_service_account_hook
-
-  nodeSelector:
-    lifecycle: Ec2Spot
-  readinessProbe:
-    initialDelaySeconds: 30
-    periodSeconds: 10
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: jupyterhub
+  namespace: jupyter
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/success-codes: 200,301,302
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 8000}]'
+  labels:
+    app: jupyterhub
+spec:
+  rules:
+  - host: ""
+    http:
+      paths:
+      - path: /*
+        backend:
+          serviceName: proxy-public
+          servicePort: 80 
           
-proxy:
-  secretToken: "37d978c42bd042da78a1afa5a32dacaaee863ded4926eca2b30cc3005832d636"
-  service:
-    type: ClusterIP
-  # chp:
-  #   nodeSelector:
-  #     lifecycle: Ec2Spot    
-
-  
-auth:
-  dummy:
-    password: "supersecret!"
-
-singleuser:
-  defaultUrl: "/lab"
-  nodeSelector:
-    lifecycle: Ec2Spot
-  image:
-    name: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc-jupyter
-    tag: latest
-    pullPolicy: Always
-  lifecycle_hooks:
-    postStart:
-      exec:
-        command: ["cp", "-r", "/opt/.jupyter", "/home/jovyan/.jupyter"]  
-  serviceAccountName: "{unescaped_username}"
-  storage:
-    type: none
-  cpu:
-    guarantee: 0.25
-    limit: 0.5
-  memory:
-    guarantee: 4G
-    limit: 4G
-  extraEnv:
-    JAVA_OPTS: -Xmx4G
-    ETL_CONF_DATALAKE_LOC: {{codeBucket}}
-  # extraNodeAffinity:
-  #   required:
-  #     - matchExpressions:
-  #       - key: lifecycle
-  #         operator: In
-  #         values: [Ec2Spot]
-  # extraSecurityContext:
-  #   runAsUser: 65534
-  #   fsGroup: 65534
-  #   allowPrivilegeEscalation: false  
-  # storage:
-  #   capacity: 50G
-  #   type: dynamic
-  #   dynamic:
-      # storageClass: csi-sc
-      # subPath: '{username}'
-
-  profileList:
-  - default: True
-    display_name: "Small (default): Arc-Jupyter Development Environment"
-    description: "4GB Memory & 1vCPUs"
-    kubespawner_override:
-      cpu_guarantee: 0.5
-      cpu_limit: 1
-      mem_guarantee: 4G
-      mem_limit: 10G
-  - display_name: "Big Arc-Jupyter Development Environment"
-    description: "15GB Memory & 2vCPUs"
-    kubespawner_override:
-      cpu_guarantee: 0.5
-      cpu_limit: 2
-      mem_guarantee: 10G
-      mem_limit: 15G
-
-prePuller:
-  hook:
-    enabled: false     
-
-# scheduling:
-#   userScheduler:
-#     enabled: true
-#     replicas: 1
-
-debug:
-  enabled: true      
+---
+apiVersion: kubernetes-client.io/v1
+kind: ExternalSecret
+metadata:
+  name: jupyter-external-secret
+  namespace: jupyter
+spec:
+  backendType: secretsManager
+  region: {{REGION}}
+  data:
+    - key: {{SECRET_NAME}}
+      name: password
+      property: password          

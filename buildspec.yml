@@ -14,7 +14,6 @@ phases:
       - export ACCOUNTNUMBER=$(aws sts get-caller-identity --query Account --output text)
       - echo "Starting deploy docker images `date` in `pwd`"
       - bash deployment/pull_and_push_ecr.sh $REGION $ACCOUNTNUMBER 'arc' 1 
-      - bash deployment/pull_and_push_ecr.sh $REGION $ACCOUNTNUMBER 'arc-jupyter'
       - echo "Docker images pull and push are completed `date`"
   build:
     commands:

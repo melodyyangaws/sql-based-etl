@@ -27,8 +27,6 @@ spec:
         --conf spark.kubernetes.executor.limit.cores=3 \
         --conf spark.kubernetes.container.image={{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest \
         --conf spark.kubernetes.container.image.pullPolicy=Always \
-        --conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' \
-        --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml' \
         --conf spark.kubernetes.authenticate.driver.serviceAccountName=nativejob \
         --conf spark.kubernetes.namespace=spark \
         --conf spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem \
@@ -37,6 +35,8 @@ spec:
         --conf spark.hadoop.mapreduce.outputcommitter.factory.scheme.s3a=org.apache.hadoop.fs.s3a.commit.S3ACommitterFactory \
         --conf spark.hadoop.fs.s3a.committer.name=directory \
         --conf spark.hadoop.fs.s3a.committer.staging.conflict-mode=append \
+        --conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' \
+        --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml' \
         \"s3a://{{codeBucket}}/app_code/job/wordcount.py\" \
         \"s3a://{{codeBucket}}/app_code/output/native\""
         ]

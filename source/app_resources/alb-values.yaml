@@ -1,10 +1,8 @@
 image:
-  tag: v1.1.8
-awsRegion: {{region_name}}
-awsVpcID: {{vpc_id}}
+  tag: v2.0.1
+region: {{region_name}}
+vpcId: {{vpc_id}}
 clusterName: {{cluster_name}}
-rbac:
-  create: true
-  serviceAccount:
-    create: false
-    name: alb-ingress-controller
+serviceAccount:
+  create: false
+  name: alb-aws-load-balancer-controller
