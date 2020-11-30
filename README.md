@@ -17,15 +17,15 @@ cd sql-based-etl
 
 ```
 
-Build Arc docker image and push it to user's container registry ECR. 
-Based on your input, the following bash script will help you to prepare the deployment in your AWS environment. Replace the placeholders by your own information.
+Build Arc docker image and push it to your container registry ECR. 
+The following bash script will help you to prepare the deployment in your AWS environment. Replace the placeholders by your own information.
 
 ```
 bash deployment/pull_and_push_ecr.sh <your_region> <your_account_number> 'arc' 1
 ```
 
-Install kubernetes tools.
-If you are running Linux / Windows, please see the [official EKS docs](https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html) for the download links.
+Install kubernetes tools on MAC.
+If you are running Linux / Windows, please see the [official docs](https://github.com/argoproj/argo/releases) for the download links.
 
 ```
 bash deployment/setup_cmd_tool.sh
@@ -219,12 +219,12 @@ echo -e "\njupyter login: $JHUB_PWD \njupyter hub URL: http://${JHUB_URL}:8000"
 
 ```
 
-2.Start the default development environment. Use a biggre Jupyter Hub instance to author your ETL job if you prefer.
+2.Start the default development environment. Use a biggre instance to author your ETL job if you prefer.
 
 ![](/images/3-jhub-login.png)
 
 3.Upload a sample Arc-jupyter notebook from `deployment/app-code/job/scd2_job.ipynb`
-![](/images/3-jhub-upload.png =80x100)
+![](/images/3-jhub-upload.png)
 
 ![](/images/3-jhub-open-notebook.png)
 
