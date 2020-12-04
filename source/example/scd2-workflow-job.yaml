@@ -65,9 +65,9 @@ spec:
             - name: image
               value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
             - name: configUri
-              value: "s3a://{{codeBucket}}/app_code/job/SCD2_merge.ipynb"
+              value: "s3a://{{codeBucket}}/app_code/job/scd2_merge.ipynb"
             - name: parameters
-              value: "--ETL_CONF_DATALAKE_LOC={{codeBucket}} --ETL_CONF_AWS_REGION={{REGION}}"           
+              value: "--ETL_CONF_DATALAKE_LOC={{codeBucket}} --ETL_CONF_AWS_REGION=us-west-2"           
             - name: sparkConf
               value: "--conf spark.databricks.delta.merge.repartitionBeforeWrite.enabled=true \
               --conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' \

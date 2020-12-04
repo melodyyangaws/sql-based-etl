@@ -1,8 +1,11 @@
+# // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# // SPDX-License-Identifier: MIT-0
+
 from aws_cdk import (
     core, 
     aws_eks as eks,
     aws_ec2 as ec2,
-    aws_efs as efs,
+    # aws_efs as efs,
     aws_iam as iam,
     aws_s3 as s3,
     aws_s3_deployment as s3deploy
@@ -36,6 +39,8 @@ class BaseEksInfraStack(core.Stack):
         _secret = Secret(self, 'jHubPwd', 
             generate_secret_string=SecretStringGenerator(
                 exclude_punctuation=True,
+                exclude_uppercase=True,
+                password_length=64,
                 secret_string_template=json.dumps({'username': login_name.value_as_string}),
                 generate_string_key="password")
         )
@@ -219,15 +224,15 @@ class BaseEksInfraStack(core.Stack):
         #     namespace='kube-system',
         # )
 
-        _k8s_efs = efs.FileSystem(self,'EFSFileSystem',
-            vpc=eks_network.vpc,
-            encrypted=True,
-            file_system_name='efs-quickaccess',
-            lifecycle_policy=efs.LifecyclePolicy.AFTER_14_DAYS,
-            performance_mode=efs.PerformanceMode.MAX_IO,
-            removal_policy=core.RemovalPolicy.DESTROY,
-            # vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE, one_per_az=True)
-        )
+        # _k8s_efs = efs.FileSystem(self,'EFSFileSystem',
+        #     vpc=eks_network.vpc,
+        #     encrypted=True,
+        #     file_system_name='efs-quickaccess',
+        #     lifecycle_policy=efs.LifecyclePolicy.AFTER_14_DAYS,
+        #     performance_mode=efs.PerformanceMode.MAX_IO,
+        #     removal_policy=core.RemovalPolicy.DESTROY,
+        #     vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE, one_per_az=True)
+        # )
         # _efs_mount_target = efs.CfnMountTarget(self,'MountEFS',
         #     file_system_id=_k8s_efs.file_system_id,
         #     security_groups=[eks_efs_sg.security_group_id],
@@ -334,7 +339,10 @@ class BaseEksInfraStack(core.Stack):
             namespace='jupyter',
             create_namespace=False,
             values=loadYamlReplaceVarLocal('../app_resources/jupyter-values.yaml', 
-                fields={"{{codeBucket}}": code_bucket})
+                fields={
+                    "{{codeBucket}}": code_bucket,
+                    "{{region}}": self.region 
+                })
         )
         _jhub_install.node.add_dependency(_jupyter_ns)
 
@@ -379,26 +387,28 @@ class BaseEksInfraStack(core.Stack):
 
 # # # //*********************************************************************//
 # # # //*************************** Deployment Output ***********************//
+# # # //************ Remove ALB ingress from Argo and JupyterHub *************//
+# # # //********* enable it only if you can set them up with HTTPS *************//
 # # # //*********************************************************************//
-        argo_url=eks.KubernetesObjectValue(self, 'argoALB',
-            cluster=self._my_cluster,
-            json_path='.status.loadBalancer.ingress[0].hostname',
-            object_type='ingress',
-            object_name='argo-server',
-            object_namespace='argo',
-            timeout=core.Duration.minutes(10)
-        )
-        argo_url.node.add_dependency(_argo_install)
-        core.CfnOutput(self,'ARGO_URL', value='http://'+ argo_url.value + ':2746')
+        # argo_url=eks.KubernetesObjectValue(self, 'argoALB',
+        #     cluster=self._my_cluster,
+        #     json_path='.status.loadBalancer.ingress[0].hostname',
+        #     object_type='ingress',
+        #     object_name='argo-server',
+        #     object_namespace='argo',
+        #     timeout=core.Duration.minutes(10)
+        # )
+        # argo_url.node.add_dependency(_argo_install)
+        # core.CfnOutput(self,'ARGO_URL', value='http://'+ argo_url.value + ':2746')
         
-        jhub_url=eks.KubernetesObjectValue(self, 'jhubALB',
-            cluster=self._my_cluster,
-            json_path='.status.loadBalancer.ingress[0].hostname',
-            object_type='ingress',
-            object_name='jupyterhub',
-            object_namespace='jupyter',
-            timeout=core.Duration.minutes(10)
-        )
-        jhub_url.node.add_dependency(_config_hub)
-        core.CfnOutput(self,'JUPYTER_URL', value='http://'+ jhub_url.value + ':8000')
+        # jhub_url=eks.KubernetesObjectValue(self, 'jhubALB',
+        #     cluster=self._my_cluster,
+        #     json_path='.status.loadBalancer.ingress[0].hostname',
+        #     object_type='ingress',
+        #     object_name='jupyterhub',
+        #     object_namespace='jupyter',
+        #     timeout=core.Duration.minutes(10)
+        # )
+        # jhub_url.node.add_dependency(_config_hub)
+        # core.CfnOutput(self,'JUPYTER_URL', value='http://'+ jhub_url.value + ':8000')
         core.CfnOutput(self,'CODE_BUCKET', value=code_bucket)

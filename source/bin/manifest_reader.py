@@ -41,10 +41,6 @@ def loadYamlLocal(yaml_file, multi_resource=False):
         
     return yaml_data 
 
-# loadYamlLocal('/Users/meloyang/Documents/sourcecode/sql-based-etl/source/app_resources/DELETE_cw_special.yaml', True)
-# loadYamlRemotely('https://github.com/kubernetes-sigs/aws-efs-csi-driver/deploy/kubernetes/overlays/stable/?ref=master')
-
-
 def loadYamlReplaceVarRemotely(url, fields, multi_resource=False):
     try:
         with request.urlopen(url) as f:

@@ -6,7 +6,11 @@ hub:
       import os
       c.JupyterHub.authenticator_class = 'jupyterhub.auth.DummyAuthenticator'
       c.DummyAuthenticator.password = os.environ['LOGIN']
-      print (os.environ['LOGIN'])
+      c.JupyterHub.admin_users = {"service-admin",}
+      c.JupyterHub.api_tokens = {
+          "secret-token": "service-admin",
+      }
+      
       # this script allows serviceAccountName to use dynamic naming based on {unescaped_username}"
       async def override_service_account_hook(kube_spawner):
         if kube_spawner.service_account is not None:
@@ -27,17 +31,12 @@ hub:
     periodSeconds: 10
           
 proxy:
-  secretToken: "37d978c42bd042da78a1afa5a32dacaaee863ded4926eca2b30cc3005832d636"
+  # secretToken: "37d978c42bd042da78a1afa5a32dacaaee863ded4926eca2b30cc3005832d636"
   service:
     type: ClusterIP
   # chp:
   #   nodeSelector:
   #     lifecycle: Ec2Spot    
-
-  
-# auth:
-#   dummy:
-#     password: "{LOGIN}"
 
 singleuser:
   defaultUrl: "/lab"
@@ -63,12 +62,13 @@ singleuser:
   extraEnv:
     JAVA_OPTS: -Xmx4G
     ETL_CONF_DATALAKE_LOC: {{codeBucket}}
+    ETL_CONF_AWS_REGION: {{region}}
   # storage:
   #   capacity: 50G
   #   type: dynamic
   #   dynamic:
       # storageClass: csi-sc
-      # subPath: '{username}'
+      # subPath: '{unescaped_username}'
   profileList:
   - default: True
     display_name: "Small (default): Arc-Jupyter Development Environment"

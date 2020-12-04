@@ -1,4 +1,4 @@
-# SQL based data processing with declarative framework
+# SQL-based ETL with Apache Spark on Amazon EKS
 This is a project developed with Python CDK for the solution SO0141 - SQL based ETL with a declarative framework.
 
 ## Prerequisites 
@@ -140,7 +140,7 @@ spec:
 We have included a second job manifest file and a Jupyter notebook, as an example of a complex Spark job to solve a real-world data problem. Let's submit it via a command line this time. 
 <details>
 <summary>manifest file</summary>
-The [manifest file](/source/app_resources/scd2-job.yaml) defines where the Jupyter notebook file (job configuration) and input data are. 
+The [manifest file](/source/example/scd2-workflow-job.yaml) defines where the Jupyter notebook file (job configuration) and input data are. 
 </details>
 <details>
 <summary>Jupyter notebook</summary>
@@ -150,10 +150,10 @@ The [Jupyter notebook](/deployment/app_code/job/scd2_job.ipynb) specifies what e
 In general, a parquet file is immutable in a Data Lake. This example will demonstrate how to address the problem and process data incrementally. It uses `Delta Lake`, which is an open source storage layer on top of parquet file, to bring the ACID transactions to your modern data architecture. In the example data pineline, we will build up a table to support the [Slowly Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) format, to demostrate how easy to do the ETL with a SQL first approach implemented in a configuration-driven architecture.
 
 
-1.Open the [scd2 job manifest file](source/app_resources/scd2-job.yaml) on your computer, replace the S3 bucket placeholders at each task sections. Either copy & paste the code bucket name from your deployment output, or use an existing s3 bucket name, input as your deployment parameter previously.
+1.Open the [scd2 job manifest file](source/example/scd2-workflow-job.yaml) on your computer, replace the S3 bucket placeholders at each task sections. Either copy & paste the code bucket name from your deployment output, or use an existing s3 bucket name, input as your deployment parameter previously.
 
 ```
-vi source/app_resources/scd2-workflow-job.yaml
+vi source/example/scd2-workflow-job.yaml
 ```
 ![](/images/4-cfn-output.png)
 
@@ -170,11 +170,11 @@ aws eks update-kubeconfig --name <EKS_cluster_name> --region <region> --role-arn
 3.Submit Arc Spark job
 
 ```
-kubectl apply -f source/app_resources/scd2-workflow-job.yaml
+kubectl apply -f source/example/scd2-workflow-job.yaml
 
 # Delete before submit the same job again
-kubectl delete -f source/app_resources/scd2-workflow-job.yaml
-kubectl apply -f source/app_resources/scd2-workflow-job.yaml
+kubectl delete -f source/example/scd2-workflow-job.yaml
+kubectl apply -f source/example/scd2-workflow-job.yaml
 ```
 
 <details>
@@ -183,7 +183,7 @@ Alternatively, submit the job with Argo CLI.
 </summary> 
 
 ```
-argo submit source/app_resources/scd2-workflow-job.yaml -n spark --watch
+argo submit source/example/scd2-workflow-job.yaml -n spark --watch
 
 # terminate the job that is running
 argo delete scd2-job-<random_string> -n spark
@@ -255,7 +255,7 @@ sh-5.0# exit
 
 ![](/images/4-cfn-output.png)
 
-3.Modify the job manifest file [native-spark-job.yaml](source/app_resources/native-spark-job.yaml) 
+3.Modify the job manifest file [native-spark-job.yaml](source/example/native-spark-job.yaml) 
 by replacing the bucket name placeholders.
 
 ![](/images/4-spark-output-s3.png)
@@ -264,7 +264,7 @@ by replacing the bucket name placeholders.
 4.Submit the native Spark job
 
 ```
-kubectl apply -f source/app_resources/native-spark-job.yaml
+kubectl apply -f source/example/native-spark-job.yaml
 
 ```
 5.Go to SparkUI to check your job progress and performance
@@ -296,9 +296,9 @@ kubectl get pod -n spark
  * `cdk docs`        open CDK documentation
  * `cdk destroy`     delete the stack deployed earlier
  * `kubectl get pod -n spark`                         list all jobs running in the Spark namespace
- * `kubectl get ingress -n argo`                          get argo dashboard URL
- * `kubectl get ingress -n jupyter`                       get Jupyterhub's URL
- * `argo submit source/app_resources/spark-job.yaml`  submit a spark job from a manifest file
+ * `kubectl get ingress -n argo`                      get argo dashboard URL
+ * `kubectl get ingress -n jupyter`                   get Jupyterhub's URL
+ * `argo submit source/example/spark-arc-job.yaml`    submit a spark job from a manifest file
  * `argo list --all-namespaces`                       show jobs from all namespaces
  * `kubectl delete pod --all -n spark`                delete all jobs submitted in the Spark namespace
  * `kubectl apply -f source/app_resources/spark-template.yaml` submit a reusable job template for Spark applications

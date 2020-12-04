@@ -35,13 +35,9 @@ else
 	sed -i.bak "s/{{ACCOUNTNUMBER}}/$ACCOUNTNUMBER/" deployment/environment.cfg
 	sed -i.bak "s/{{REGION}}/$REGION/" deployment/environment.cfg
 
-	echo "Replace account number in job configuration files"
-	sed -i.bak "s/{{ACCOUNTNUMBER}}/$ACCOUNTNUMBER/" source/app_resources/*-job.yaml
-	sed -i.bak "s/{{REGION}}/$REGION/" source/app_resources/*-job.yaml
-
-	echo "Replace account number in jupyter config"
-	sed -i.bak "s/{{ACCOUNTNUMBER}}/$ACCOUNTNUMBER/" source/app_resources/jupyter-config.yaml
-	sed -i.bak "s/{{REGION}}/$REGION/" source/app_resources/jupyter-config.yaml
+	echo "Update ECR url in sample job files"
+	sed -i.bak "s/{{ACCOUNTNUMBER}}/$ACCOUNTNUMBER/" source/example/*.yaml
+	sed -i.bak "s/{{REGION}}/$REGION/" source/example/*.yaml
 
 	find . -type f -name "*.bak" -delete
 fi
