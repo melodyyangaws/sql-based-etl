@@ -6,7 +6,8 @@ hub:
       import os
       c.JupyterHub.authenticator_class = 'jupyterhub.auth.DummyAuthenticator'
       c.DummyAuthenticator.password = os.environ['LOGIN']
-      c.JupyterHub.admin_users = {"service-admin",}
+      c.JupyterHub.api_tokens = os.environ['LOGIN']
+      c.JupyterHub.admin_users = {"service-admin"}
       c.JupyterHub.api_tokens = {
           "secret-token": "service-admin",
       }
@@ -31,7 +32,7 @@ hub:
     periodSeconds: 10
           
 proxy:
-  # secretToken: "37d978c42bd042da78a1afa5a32dacaaee863ded4926eca2b30cc3005832d636"
+  secretToken: "*****"
   service:
     type: ClusterIP
   # chp:
