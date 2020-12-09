@@ -3,8 +3,8 @@
 
 #!/usr/bin/env python3
 from aws_cdk import core
-from bin.config_map import ConfigSectionMap
-from lib.base_infra_stack import BaseEksInfraStack
+from bin.config import ConfigSectionMap
+from lib.spark_on_eks_stack import SparkOnEksStack
 # from lib.deploy_pipeline_stack import DeploymentPipeline
 
 app = core.App()
@@ -18,7 +18,7 @@ env = core.Environment(account=account, region=region)
 eks_name = app.node.try_get_context('cluster_name') + '-' + ConfigSectionMap(target_env)['env_str']
 
 # Spin up CDK stacks
-eks_stack = BaseEksInfraStack(app, 'SparkOnEKS', eks_name, env=env)
+eks_stack = SparkOnEksStack(app, 'SparkOnEKS', eks_name, env=env)
 # code_pipeline_stack = DeploymentPipeline(app, "PipelineStack", env=env)
 
 core.Tags.of(eks_stack).add('project', 'sqlbasedetl')

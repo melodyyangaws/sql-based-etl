@@ -2,8 +2,7 @@ import typing
 
 from aws_cdk import (
     core,
-    aws_iam as iam,
-    # aws_ssm as ssm
+    aws_iam as iam
 )
 from typing import  List
 
@@ -19,10 +18,6 @@ class IamConst(core.Construct):
 
     def __init__(self,scope: core.Construct, id:str, cluster_name:str, **kwargs,) -> None:
         super().__init__(scope, id, **kwargs)
-
-# //*********************************************************************//
-# //**************************** IAM ROLES ******************************//
-# //*********************************************************************//
 
         # # fargate role
         # _fargate_policy = (

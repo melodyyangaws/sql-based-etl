@@ -12,14 +12,6 @@ class NetworkSgConst(core.Construct):
     def efs_sg(self):
         return self._eks_efs_sg.security_group_id
 
-    @property
-    def eks_cluster_sg(self):
-        return self._eks_cluster_sg    
-
-    @property
-    def eks_shared_sg(self):
-        return self._eks_shared_sg    
-
 
     def __init__(self,scope: core.Construct, id:str, eksname:str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
@@ -64,38 +56,4 @@ class NetworkSgConst(core.Construct):
 
         core.Tags.of(self._eks_efs_sg).add('kubernetes.io/cluster/' + eksname,'owned')
         core.Tags.of(self._eks_efs_sg).add('Name', eksname+'-EFS-sg')
-       
-        # # cluster SG
-        # self._eks_cluster_sg = ec2.SecurityGroup(self,'clusterSG',
-        #     security_group_name= eksname+'-clusterSG',
-        #     vpc=self._vpc,
-        #     allow_all_outbound=True,
-        #     description='security group applied to ENI that is attached to EKS Control Plane master nodes, as well as any managed workloads',
-        # )
-        # core.Tags.of(self._eks_cluster_sg).add('kubernetes.io/cluster/' + eksname,'owned')
-        # core.Tags.of(self._eks_cluster_sg).add('Name', eksname+'-clusterSG')
-
-        # # cluster shared SG
-        # self._eks_shared_sg = ec2.SecurityGroup(self,'clusterSharedSG',
-        #     security_group_name= eksname + '-sharedSG',
-        #     vpc=self._vpc,
-        #     allow_all_outbound=True,
-        #     description='EKS shared SG for ' + eksname,
-        # )
-        # core.Tags.of(self._eks_shared_sg).add('kubernetes.io/cluster/' + eksname,'owned')
-        # core.Tags.of(self._eks_shared_sg).add('Name', eksname+'-sharedSG')
-        
-        # # add ingress rule to enable communicate with all types of node groups in EKS
-        # self._eks_shared_sg.add_ingress_rule(self._eks_shared_sg,
-        #     ec2.Port.all_traffic(),
-        #     description='Allow nodes to communicate with each other (all ports)'
-        # )
-        # self._eks_shared_sg.add_ingress_rule(self._eks_cluster_sg,
-        #     ec2.Port.all_traffic(),
-        #     description='Allow managed and unmanaged nodes to communicate with each other (all ports)')
-
-        # self._eks_cluster_sg.add_ingress_rule(self._eks_shared_sg,
-        #     ec2.Port.all_traffic(),
-        #     description='Allow unmanaged nodes to communicate with control plane (all ports)'
-        # )
-        # self._eks_cluster_sg.add_ingress_rule(self._eks_cluster_sg,ec2.Port.all_traffic())
+    
