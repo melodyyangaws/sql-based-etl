@@ -20,5 +20,3 @@ THIRD PARTY COMPONENTS
 This software includes third party software subject to the following copyrights:
 
 Arc; version 3.6.2 -- https://arc.tripl.ai/ -- MIT License
-Apache Spark; version 3.0.1 -- https://spark.apache.org/docs/latest/ -- Apache License Version 2.0
-slf4j-json-logger; version 2.0.2 -- https://github.com/savoirtech/slf4j-json-logger -- Apache License Version 2.0

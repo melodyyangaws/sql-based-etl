@@ -6,12 +6,10 @@ hub:
       import os
       c.JupyterHub.authenticator_class = 'jupyterhub.auth.DummyAuthenticator'
       c.DummyAuthenticator.password = os.environ['LOGIN']
-      c.JupyterHub.api_tokens = os.environ['LOGIN']
-      c.JupyterHub.admin_users = {"service-admin"}
-      c.JupyterHub.api_tokens = {
+      c.Authenticator.admin_users = {"service-admin"}
+      c.JupyterHub.service_tokens = {
           "secret-token": "service-admin",
       }
-      
       # this script allows serviceAccountName to use dynamic naming based on {unescaped_username}"
       async def override_service_account_hook(kube_spawner):
         if kube_spawner.service_account is not None:
@@ -45,7 +43,7 @@ singleuser:
     lifecycle: Ec2Spot
   image:
     name: ghcr.io/tripl-ai/arc-jupyter
-    tag: latest
+    tag: arc-jupyter_3.10.1_scala_2.12_hadoop_3.2.0_1.3.0
     pullPolicy: Always
   lifecycle_hooks:
     postStart:
@@ -96,5 +94,5 @@ scheduling:
     enabled: true
     replicas: 1
 
-debug:
-  enabled: true      
+# debug:
+#   enabled: true      

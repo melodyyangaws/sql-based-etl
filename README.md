@@ -1,5 +1,7 @@
 # SQL-based ETL with Apache Spark on Amazon EKS
-This is a project developed with Python CDK for the solution SO0141 - SQL based ETL with a declarative framework.
+This is a project developed with Python CDK for the solution - SQL based ETL with a declarative framework powered by Apache Spark. 
+
+We introduce a quality-aware design to increase data process productivity, by leveraging an open-source data framework [Arc](https://arc.tripl.ai/) for a user-centered declarative ETL solution. Additionally, we take considerations of the needs and expected skills from customers in data analytics, and accelerate their interaction with ETL practice in order to foster simplicity, while maximizing efficiency.
 
 ## Prerequisites 
 Python is needed in this project. Specifically, you will need version 3.6 or later. You can find information about downloading and installing Python [here](https://www.python.org/downloads/). Additionally you will need to have the Python package installer (pip) installed. See installation instructions [here](https://pypi.org/project/pip/).
@@ -83,6 +85,16 @@ You can use the cdk bootstrap command to install the bootstrap stack into an env
 cdk bootstrap aws://<YOUR_ACCOUNT_NUMBER>/<YOUR_REGION> -c develop
 ```
 
+## Connect to EKS cluster
+
+Before running any commands against the EKS cluster newly deployed, you need to connect to it firstly. Get the connection command from your deployment output, something like this:
+
+```
+aws eks update-kubeconfig --name <EKS_cluster_name> --region <region> --role-arn arn:aws:iam::<account_number>:role/<role_name>
+```
+![](/images/0-eks-config.png)
+
+
 ## Submit a Spark job on web interface
 
 After finished the deployment, we can start to `submit Spark job` on [Argo](https://argoproj.github.io/). Argo is an open source container-native workflow tool to orchestrate parallel jobs on Kubernetes. Argo Workflows is implemented as a Kubernetes CRD (Custom Resource Definition), which triggers time-based and event-based workflows specified by a configuration file.
@@ -94,7 +106,10 @@ In this example, we will extract the `New York City Taxi Data` from the [AWS Ope
 1. Find your Argo dashboard URL from the deployment output, something like this:
 ![](/images/0-argo-uri.png)
 
-2. Go to the ARGO dashboard, click on the `SUBMIT NEW WORKFLOW` button.
+NOTE: if the URL is not available, run it locally by type in `argo server` in your commandline tool.
+
+2. Go to the ARGO dashboard, click on the `SUBMIT NEW WORKFLOW` button. If you are running Argo locally, type in `http://localhost:2746` in your web browser.
+
 ![](/images/1-argoui.png)
 
 3. Replace the existing manifest by the following job definition, click `SUBMIT`.
@@ -144,13 +159,13 @@ The [manifest file](/source/example/scd2-workflow-job.yaml) defines where the Ju
 </details>
 <details>
 <summary>Jupyter notebook</summary>
-The [Jupyter notebook](/deployment/app_code/job/scd2_job.ipynb) specifies what exactly need to do in a data pipeline.
+The [Jupyter notebook](/source/example/scd2_job.ipynb) specifies what exactly need to do in a data pipeline.
 </details>
 
 In general, a parquet file is immutable in a Data Lake. This example will demonstrate how to address the problem and process data incrementally. It uses `Delta Lake`, which is an open source storage layer on top of parquet file, to bring the ACID transactions to your modern data architecture. In the example data pineline, we will build up a table to support the [Slowly Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) format, to demostrate how easy to do the ETL with a SQL first approach implemented in a configuration-driven architecture.
 
 
-1.Open the [scd2 job manifest file](source/example/scd2-workflow-job.yaml) on your computer, replace the S3 bucket placeholders at each task sections. Either copy & paste the code bucket name from your deployment output, or use an existing s3 bucket name, input as your deployment parameter previously.
+1.Open the [scd2 job manifest file](source/example/scd2-workflow-job.yaml) on your computer, replace the S3 bucket placeholders at each task sections. Either copy & paste the code bucket name from your deployment output, or use the existing s3 bucket name passed in as a parameter to your deployment previously.
 
 ```
 vi source/example/scd2-workflow-job.yaml
@@ -160,16 +175,13 @@ vi source/example/scd2-workflow-job.yaml
 ![](/images/3-scd-bucket.png)
 
 
-2.Before running command lines, you need to connect to the Amazon EKS cluster firstly. Get the connection command from your deployment output, something like this:
+2.Submit Arc Spark job
 
 ```
-aws eks update-kubeconfig --name <EKS_cluster_name> --region <region> --role-arn arn:aws:iam::<account_number>:role/<role_name>
-```
-![](/images/0-eks-config.png)
+# Make sure you are in the project root directory
+cd sql-based-etl
 
-3.Submit Arc Spark job
-
-```
+# Start a data pipeline containing 3 spark jobs
 kubectl apply -f source/example/scd2-workflow-job.yaml
 
 # Delete before submit the same job again
@@ -210,21 +222,25 @@ echo ARGO DASHBOARD: http://${ARGO_URL}:2746
 Apart from orchestrating Spark jobs with a declarative approach, we introduce a configuration-driven design for increasing data process productivity, by leveraging an open-source [data framework Arc](https://arc.tripl.ai/) for a SQL-centric ETL solution. We take considerations of the needs and expected skills from our customers in data, and accelerate their interaction with ETL practice in order to foster simplicity, while maximizing efficiency.
 
 1.Login to Jupyter Hub. 
-The default username is `sparkoneks`, or use your own login name defined at your deployment earlier:
+The default username is `sparkoneks`, or use your own login name defined at the deployment earlier:
 
 ```
 JHUB_PWD=$(kubectl -n jupyter get secret jupyter-external-secret -o jsonpath="{.data.password}" | base64 --decode)
 JHUB_URL=$(kubectl -n jupyter get ingress -o jsonpath="{.items[].status.loadBalancer.ingress[0].hostname}")
 echo -e "\njupyter login: $JHUB_PWD \njupyter hub URL: http://${JHUB_URL}:8000"
 
+#if the jupyter hub URL returned http://:8000, we can run the user interface locally
+POD_NAME=$(kubectl get po -n jupyter -l component=proxy -o jsonpath="{range .items[*]}{@.metadata.name}{end}")
+kubectl port-forward $POD_NAME 8000:8000 -n jupyter 
+
+# type http://127.0.0.1:8000 in your web browser
 ```
 
 2.Start the default development environment. Use a biggre instance to author your ETL job if you prefer.
 
 ![](/images/3-jhub-login.png)
 
-3.Upload a sample Arc-jupyter notebook from `deployment/app-code/job/scd2_job.ipynb`
-![](/images/3-jhub-upload.png)
+3.Upload a sample Arc-jupyter notebook from `source/example/scd2_job.ipynb`
 
 ![](/images/3-jhub-open-notebook.png)
 
@@ -311,3 +327,11 @@ kubectl get pod -n spark
 cdk destroy SparkOnEKS -c env=develop --require-approval never
 ``` 
 If any error ocurrs, go to Cloudformation console in your AWS account, manually delete templates on the console.
+
+## Security
+
+See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+
+## License
+
+This library is licensed under the MIT-0 License. See the LICENSE file.

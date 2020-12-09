@@ -8,8 +8,14 @@ from aws_cdk import (
     # aws_efs as efs,
     aws_iam as iam,
     aws_s3 as s3,
-    aws_s3_deployment as s3deploy
+    aws_s3_deployment as s3deploy,
+    aws_cloudfront_origins as origins
     # aws_cloud9 as cloud9
+)
+from aws_cdk.aws_elasticloadbalancingv2 import ApplicationLoadBalancer 
+from aws_cdk.aws_cloudfront import (
+    Distribution,
+    AllowedMethods
 )
 from aws_cdk.aws_secretsmanager import (
     Secret,
@@ -39,8 +45,6 @@ class BaseEksInfraStack(core.Stack):
         _secret = Secret(self, 'jHubPwd', 
             generate_secret_string=SecretStringGenerator(
                 exclude_punctuation=True,
-                exclude_uppercase=True,
-                password_length=64,
                 secret_string_template=json.dumps({'username': login_name.value_as_string}),
                 generate_string_key="password")
         )
@@ -367,7 +371,7 @@ class BaseEksInfraStack(core.Stack):
 # # //*************************************************************************************//
 # # //****************** 3.Setup permission for native Spark jobs  ***********************//
 # # //***********************************************************************************//
-        _spark_sa = self._my_cluster.add_service_account('nativeSparkSa',
+        _spark_sa = self._my_cluster.add_service_account('NativeSparkSa',
             name='nativejob',
             namespace='spark'
         )
@@ -385,30 +389,48 @@ class BaseEksInfraStack(core.Stack):
         for statmnt in _spark_iam:
             _spark_sa.add_to_principal_policy(iam.PolicyStatement.from_json(statmnt))
 
+# # # //******************************************************************************//
+# # # //*************** 4. Enable HTTPS endpoint by adding CloudFront ***************//
+# # # //*******************  to encrypt request on user interface ******************//
+# # # //***************************************************************************//
+        jhub_alb = ApplicationLoadBalancer.from_lookup(self, "ALBJHub",
+            load_balancer_tags={
+                # Finds a load balancer matching all tags.
+                "ingress.k8s.aws/stack": "jupyter/jupyterhub",
+                "elbv2.k8s.aws/cluster": eksname
+            }
+        ) 
+        jhub_alb.node.add_dependency(_config_hub)
+        jhub_dist = Distribution(self, "JHubDist",
+            default_behavior={
+                "origin": origins.LoadBalancerV2Origin(jhub_alb),
+                "allowed_methods": AllowedMethods.ALLOW_ALL
+            }
+
+        )
+        
+        argo_alb = ApplicationLoadBalancer.from_lookup(self, "ALBArgo",
+            load_balancer_tags={
+                "ingress.k8s.aws/stack": "argo/argo-server",
+                "elbv2.k8s.aws/cluster": eksname
+            }
+        )   
+        argo_alb.node.add_dependency(_argo_install)  
+        argo_dist = Distribution(self, "ArgoDist",
+            default_behavior={
+                "origin": origins.LoadBalancerV2Origin(argo_alb),
+                "allowed_methods": AllowedMethods.ALLOW_ALL
+            }
+        )
+
 # # # //*********************************************************************//
 # # # //*************************** Deployment Output ***********************//
-# # # //************ Remove ALB ingress from Argo and JupyterHub *************//
-# # # //********* enable it only if you can set them up with HTTPS *************//
 # # # //*********************************************************************//
-        # argo_url=eks.KubernetesObjectValue(self, 'argoALB',
-        #     cluster=self._my_cluster,
-        #     json_path='.status.loadBalancer.ingress[0].hostname',
-        #     object_type='ingress',
-        #     object_name='argo-server',
-        #     object_namespace='argo',
-        #     timeout=core.Duration.minutes(10)
-        # )
-        # argo_url.node.add_dependency(_argo_install)
-        # core.CfnOutput(self,'ARGO_URL', value='http://'+ argo_url.value + ':2746')
-        
-        # jhub_url=eks.KubernetesObjectValue(self, 'jhubALB',
-        #     cluster=self._my_cluster,
-        #     json_path='.status.loadBalancer.ingress[0].hostname',
-        #     object_type='ingress',
-        #     object_name='jupyterhub',
-        #     object_namespace='jupyter',
-        #     timeout=core.Duration.minutes(10)
-        # )
-        # jhub_url.node.add_dependency(_config_hub)
-        # core.CfnOutput(self,'JUPYTER_URL', value='http://'+ jhub_url.value + ':8000')
+
+        core.CfnOutput(self,'JUPYTER_URL', value='http://'+ jhub_alb.load_balancer_dns_name)
+        core.CfnOutput(self,'ARGO_URL', value='http://'+ argo_alb.load_balancer_dns_name)
+
+        core.CfnOutput(self,'JUPYTER_HTTPS_URL', value='https://'+ jhub_dist.distribution_domain_name)
+        core.CfnOutput(self,'ARGO_HTTPS_URL', value='https://'+ argo_dist.distribution_domain_name)
+
         core.CfnOutput(self,'CODE_BUCKET', value=code_bucket)

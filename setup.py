@@ -30,8 +30,9 @@ setuptools.setup(
         "aws-cdk.aws_codepipeline==1.76.0",
         "aws-cdk.aws_codepipeline_actions==1.76.0",
         "aws_cdk.aws_secretsmanager==1.76.0",
-        # "aws-cdk.aws_cloud9==1.76.0",
-        "aws-cdk.aws_efs==1.76.0",
+        "aws_cdk.aws_elasticloadbalancingv2==1.76.0",
+        "aws-cdk.aws_cloudfront==1.76.0",
+        "aws-cdk.aws_cloudfront_origins==1.76.0",
         "pyyaml==5.3"
     ],
 
