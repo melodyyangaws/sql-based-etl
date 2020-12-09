@@ -87,7 +87,7 @@ cdk bootstrap aws://<YOUR_ACCOUNT_NUMBER>/<YOUR_REGION> -c develop
 
 ## Connect to EKS cluster
 
-Before running any commands against the EKS cluster newly deployed, you need to connect to it firstly. Get the connection command from your deployment output, something like this:
+Before running any commands against a new EKS cluster, you need to connect to it firstly. Get the connection command from your deployment output, something like this:
 
 ```
 aws eks update-kubeconfig --name <EKS_cluster_name> --region <region> --role-arn arn:aws:iam::<account_number>:role/<role_name>
@@ -97,7 +97,9 @@ aws eks update-kubeconfig --name <EKS_cluster_name> --region <region> --role-arn
 
 ## Submit a Spark job on web interface
 
-After finished the deployment, we can start to `submit Spark job` on [Argo](https://argoproj.github.io/). Argo is an open source container-native workflow tool to orchestrate parallel jobs on Kubernetes. Argo Workflows is implemented as a Kubernetes CRD (Custom Resource Definition), which triggers time-based and event-based workflows specified by a configuration file.
+After finished the deployment, we can start to `submit Spark job` on [Argo](https://argoproj.github.io/).
+
+Argo is an open source container-native workflow tool to orchestrate parallel jobs on Kubernetes. Argo Workflows is implemented as a Kubernetes CRD (Custom Resource Definition), which triggers time-based and event-based workflows specified by a configuration file.
 
 Take a look at the [sample job](https://github.com/tripl-ai/arc-starter/tree/master/examples/kubernetes/nyctaxi.ipynb) developed in Jupyter Notebook.  It uses a thin Spark wrapper called [Arc](https://arc.tripl.ai/) to create an ETL job in a codeless, declarative way. The opinionated standard approach enables rapid application deployment, simplifies data pipeline build. Additionally, it makes [self-service analytics](https://github.com/melodyyangaws/aws-service-catalog-reference-architectures/blob/customize_ecs/ecs/README.md) possible to the business.
 

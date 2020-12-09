@@ -19,4 +19,4 @@ THIRD PARTY COMPONENTS
 **********************
 This software includes third party software subject to the following copyrights:
 
-Arc; version 3.6.2 -- https://arc.tripl.ai/ -- MIT License
+Arc -- version 3.6.2 -- https://arc.tripl.ai/ -- MIT License
