@@ -4,8 +4,7 @@
 from aws_cdk import (
     core, 
     aws_eks as eks,
-    aws_secretsmanager as secmger,
-    aws_cdk.aws_elasticloadbalancingv2 as alb
+    aws_secretsmanager as secmger
 )
 from bin.network_sg import NetworkSgConst
 from bin.iam_roles import IamConst
@@ -41,7 +40,7 @@ class SparkOnEksStack(core.Stack):
                 generate_string_key="password")
         )
 
-        # Setup EKS base infrastructure
+        # 1. Setup EKS base infrastructure
         network_sg = NetworkSgConst(self,'network-sg', eksname)
         iam_role = IamConst(self,'iam_roles', eksname)
         eks_cluster = EksConst(self,'eks_cluster', eksname, network_sg.vpc, iam_role.managed_node_role)
@@ -49,7 +48,7 @@ class SparkOnEksStack(core.Stack):
         eks_base_app = EksBaseAppConst(self, 'eks_base_app', eks_cluster.my_cluster, self.region)
         # eks_base_app.node.add_dependency(eks_security)
 
-        # Setup Spark On EKS
+        # 2. Setup SparkOnEKS security control
         app_s3 = S3AppCodeConst(self,'upload_app_code')
         app_security = SparkOnEksSAConst(self,'spark_service_account', 
             eks_cluster.my_cluster, 
@@ -58,10 +57,8 @@ class SparkOnEksStack(core.Stack):
             datalake_bucket.value_as_string
         )
         
-# //**************************************************************************************//
-# //************************** 1. Setup Argo Workflow ***********************************//
-# //******* K8s Native WF tool orchestrates containerized batch & streaming jobs ********//
-# //***********************************************************************************//
+        # 3. Install ETL orchestrator - Argo
+        # can be replaced by other workflow tool, ie. Airflow
         argo_install = eks_cluster.my_cluster.add_helm_chart('ARGOChart',
             chart='argo',
             repository='https://argoproj.github.io/argo-helm',
@@ -70,17 +67,13 @@ class SparkOnEksStack(core.Stack):
             create_namespace=True,
             values=loadYamlLocal('../app_resources/argo-values.yaml')
         )
-        
-        # Create a k8s cluster scope workflow template, required when manually submit Spark jobs
+        # Create a Spark workflow template with different T-shirt size
         submit_tmpl = eks_cluster.my_cluster.add_manifest('SubmitSparkWrktmpl',
             loadYamlLocal('../app_resources/spark-template.yaml')
         )
         submit_tmpl.node.add_dependency(argo_install)
 
-# //*********************************************************************//
-# //************************ 2. Setup Arc Jupyter ***********************//
-# //********* interactive user interface to develop Spark ETL ***********//
-# //*********************************************************************//
+        # 4. Install Arc Jupyter, interactive user interface to build Spark ETL
         jhub_install= eks_cluster.my_cluster.add_helm_chart('JHubChart',
             chart='jupyterhub',
             repository='https://jupyterhub.github.io/helm-chart',
@@ -96,7 +89,7 @@ class SparkOnEksStack(core.Stack):
         )
         # jhub_install.node.add_dependency(app_security)
 
-        # configure JupyterHub
+        # get Arc Jupyter login from secrets manager
         name_parts= core.Fn.split('-',jhub_secret.secret_name)
         name_no_suffix=core.Fn.join('-',[core.Fn.select(0, name_parts), core.Fn.select(1, name_parts)])
 
@@ -104,7 +97,7 @@ class SparkOnEksStack(core.Stack):
             cluster=eks_cluster.my_cluster,
             manifest=loadYamlReplaceVarLocal('../app_resources/jupyter-config.yaml', 
                 fields= {
-                    "{{MY_SA}}": etl_security.jupyter_sa,
+                    "{{MY_SA}}": app_security.jupyter_sa,
                     "{{REGION}}": self.region, 
                     "{{SECRET_NAME}}": name_no_suffix
                 }, 
@@ -113,35 +106,16 @@ class SparkOnEksStack(core.Stack):
         # config_hub.node.add_dependency(eks_security)
         config_hub.node.add_dependency(jhub_install)
 
-# //******************************************************************************//
-# //************* 3. Add CloudFront to enable HTTPS Endpoint (OPTIONAL) *********//
-# //*************  to encrypt request between user and web apps ****************//
-# //***************************************************************************//
-        jhub_alb = alb.ApplicationLoadBalancer.from_lookup(self, "ALBJHub",
-            load_balancer_tags={
-                "ingress.k8s.aws/stack": "jupyter/jupyterhub",
-                "elbv2.k8s.aws/cluster": eksname
-            }
-        ) 
-        jhub_alb.node.add_dependency(config_hub)
-        jhub_cf = CloudFrontConst(self,'jhubCloudFront', alb=jhub_alb, port=8000)
-        
-        argo_alb = alb.ApplicationLoadBalancer.from_lookup(self, "ALBArgo",
-            load_balancer_tags={
-                "ingress.k8s.aws/stack": "argo/argo-server",
-                "elbv2.k8s.aws/cluster": eksname
-            }
-        )   
-        argo_alb.node.add_dependency(argo_install)  
-        argo_cf = CloudFrontConst(self,'argoCloudFront', alb=argo_alb, port=2746)
+        # 5. OPTIONAL - Enable HTTPS encryption via CloudFront
+        cf_dist = CloudFrontConst(self, 'cloud_front', eksname)
 
 # //*********************************************************************//
 # //*************************** Deployment Output ***********************//
 # //*********************************************************************//
 
-        # core.CfnOutput(self,'JUPYTER_ALB_URL', value='http://'+ jhub_alb.load_balancer_dns_name + ':8000')
-        # core.CfnOutput(self,'ARGO_ALB_URL', value='http://'+ argo_alb.load_balancer_dns_name+ ':2746')
+        # core.CfnOutput(self,'JUPYTER_ALB_URL', value='http://'+ cf_dist.jhub_alb_name + ':8000')
+        # core.CfnOutput(self,'ARGO_ALB_URL', value='http://'+ cf_dist.argo_alb_name+ ':2746')
 
-        core.CfnOutput(self,'JUPYTER_URL', value='https://'+ jhub_cf.distribution.distribution_domain_name)
-        core.CfnOutput(self,'ARGO_URL', value='https://'+ argo_cf.distribution.distribution_domain_name)
+        core.CfnOutput(self,'JUPYTER_URL', value='https://'+ cf_dist.jhub_cf_name)
+        core.CfnOutput(self,'ARGO_URL', value='https://'+ cf_dist.argo_cf_name)
         core.CfnOutput(self,'CODE_BUCKET', value=app_s3.code_bucket)

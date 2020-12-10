@@ -14,8 +14,8 @@ If you use Windows, be sure Python is on your PATH.
 Clone the project.
 
 ```
-git clone https://github.com/melodyyangaws/sql-based-etl.git
-cd sql-based-etl
+git clone https://github.com/awslabs/sql-based-etl-with-apache-spark-on-amazon-eks.git
+cd sql-based-etl-with-apache-spark-on-amazon-eks
 
 ```
 
@@ -223,19 +223,15 @@ echo ARGO DASHBOARD: http://${ARGO_URL}:2746
 
 Apart from orchestrating Spark jobs with a declarative approach, we introduce a configuration-driven design for increasing data process productivity, by leveraging an open-source [data framework Arc](https://arc.tripl.ai/) for a SQL-centric ETL solution. We take considerations of the needs and expected skills from our customers in data, and accelerate their interaction with ETL practice in order to foster simplicity, while maximizing efficiency.
 
-1.Login to Jupyter Hub. 
+1.Login to Jupyter Hub via a URL output from the deployment.
+
+![](/images/3-jupyter-url.png)
+
 The default username is `sparkoneks`, or use your own login name defined at the deployment earlier:
 
 ```
 JHUB_PWD=$(kubectl -n jupyter get secret jupyter-external-secret -o jsonpath="{.data.password}" | base64 --decode)
-JHUB_URL=$(kubectl -n jupyter get ingress -o jsonpath="{.items[].status.loadBalancer.ingress[0].hostname}")
-echo -e "\njupyter login: $JHUB_PWD \njupyter hub URL: http://${JHUB_URL}:8000"
-
-#if the jupyter hub URL returned http://:8000, we can run the user interface locally
-POD_NAME=$(kubectl get po -n jupyter -l component=proxy -o jsonpath="{range .items[*]}{@.metadata.name}{end}")
-kubectl port-forward $POD_NAME 8000:8000 -n jupyter 
-
-# type http://127.0.0.1:8000 in your web browser
+echo -e "\njupyter login: $JHUB_PWD"
 ```
 
 2.Start the default development environment. Use a biggre instance to author your ETL job if you prefer.
@@ -322,8 +318,10 @@ kubectl get pod -n spark
  * `kubectl apply -f source/app_resources/spark-template.yaml` submit a reusable job template for Spark applications
 
 ## Clean up
+* Delete the cdk.context.json file from your code repo, before redeploy the CDK package from the scratch.
 * Delete a s3 bucket with the prefix of `sparkoneks-codebucket`, because AWS CloudFormation cannot delete a non-empty Amazon S3 bucket automatically. 
-* Delete cloud resources by the following CDK CLI
+* Delete docker container image from ECR
+* Delete the rest of cloud resources via CDK CLI
 
 ```
 cdk destroy SparkOnEKS -c env=develop --require-approval never
@@ -336,4 +334,4 @@ See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more inform
 
 ## License
 
-This library is licensed under the MIT-0 License. See the LICENSE file.
+This library is licensed under the MIT-0 License. See the [LICENSE](LICENSE.txt) file.
