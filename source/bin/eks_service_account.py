@@ -6,22 +6,8 @@ from aws_cdk import (
 from aws_cdk.aws_secretsmanager import ISecret
 from aws_cdk.aws_eks import ICluster
 from bin.manifest_reader import *
-import json
 
 class EksSAConst(core.Construct):
-
-    # @property
-    # def scaler_sa(self):
-    #     return self._scaler_sa
-
-    # @property
-    # def alb_sa(self):
-    #     return self._alb_sa    
-
-    # @property
-    # def secrets_sa(self):
-    #     return self._secrets_sa    
-           
 
     def __init__(self,scope: core.Construct, id:str, eks_cluster: ICluster, secret: ISecret, **kwargs,) -> None:
         super().__init__(scope, id, **kwargs)

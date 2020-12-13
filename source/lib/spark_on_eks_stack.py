@@ -8,7 +8,6 @@ from aws_cdk import (
 )
 from bin.network_sg import NetworkSgConst
 from bin.iam_roles import IamConst
-from bin.cloudfront import CloudFrontConst
 from bin.eks_cluster import EksConst
 from bin.eks_service_account import EksSAConst
 from bin.eks_base_app import EksBaseAppConst
@@ -106,16 +105,8 @@ class SparkOnEksStack(core.Stack):
         # config_hub.node.add_dependency(eks_security)
         config_hub.node.add_dependency(jhub_install)
 
-        # 5. OPTIONAL - Enable HTTPS encryption via CloudFront
-        cf_dist = CloudFrontConst(self, 'cloud_front', eksname)
+    # //*********************************************************************//
+    # //*************************** Deployment Output ***********************//
+    # //*********************************************************************//
 
-# //*********************************************************************//
-# //*************************** Deployment Output ***********************//
-# //*********************************************************************//
-
-        # core.CfnOutput(self,'JUPYTER_ALB_URL', value='http://'+ cf_dist.jhub_alb_name + ':8000')
-        # core.CfnOutput(self,'ARGO_ALB_URL', value='http://'+ cf_dist.argo_alb_name+ ':2746')
-
-        core.CfnOutput(self,'JUPYTER_URL', value='https://'+ cf_dist.jhub_cf_name)
-        core.CfnOutput(self,'ARGO_URL', value='https://'+ cf_dist.argo_cf_name)
         core.CfnOutput(self,'CODE_BUCKET', value=app_s3.code_bucket)

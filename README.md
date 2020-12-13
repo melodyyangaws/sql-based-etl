@@ -20,10 +20,13 @@ cd sql-based-etl-with-apache-spark-on-amazon-eks
 ```
 
 Build Arc docker image and push it to your container registry ECR. 
-The following bash script will help you to prepare the deployment in your AWS environment. Replace the placeholders by your own information.
+The following bash script will help you to prepare the deployment in your AWS environment. Replace the following placeholders by your own information.
 
 ```
-bash deployment/pull_and_push_ecr.sh <your_region> <your_account_number> 'arc' 1
+bash deployment/pull_and_push_ecr.sh <your_region> <your_account_number> 'arc'
+
+# use `skip_ecr` flag, when rerun the script without docker push 
+bash deployment/pull_and_push_ecr.sh <your_region> <your_account_number> 'arc' 'skip_ecr'
 ```
 
 Install kubernetes tools on MAC.
@@ -39,19 +42,15 @@ This project is set up like a standard Python project. The `cdk.json` file tells
 ``` 
 python3 -m venv .env
 ```
-If you are a Windows platform, you would activate the virtualenv like this:
+If you are in a Windows platform, you would activate the virtualenv like this:
 
 ```
 % .env\Scripts\activate.bat
 ```
-After the virtualenv is created, you can use the following step to activate your virtualenv.
+After the virtualenv is created, you can use the followings to activate your virtualenv and install the required dependencies.
 
 ```
 source .env/bin/activate
-```
-Once the virtualenv is activated, you can install the required dependencies.
-
-```
 pip install -r source/requirements.txt
 ```
 Finally deploy the stack. It takes two optional parameters `jhubuser` & `datalakebucket`.
@@ -75,7 +74,7 @@ cdk deploy SparkOnEKS --require-approval never -c env=develop --parameters jhubu
 ```
 ## Troubleshooting
 
-1. If you see the issue `[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1123)`, most likely it means no default certificate authority for your Python installation on OSX. Refer to the [answer](https://stackoverflow.com/questions/52805115/certificate-verify-failed-unable-to-get-local-issuer-certificate) and installing `Install Certificates.command` should fix your local environment. Otherwise, use Cloud9 to deploy the CDK instead.
+1. If you see the issue `[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1123)`, most likely it means no default certificate authority for your Python installation on OSX. Refer to the [answer](https://stackoverflow.com/questions/52805115/0nd installing `Install Certificates.command` should fix your local environment. Otherwise, use [Cloud9](https://aws.amazon.com/cloud9/details/) to deploy the CDK instead.
 
 2. If an error says `SparkOnEKS failed: Error: This stack uses assets, so the toolkit stack must be deployed to the environment (Run "cdk bootstrap aws://YOUR_ACCOUNT_NUMBER/REGION")` , it means it is the first time you deploy an AWS CDK app into an environment (account/region), you’ll need to install a “bootstrap stack”. This stack includes resources that are needed for the toolkit’s operation. For example, the stack includes an S3 bucket that is used to store templates and assets during the deployment process.
 
@@ -87,7 +86,7 @@ cdk bootstrap aws://<YOUR_ACCOUNT_NUMBER>/<YOUR_REGION> -c develop
 
 ## Connect to EKS cluster
 
-Before running any commands against a new EKS cluster, you need to connect to it firstly. Get the connection command from your deployment output, something like this:
+Before running any commands against a new EKS cluster, you need to connect to it first. Get the connection command from your deployment output, something like this:
 
 ```
 aws eks update-kubeconfig --name <EKS_cluster_name> --region <region> --role-arn arn:aws:iam::<account_number>:role/<role_name>
@@ -97,24 +96,28 @@ aws eks update-kubeconfig --name <EKS_cluster_name> --region <region> --role-arn
 
 ## Submit a Spark job on web interface
 
-After finished the deployment, we can start to `submit Spark job` on [Argo](https://argoproj.github.io/).
+Once the CDK deployment is completed, we can start to `submit a Spark job` on [Argo](https://argoproj.github.io/).
 
-Argo is an open source container-native workflow tool to orchestrate parallel jobs on Kubernetes. Argo Workflows is implemented as a Kubernetes CRD (Custom Resource Definition), which triggers time-based and event-based workflows specified by a configuration file.
+<details>
+<summary>Argo definition</summary>
+An open source container-native workflow tool to orchestrate parallel jobs on Kubernetes. Argo Workflows is implemented as a Kubernetes CRD (Custom Resource Definition). It triggers time-based or event-based workflows via configuration files.
+</details>
 
-Take a look at the [sample job](https://github.com/tripl-ai/arc-starter/tree/master/examples/kubernetes/nyctaxi.ipynb) developed in Jupyter Notebook.  It uses a thin Spark wrapper called [Arc](https://arc.tripl.ai/) to create an ETL job in a codeless, declarative way. The opinionated standard approach enables rapid application deployment, simplifies data pipeline build. Additionally, it makes [self-service analytics](https://github.com/melodyyangaws/aws-service-catalog-reference-architectures/blob/customize_ecs/ecs/README.md) possible to the business.
+Firstly, let's take a look at a [sample job](https://github.com/tripl-ai/arc-starter/tree/master/examples/kubernetes/nyctaxi.ipynb) developed in Jupyter Notebook.  It uses a thin Spark wrapper called [Arc](https://arc.tripl.ai/) to create an ETL job in a codeless, declarative way. The opinionated standard approach enables rapid application development, and simplifies data pipeline build. Additionally, it makes [self-service analytics](https://github.com/melodyyangaws/aws-service-catalog-reference-architectures/blob/customize_ecs/ecs/README.md) possible.
 
-In this example, we will extract the `New York City Taxi Data` from the [AWS Open Data Registry](https://registry.opendata.aws/nyc-tlc-trip-records-pds/), ie. a public s3 bucket `s3://nyc-tlc/trip data`, transform the data from CSV to parquet file format, followed by a SQL-based data validation step, to ensure the typing transformation is done correctly. Finally, query the optimized data filtered by a flag column.
+In this example, we will extract the `New York City Taxi Data` from [AWS Open Data Registry](https://registry.opendata.aws/nyc-tlc-trip-records-pds/), ie. a public S3 bucket `s3://nyc-tlc/trip data`, then transform the data from CSV to parquet file format, followed by a SQL-based validation step, to ensure the typing transformation is done correctly. Finally, query the optimized data filtered by a flag column.
 
-1. Find your Argo dashboard URL from the deployment output, something like this:
+1. Copy an Argo dashboard URL from your deployment output, something like this:
+
 ![](/images/0-argo-uri.png)
 
-NOTE: if the URL is not available, run it locally by type in `argo server` in your commandline tool.
+OPTIONAL: type `argo server` in command line tool, then go to `http://localhost:2746`.
 
-2. Go to the ARGO dashboard, click on the `SUBMIT NEW WORKFLOW` button. If you are running Argo locally, type in `http://localhost:2746` in your web browser.
+2. Go to the dashboard, click `SUBMIT NEW WORKFLOW`. 
 
 ![](/images/1-argoui.png)
 
-3. Replace the existing manifest by the following job definition, click `SUBMIT`.
+3. Replace the existing manifest by the following job definition, then `SUBMIT`.
 
 ```
 apiVersion: argoproj.io/v1alpha1
@@ -149,6 +152,7 @@ spec:
 ![](/images/2-argo-submit.png)
 
 4. Click a pod (dot) on the dashboard to examine the job status and application logs.
+
 ![](/images/3-argo-log.png)
 
 
@@ -164,24 +168,23 @@ The [manifest file](/source/example/scd2-workflow-job.yaml) defines where the Ju
 The [Jupyter notebook](/source/example/scd2_job.ipynb) specifies what exactly need to do in a data pipeline.
 </details>
 
-In general, a parquet file is immutable in a Data Lake. This example will demonstrate how to address the problem and process data incrementally. It uses `Delta Lake`, which is an open source storage layer on top of parquet file, to bring the ACID transactions to your modern data architecture. In the example data pineline, we will build up a table to support the [Slowly Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) format, to demostrate how easy to do the ETL with a SQL first approach implemented in a configuration-driven architecture.
+In general, parquet files are immutable in Data Lake. This example will demonstrate how to address the problem and process data incrementally. It uses `Delta Lake`, an open source storage layer on top of parquet file, to bring the ACID transactions to your modern data architecture. In the example, we will build up a table to support the [Slowly Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) format, to demostrate how easy to do the ETL with a SQL first approach implemented in a configuration-driven way.
 
 
-1.Open the [scd2 job manifest file](source/example/scd2-workflow-job.yaml) on your computer, replace the S3 bucket placeholders at each task sections. Either copy & paste the code bucket name from your deployment output, or use the existing s3 bucket name passed in as a parameter to your deployment previously.
+1. Open the [scd2 job manifest file](source/example/scd2-workflow-job.yaml) on your computer, replace the S3 bucket placeholder {{codeBucket}}. Either copy & paste the code bucket name from your deployment output, or use the existing s3 bucket name passed in as a parameter to your deployment previously.
 
 ```
 vi source/example/scd2-workflow-job.yaml
 ```
 ![](/images/4-cfn-output.png)
-
 ![](/images/3-scd-bucket.png)
 
 
-2.Submit Arc Spark job
+2. Submit Arc Spark job
 
 ```
 # Make sure you are in the project root directory
-cd sql-based-etl
+cd sql-based-etl-with-apache-spark-on-amazon-eks
 
 # Start a data pipeline containing 3 spark jobs
 kubectl apply -f source/example/scd2-workflow-job.yaml
@@ -199,7 +202,7 @@ Alternatively, submit the job with Argo CLI.
 ```
 argo submit source/example/scd2-workflow-job.yaml -n spark --watch
 
-# terminate the job that is running
+# terminate your job, for example 'scd2-job-vvkgr'
 argo delete scd2-job-<random_string> -n spark
 
 ```
@@ -208,43 +211,47 @@ argo delete scd2-job-<random_string> -n spark
 ![](/images/2-argo-scdjob.png)
 </details>
 
-4.Go to your Argo dashboard by running the following command. Or copy the URL directly from your deployment output.
 
-```
-ARGO_URL=$(kubectl -n argo get ingress argo-server --template "{{ range (index .status.loadBalancer.ingress 0) }}{{ . }}{{ end }}")
-echo ARGO DASHBOARD: http://${ARGO_URL}:2746
-```
+3. Go to your Argo dashboard via the deployment output URL link
 
-5.Check the job status and applications logs on the dashboard.
+![](/images/0-argo-uri.png)
+
+
+
+4. Check the job status and applications logs
 ![](/images/3-argo-log.png)
 
 
-## Developo & test Spark job in Jupyter notebook
+
+## Develop & test Spark job in Jupyter
 
 Apart from orchestrating Spark jobs with a declarative approach, we introduce a configuration-driven design for increasing data process productivity, by leveraging an open-source [data framework Arc](https://arc.tripl.ai/) for a SQL-centric ETL solution. We take considerations of the needs and expected skills from our customers in data, and accelerate their interaction with ETL practice in order to foster simplicity, while maximizing efficiency.
 
-1.Login to Jupyter Hub via a URL output from the deployment.
+1. Login to Jupyter Hub user interface:
 
 ![](/images/3-jupyter-url.png)
 
-The default username is `sparkoneks`, or use your own login name defined at the deployment earlier:
+username -  `sparkoneks`, or use your own login name defined at the deployment earlier. 
+password - see below command.
 
 ```
 JHUB_PWD=$(kubectl -n jupyter get secret jupyter-external-secret -o jsonpath="{.data.password}" | base64 --decode)
 echo -e "\njupyter login: $JHUB_PWD"
 ```
 
-2.Start the default development environment. Use a biggre instance to author your ETL job if you prefer.
+2. Start the default IDE (development environment). Use the bigger instance to author your ETL job if needed.
 
 ![](/images/3-jhub-login.png)
 
-3.Upload a sample Arc-jupyter notebook from `source/example/scd2_job.ipynb`
+
+3. Upload a sample Arc-jupyter notebook from `source/example/scd2_job.ipynb`
 
 ![](/images/3-jhub-open-notebook.png)
 
-4.Execute each block and observe the result.
 
-NOTE: the variable `${ETL_CONF_DATALAKE_LOC}` is set to a code bucket or your existing bucket configured by the deployment, ie. an IAM role attached to the Jupyter Hub is designed to access this bucket only. If you would like to connect to another bucket that wansn't configured by the deployment process, you will get an error with access deny. In this case, simply add the bucket ARN to the IAM role 'SparkOnEKS-EksClusterjhubServiceAcctRole'.
+4. Execute each block and observe the result.
+
+NOTE: the variable `${ETL_CONF_DATALAKE_LOC}` is set to a code bucket or an existing DataLake S3 bucket specified at the deployment. An IAM role attached to the Jupyter Hub is controling the data access to the S3 bucket. If you would like to connect to another bucket that wansn't specified at the deployment, you will get an access deny error. In this case, simply add the bucket ARN to the IAM role 'SparkOnEKS-EksClusterjhubServiceAcctRole'.
 
 
 ## Submit a native Spark job with Spot instance
@@ -253,7 +260,8 @@ As an addition of the solution, to meet customer's preference of running native 
 
 In Spark, driver is a single point of failure in data processing. If driver dies, all other linked components will be discarded as well. To achieve the optimal performance and cost, we will run the driver on a reliable managed EC2 instance on EKS, and the rest of executors will be on spot instances.
 
-1.[OPTIONAL] Run a dummy container to validate template files.
+1. [OPTIONAL] Run a dummy container to validate the spot template file. 
+NOTE: update the placeholder with corret information.
 
 ```
 kubectl run --generator=run-pod/v1 jump-pod --rm -i --tty --serviceaccount=nativejob --namespace=spark --image <your_account_number>.dkr.ecr.<your_region>.amazonaws.com/arc:latest sh
@@ -265,36 +273,33 @@ sh-5.0# cat executor-pod-template.yaml
 sh-5.0# exit
 
 ```
-2.Copy the S3 bucket name from the deployment output
+
+2. Modify the job manifest file [native-spark-job.yaml](source/example/native-spark-job.yaml) stored on your computer, ie. replace the placeholder {{codeBucket}}.
 
 ![](/images/4-cfn-output.png)
-
-3.Modify the job manifest file [native-spark-job.yaml](source/example/native-spark-job.yaml) 
-by replacing the bucket name placeholders.
-
 ![](/images/4-spark-output-s3.png)
 
 
-4.Submit the native Spark job
+3. Submit the native Spark job
 
 ```
 kubectl apply -f source/example/native-spark-job.yaml
 
 ```
-5.Go to SparkUI to check your job progress and performance
+4. Go to SparkUI to check your job progress and performance
 
 ```
 driver=$(kubectl get pod -n spark -l spark-role=driver -o jsonpath="{.items[*].metadata.name}")
 kubectl port-forward $driver 4040:4040 -n spark
 
-# type in `localhost:4040` to go to your web browser
+# go to `localhost:4040` from your web browser
 
 ```
-6. Examine the auto-scaling and multiAZs
+5. Examine the auto-scaling and multi-AZs
 
 ```
-# the job requests 5 executors with 5 new Spot instances. 
-# the auto-scaling will be triggered across multiple AZs.
+# The job requests 5 Spark executors (pods) on top of 5 spot instances. It is configurable to fit in to a single or less number of spot instances. 
+# the auto-scaling is triggered across multiple AZs, again it is configurable to trigger the job in a single AZ if reuqired.
 
 kubectl get node --label-columns=lifecycle,topology.kubernetes.io/zone
 kubectl get pod -n spark
@@ -318,15 +323,15 @@ kubectl get pod -n spark
  * `kubectl apply -f source/app_resources/spark-template.yaml` submit a reusable job template for Spark applications
 
 ## Clean up
-* Delete the cdk.context.json file from your code repo, before redeploy the CDK package from the scratch.
-* Delete a s3 bucket with the prefix of `sparkoneks-codebucket`, because AWS CloudFormation cannot delete a non-empty Amazon S3 bucket automatically. 
-* Delete docker container image from ECR
-* Delete the rest of cloud resources via CDK CLI
+* Delete the cdk.context.json file from the code repository, if you need to redeploy the CDK package from the scratch.
+* Delete the s3 with a prefix of `sparkoneks-codebucket`, because AWS CloudFormation cannot delete a non-empty S3 bucket automatically. 
+* Delete the Arc docker image from ECR.
+* Finally, delete the rest of cloud resources via CDK CLI
 
 ```
 cdk destroy SparkOnEKS -c env=develop --require-approval never
 ``` 
-If any error ocurrs, go to Cloudformation console in your AWS account, manually delete templates on the console.
+
 
 ## Security
 

@@ -32,9 +32,9 @@ class DeploymentPipeline(core.Stack):
             # pass env into the codebuild project so codebuild knows where to push
             environment_variables={
                 'REGION': codebuild.BuildEnvironmentVariable(
-                    value=env.REGION),
+                    value=self.region),
                 'ACCOUNTNUMBER': codebuild.BuildEnvironmentVariable(
-                    value=env.ACCOUNTNUMBER)
+                    value=self.account)
             },
         )
 

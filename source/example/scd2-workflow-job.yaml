@@ -1,10 +1,10 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
-  # need it if using ArgoCLI
+  # only need if using ArgoCLI
   # generateName: scd2-job-
   namespace: spark
-  ## need it if use kubectl
+  ## only need if use kubectl
   name: scd2-job
 spec:
   serviceAccountName: arcjob
@@ -67,7 +67,7 @@ spec:
             - name: configUri
               value: "s3a://{{codeBucket}}/app_code/job/scd2_merge.ipynb"
             - name: parameters
-              value: "--ETL_CONF_DATALAKE_LOC={{codeBucket}} --ETL_CONF_AWS_REGION=us-west-2"           
+              value: "--ETL_CONF_DATALAKE_LOC={{codeBucket}} --ETL_CONF_AWS_REGION={{REGION}}"           
             - name: sparkConf
               value: "--conf spark.databricks.delta.merge.repartitionBeforeWrite.enabled=true \
               --conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' \

@@ -5,7 +5,8 @@
 from aws_cdk import core
 from bin.config import ConfigSectionMap
 from lib.spark_on_eks_stack import SparkOnEksStack
-# from lib.deploy_pipeline_stack import DeploymentPipeline
+from lib.cloud_front_stack import AddCloudFrontStack
+from lib.deploy_pipeline_stack import DeploymentPipeline
 
 app = core.App()
 
@@ -19,7 +20,10 @@ eks_name = app.node.try_get_context('cluster_name') + '-' + ConfigSectionMap(tar
 
 # Spin up CDK stacks
 eks_stack = SparkOnEksStack(app, 'SparkOnEKS', eks_name, env=env)
-# code_pipeline_stack = DeploymentPipeline(app, "PipelineStack", env=env)
+cf_stack = AddCloudFrontStack(app,'CreateCF', eks_name, env=env)
+# cf_stack.add_dependency(eks_stack)
+
+# code_pipeline_stack = DeploymentPipeline(app, "Pipeline", env=env)
 
 core.Tags.of(eks_stack).add('project', 'sqlbasedetl')
 # core.Tags.of(code_pipeline_stack).add('project', 'sqlbasedetl')
