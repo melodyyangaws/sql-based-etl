@@ -8,9 +8,21 @@ from aws_cdk import (
     aws_elasticloadbalancingv2 as alb
 )
 
-class AddCloudFrontStack(core.Stack):
+class AddCloudFrontStack(core.NestedStack):
 
-    def __init__(self, scope: core.Construct, id: str, eksname: str, **kwargs) -> None:
+    @property
+    def jhub_cf(self):
+        return self._jhub_cf
+
+    @property
+    def argo_cf(self):
+        return self._argo_cf
+
+    def __init__(self, scope: core.Construct, id: str,
+        eksname: str, 
+        argo_alb_dns_name: str, 
+        jhub_alb_dns_name: str, 
+        **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
 # //**********************************************************************************************************//
@@ -19,40 +31,26 @@ class AddCloudFrontStack(core.Stack):
 # //****************************** add it to the application load balancer *********************************//
 # //*******************************************************************************************************//
 
-        self._jhub_alb = alb.ApplicationLoadBalancer.from_lookup(self, "ALBJHub",
-            load_balancer_tags={
-                "ingress.k8s.aws/stack": "jupyter/jupyterhub",
-                "elbv2.k8s.aws/cluster": eksname
-            }
-        ) 
-        # self._jhub_alb.node.add_dependency(config_hub)
-        self._jhub_cf = add_distribution(self, 'jhub_dist', self._jhub_alb, 8000)
-        
-        self._argo_alb = alb.ApplicationLoadBalancer.from_lookup(self, "ALBArgo",
-            load_balancer_tags={
-                "ingress.k8s.aws/stack": "argo/argo-server",
-                "elbv2.k8s.aws/cluster": eksname
-            }
-        )   
-        # argo_alb.node.add_dependency(argo_install)  
-        self._argo_cf = add_distribution(self, 'argo_dist', self._argo_alb, 2746)
-
-        # deployment output
-
-        # core.CfnOutput(self,'JUPYTER_ALB_URL', value='http://'+ self._argo_alb.load_balancer_dns_name + ':8000')
-        # core.CfnOutput(self,'ARGO_ALB_URL', value='http://'+ self._jhub_alb.load_balancer_dns_name+ ':2746')
-        core.CfnOutput(self,'JUPYTER_URL', value='https://'+ self._jhub_cf)
-        core.CfnOutput(self,'ARGO_URL', value='https://'+ self._argo_cf)
-       
+        self._jhub_cf = add_distribution(self, 'jhub_dist', jhub_alb_dns_name, 8000)
+        self._argo_cf = add_distribution(self, 'argo_dist', argo_alb_dns_name, 2746)
 
 
-def add_distribution(scope: core.Construct, id: str, alb2: alb.ILoadBalancerV2, port: int) -> cf.IDistribution:
+def add_distribution(scope: core.Construct, id: str, alb_dns_name: str, port: int
+) -> cf.IDistribution:
 
+    load_balancer_arn=core.Fn.get_att(alb_dns_name,"DNSName")
+    security_group_id=core.Fn.get_att(alb_dns_name,"SecurityGroups")
+
+    alb2 = alb.ApplicationLoadBalancer.from_application_load_balancer_attributes(scope, id,
+            load_balancer_arn=load_balancer_arn.to_string(),
+            security_group_id=security_group_id.to_string(),
+            load_balancer_dns_name=alb_dns_name
+        )
     _origin = origins.LoadBalancerV2Origin(alb2,
         http_port=port,
         protocol_policy=cf.OriginProtocolPolicy.HTTP_ONLY
     )
-    dist = cf.Distribution(scope, id,
+    dist = cf.Distribution(scope, "CF-"+id,
         default_behavior={
             "origin": _origin,
             "allowed_methods": cf.AllowedMethods.ALLOW_ALL,

@@ -14,7 +14,7 @@ class S3AppCodeConst(core.Construct):
         super().__init__(scope, id, **kwargs)
 
        # Upload application code to S3 bucket 
-        artifact_bucket=s3.Bucket(self, "codeBucket", 
+        artifact_bucket=s3.Bucket(self, id, 
             encryption=s3.BucketEncryption.KMS_MANAGED
         )  
         s3deploy.BucketDeployment(self, "DeployCode",

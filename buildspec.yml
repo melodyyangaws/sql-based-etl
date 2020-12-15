@@ -13,7 +13,7 @@ phases:
       - export REGION=$(aws configure get region)
       - export ACCOUNTNUMBER=$(aws sts get-caller-identity --query Account --output text)
       - echo "Starting deploy docker images `date` in `pwd`"
-      - bash deployment/pull_and_push_ecr.sh $REGION $ACCOUNTNUMBER 'arc' 1 
+      - bash deployment/pull_and_push_ecr.sh $REGION $ACCOUNTNUMBER 'arc'
       - echo "Docker images pull and push are completed `date`"
   build:
     commands:
@@ -22,6 +22,7 @@ phases:
       - pip install -r source/requirements.txt
       - cdk bootstrap -c stage=$STAGE aws://$ACCOUNTNUMBER/$REGION
       - cdk deploy SparkOnEKS --require-approval never -c env=develop
+      - cdk deploy CreateCF --require-approval never -c env=develop
       - echo "CDK deployment is completed `date`"
   post_build:
     commands:

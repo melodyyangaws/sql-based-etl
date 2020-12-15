@@ -18,14 +18,20 @@ env = core.Environment(account=account, region=region)
 
 eks_name = app.node.try_get_context('cluster_name') + '-' + ConfigSectionMap(target_env)['env_str']
 
-# Spin up CDK stacks
+# Spin up the main stack
 eks_stack = SparkOnEksStack(app, 'SparkOnEKS', eks_name, env=env)
-cf_stack = AddCloudFrontStack(app,'CreateCF', eks_name, env=env)
-# cf_stack.add_dependency(eks_stack)
-
+# call the nested stack
+cf_stack = AddCloudFrontStack(eks_stack,'CreateCF', eks_name, eks_stack.argo_url, eks_stack.jhub_url)
 # code_pipeline_stack = DeploymentPipeline(app, "Pipeline", env=env)
 
 core.Tags.of(eks_stack).add('project', 'sqlbasedetl')
+core.Tags.of(cf_stack).add('project', 'sqlbasedetl')
 # core.Tags.of(code_pipeline_stack).add('project', 'sqlbasedetl')
+
+# Deployment Output
+core.CfnOutput(eks_stack,'CODE_BUCKET', value=eks_stack.code_bucket)
+core.CfnOutput(eks_stack,'JUPYTER_URL', value='https://'+ cf_stack.jhub_cf)
+core.CfnOutput(eks_stack,'ARGO_URL', value='https://'+ cf_stack.argo_cf)
+    
 
 app.synth()

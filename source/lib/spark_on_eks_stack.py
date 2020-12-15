@@ -13,10 +13,23 @@ from bin.eks_service_account import EksSAConst
 from bin.eks_base_app import EksBaseAppConst
 from bin.s3_app_code import S3AppCodeConst
 from bin.spark_permission import SparkOnEksSAConst
+from lib.cloud_front_stack import AddCloudFrontStack
 from bin.manifest_reader import *
 import json
 
 class SparkOnEksStack(core.Stack):
+
+    @property
+    def code_bucket(self):
+        return self.app_s3.code_bucket
+
+    @property
+    def argo_url(self):
+        return self._argo_alb.value
+
+    @property
+    def jhub_url(self):
+        return self._jhub_alb.value
 
     def __init__(self, scope: core.Construct, id: str, eksname: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
@@ -48,11 +61,11 @@ class SparkOnEksStack(core.Stack):
         # eks_base_app.node.add_dependency(eks_security)
 
         # 2. Setup SparkOnEKS security control
-        app_s3 = S3AppCodeConst(self,'upload_app_code')
+        self.app_s3 = S3AppCodeConst(self,'appcode')
         app_security = SparkOnEksSAConst(self,'spark_service_account', 
             eks_cluster.my_cluster, 
             login_name.value_as_string,
-            app_s3.code_bucket,
+            self.app_s3.code_bucket,
             datalake_bucket.value_as_string
         )
         
@@ -82,11 +95,10 @@ class SparkOnEksStack(core.Stack):
             create_namespace=False,
             values=loadYamlReplaceVarLocal('../app_resources/jupyter-values.yaml', 
                 fields={
-                    "{{codeBucket}}": app_s3.code_bucket,
+                    "{{codeBucket}}": self.app_s3.code_bucket,
                     "{{region}}": self.region 
                 })
         )
-        # jhub_install.node.add_dependency(app_security)
 
         # get Arc Jupyter login from secrets manager
         name_parts= core.Fn.split('-',jhub_secret.secret_name)
@@ -102,11 +114,23 @@ class SparkOnEksStack(core.Stack):
                 }, 
                 multi_resource=True)
         )
-        # config_hub.node.add_dependency(eks_security)
         config_hub.node.add_dependency(jhub_install)
+   
+        # 5. Retrieve ALB DNS Name to add Cloudfront distribution (OPTIONAL)
+        self._argo_alb = eks.KubernetesObjectValue(self, 'argoALB',
+            cluster=eks_cluster.my_cluster,
+            json_path='.status.loadBalancer.ingress[0].hostname',
+            object_type='ingress',
+            object_name='argo-server',
+            object_namespace='argo'
+        )
+        self._argo_alb.node.add_dependency(argo_install)
 
-    # //*********************************************************************//
-    # //*************************** Deployment Output ***********************//
-    # //*********************************************************************//
-
-        core.CfnOutput(self,'CODE_BUCKET', value=app_s3.code_bucket)
+        self._jhub_alb=eks.KubernetesObjectValue(self, 'jhubALB',
+            cluster=eks_cluster.my_cluster,
+            json_path='.status.loadBalancer.ingress[0].hostname',
+            object_type='ingress',
+            object_name='jupyterhub',
+            object_namespace='jupyter'
+        )
+        self._jhub_alb.node.add_dependency(config_hub)

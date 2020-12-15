@@ -58,18 +58,18 @@ Finally deploy the stack. It takes two optional parameters `jhubuser` & `datalak
 ```
 # Scenario1: Deploy with default settings (recommended)
 
-cdk deploy SparkOnEKS --require-approval never -c env=develop
+cdk deploy SparkOnEKS -c env=develop
 
 # Scenario2: Create a username to login Jupyter hub. 
 # Otherwise, login by a default name.
 
-cdk deploy SparkOnEKS --require-approval never -c env=develop --parameters jhubuser=<random_login_name>
+cdk deploy SparkOnEKS -c env=develop --parameters jhubuser=<random_login_name>
 
 # Scenario3: by default, the `datalakebucket` is pointing to a S3 bucket created by the solution.
 # if you prefer to use an existing bucket that contains real data, replace the placeholder by your bucket name. 
 # NOTE: the bucket must be in the same region as the solution deployment region.
 
-cdk deploy SparkOnEKS --require-approval never -c env=develop --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
+cdk deploy SparkOnEKS -c env=develop --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
 
 ```
 ## Troubleshooting
@@ -323,8 +323,8 @@ kubectl get pod -n spark
  * `kubectl apply -f source/app_resources/spark-template.yaml` submit a reusable job template for Spark applications
 
 ## Clean up
-* Delete the cdk.context.json file from the code repository, if you need to redeploy the CDK package from the scratch.
-* Delete the s3 with a prefix of `sparkoneks-codebucket`, because AWS CloudFormation cannot delete a non-empty S3 bucket automatically. 
+* Delete the s3 bucket with a prefix of `sparkoneks-appcode`, because AWS CloudFormation cannot delete a non-empty bucket automatically. 
+* Delete Application Load Balancer.
 * Delete the Arc docker image from ECR.
 * Finally, delete the rest of cloud resources via CDK CLI
 
