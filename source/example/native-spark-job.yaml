@@ -18,7 +18,7 @@ spec:
         --master k8s://kubernetes.default.svc:443 \
         --deploy-mode cluster \
         --name 'Word Count' \  
-        --conf spark.executor.instances=5 \
+        --conf spark.executor.instances=10 \
         --conf spark.kubernetes.allocation.batch.size=10 \ 
         --conf spark.kubernetes.driver.request.cores=2 \
         --conf spark.kubernetes.driver.limit.cores=3 \

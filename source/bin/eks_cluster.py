@@ -54,7 +54,7 @@ class EksConst(core.Construct):
         _spot_node = self._my_cluster.add_auto_scaling_group_capacity('spot',
             instance_type=ec2.InstanceType('r4.xlarge'),
             min_capacity=1,
-            max_capacity=10,
+            max_capacity=30,
             spot_price='1'
         )
         _spot_node.add_security_group(

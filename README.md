@@ -1,5 +1,5 @@
 # SQL-based ETL with Apache Spark on Amazon EKS
-This is a project developed with Python CDK for the solution - SQL based ETL with a declarative framework powered by Apache Spark. 
+This is a project developed with Python [CDK](https://docs.aws.amazon.com/cdk/latest/guide/home.html) for the solution - SQL based ETL with a declarative framework powered by Apache Spark. 
 
 We introduce a quality-aware design to increase data process productivity, by leveraging an open-source data framework [Arc](https://arc.tripl.ai/) for a user-centered declarative ETL solution. Additionally, we take considerations of the needs and expected skills from customers in data analytics, and accelerate their interaction with ETL practice in order to foster simplicity, while maximizing efficiency.
 
@@ -53,23 +53,23 @@ After the virtualenv is created, you can use the followings to activate your vir
 source .env/bin/activate
 pip install -r source/requirements.txt
 ```
-Finally deploy the stack. It takes two optional parameters `jhubuser` & `datalakebucket`.
+Finally deploy the stack. It takes two optional parameters `jhubuser` & `datalakebucket`. See the `troubleshooting` section if you have a problem with the `cdk deploy`
 
 ```
 # Scenario1: Deploy with default settings (recommended)
 
-cdk deploy SparkOnEKS -c env=develop
+cdk deploy -c env=develop
 
 # Scenario2: Create a username to login Jupyter hub. 
 # Otherwise, login by a default name.
 
-cdk deploy SparkOnEKS -c env=develop --parameters jhubuser=<random_login_name>
+cdk deploy -c env=develop --parameters jhubuser=<random_login_name>
 
 # Scenario3: by default, the `datalakebucket` is pointing to a S3 bucket created by the solution.
 # if you prefer to use an existing bucket that contains real data, replace the placeholder by your bucket name. 
 # NOTE: the bucket must be in the same region as the solution deployment region.
 
-cdk deploy SparkOnEKS -c env=develop --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
+cdk deploy -c env=develop --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
 
 ```
 ## Troubleshooting
@@ -81,7 +81,7 @@ cdk deploy SparkOnEKS -c env=develop --parameters jhubuser=<random_login_name> -
 You can use the cdk bootstrap command to install the bootstrap stack into an environment:
 
 ```
-cdk bootstrap aws://<YOUR_ACCOUNT_NUMBER>/<YOUR_REGION> -c develop
+cdk bootstrap aws://<YOUR_ACCOUNT_NUMBER>/<YOUR_REGION> -c env=develop
 ```
 
 ## Connect to EKS cluster
@@ -280,16 +280,18 @@ sh-5.0# exit
 ![](/images/4-spark-output-s3.png)
 
 
-3. Submit the native Spark job
+3. Submit the native Spark job.
 
 ```
 kubectl apply -f source/example/native-spark-job.yaml
+kubectl get pod -n spark
 
 ```
-4. Go to SparkUI to check your job progress and performance
+4. Go to SparkUI to check your job progress and performance. Make sure the driver pod exists.
 
 ```
-driver=$(kubectl get pod -n spark -l spark-role=driver -o jsonpath="{.items[*].metadata.name}")
+driver=$(kubectl get pod -n spark -l spark-role=driver -o jsonpath="{.items[*].metadata.name}" --field-selector=status.phase=Running)
+echo "driver pod is $driver"
 kubectl port-forward $driver 4040:4040 -n spark
 
 # go to `localhost:4040` from your web browser
@@ -298,8 +300,8 @@ kubectl port-forward $driver 4040:4040 -n spark
 5. Examine the auto-scaling and multi-AZs
 
 ```
-# The job requests 5 Spark executors (pods) on top of 5 spot instances. It is configurable to fit in to a single or less number of spot instances. 
-# the auto-scaling is triggered across multiple AZs, again it is configurable to trigger the job in a single AZ if reuqired.
+# The job requests 15 Spark executors on top of 15 spot instances, ie. 1 executor per ec2 instance. It is configurable to fit all executors into a single or less number of spot instances. 
+# the auto-scaling is triggered across multiple AZs, again it is configurable to trigger the job in a single AZ if required.
 
 kubectl get node --label-columns=lifecycle,topology.kubernetes.io/zone
 kubectl get pod -n spark
@@ -329,7 +331,7 @@ kubectl get pod -n spark
 * Finally, delete the rest of cloud resources via CDK CLI
 
 ```
-cdk destroy SparkOnEKS -c env=develop --require-approval never
+cdk destroy -c env=develop
 ``` 
 
 

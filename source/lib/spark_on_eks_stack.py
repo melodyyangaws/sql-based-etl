@@ -58,9 +58,8 @@ class SparkOnEksStack(core.Stack):
         eks_cluster = EksConst(self,'eks_cluster', eksname, network_sg.vpc, iam_role.managed_node_role)
         eks_security = EksSAConst(self, 'eks_sa', eks_cluster.my_cluster, jhub_secret)
         eks_base_app = EksBaseAppConst(self, 'eks_base_app', eks_cluster.my_cluster, self.region)
-        # eks_base_app.node.add_dependency(eks_security)
 
-        # 2. Setup SparkOnEKS security control
+        # 2. Setup Spark application access control
         self.app_s3 = S3AppCodeConst(self,'appcode')
         app_security = SparkOnEksSAConst(self,'spark_service_account', 
             eks_cluster.my_cluster, 
@@ -85,12 +84,12 @@ class SparkOnEksStack(core.Stack):
         )
         submit_tmpl.node.add_dependency(argo_install)
 
-        # 4. Install Arc Jupyter, interactive user interface to build Spark ETL
+        # 4. Install Arc Jupyter notebook to as Spark ETL IDE
         jhub_install= eks_cluster.my_cluster.add_helm_chart('JHubChart',
             chart='jupyterhub',
             repository='https://jupyterhub.github.io/helm-chart',
             release='jhub',
-            version='0.10.4',
+            version='0.10.6',
             namespace='jupyter',
             create_namespace=False,
             values=loadYamlReplaceVarLocal('../app_resources/jupyter-values.yaml', 
@@ -117,6 +116,8 @@ class SparkOnEksStack(core.Stack):
         config_hub.node.add_dependency(jhub_install)
    
         # 5. Retrieve ALB DNS Name to add Cloudfront distribution (OPTIONAL)
+        # The recommended way is to comment out this section.
+        # Generate a certificate with your own domain to enable the HTTPS encryotion.
         self._argo_alb = eks.KubernetesObjectValue(self, 'argoALB',
             cluster=eks_cluster.my_cluster,
             json_path='.status.loadBalancer.ingress[0].hostname',
