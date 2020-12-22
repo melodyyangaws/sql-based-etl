@@ -29,6 +29,9 @@ spec:
         --conf spark.kubernetes.container.image.pullPolicy=Always \
         --conf spark.kubernetes.authenticate.driver.serviceAccountName=nativejob \
         --conf spark.kubernetes.namespace=spark \
+        --conf spark.io.encryption.enabled=true \
+        --conf spark.kubernetes.authenticate.caCertFile=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+        --conf spark.kubernetes.authenticate.oauthTokenFile=/var/run/secrets/kubernetes.io/serviceaccount/token \
         --conf spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem \
         --conf spark.hadoop.fs.s3a.fast.upload=true \
         --conf spark.hadoop.fs.s3a.aws.credentials.provider=com.amazonaws.auth.WebIdentityTokenCredentialsProvider \

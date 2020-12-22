@@ -10,4 +10,5 @@ VERSION=$(curl --silent "https://api.github.com/repos/argoproj/argo/releases/lat
 curl -sLO https://github.com/argoproj/argo/releases/download/${VERSION}/argo-darwin-amd64.gz
 gunzip argo-darwin-amd64.gz
 mv ./argo-darwin-amd64 $HOME/bin/argo
+chmod +x $HOME/bin/argo
 argo version --short

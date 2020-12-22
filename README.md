@@ -20,12 +20,13 @@ cd sql-based-etl-with-apache-spark-on-amazon-eks
 ```
 
 Build Arc docker image and push it to your container registry ECR. 
-The following bash script will help you to prepare the deployment in your AWS environment. Replace the following placeholders by your own information.
+The following bash script will help you to prepare the deployment in your AWS account. After the execution, check your `deployment/environment.cfg` file, which should contain a correct envirnoment information.
+NOTE: the `arc` ECR repository name is fixed, however, it can be changed. If that happens, don't forget correcting all of ECR endpoints in your [example ETL jobs](/source/example).
 
 ```
 bash deployment/pull_and_push_ecr.sh <your_region> <your_account_number> 'arc'
 
-# use `skip_ecr` flag, when rerun the script without docker push 
+# use `skip_ecr` flag, when rerun the script without a docker push 
 bash deployment/pull_and_push_ecr.sh <your_region> <your_account_number> 'arc' 'skip_ecr'
 ```
 
@@ -83,6 +84,9 @@ You can use the cdk bootstrap command to install the bootstrap stack into an env
 ```
 cdk bootstrap aws://<YOUR_ACCOUNT_NUMBER>/<YOUR_REGION> -c env=develop
 ```
+
+3. If an error appears during the CDK deploy `Failed to create resource. IAM role’s policy must include the "ec2:DescribeVpcs" action`, it means you have reach the quota limits of Amazon VPC resources per Region for your AWS account. Please change to a different region or a different account.
+
 
 ## Connect to EKS cluster
 
@@ -222,6 +226,11 @@ argo delete scd2-job-<random_string> -n spark
 ![](/images/3-argo-log.png)
 
 
+5. As an outcome of the ETL pipeline, you will see a [Delta Lake](https://delta.io/) table is created in [Athena](https://console.aws.amazon.com/athena/). Run the following query to check if the table is a SCD2 type.
+
+```
+SELECT * FROM default.deltalake_contact WHERE id=12
+```
 
 ## Develop & test Spark job in Jupyter
 
@@ -244,7 +253,7 @@ echo -e "\njupyter login: $JHUB_PWD"
 ![](/images/3-jhub-login.png)
 
 
-3. Upload a sample Arc-jupyter notebook from `source/example/scd2_job.ipynb`
+3. Upload a sample Arc-jupyter notebook from `source/example/scd2_job.ipynb`. Once uploaded, double click the file name to open the notebook.
 
 ![](/images/3-jhub-open-notebook.png)
 
@@ -253,6 +262,12 @@ echo -e "\njupyter login: $JHUB_PWD"
 
 NOTE: the variable `${ETL_CONF_DATALAKE_LOC}` is set to a code bucket or an existing DataLake S3 bucket specified at the deployment. An IAM role attached to the Jupyter Hub is controling the data access to the S3 bucket. If you would like to connect to another bucket that wansn't specified at the deployment, you will get an access deny error. In this case, simply add the bucket ARN to the IAM role 'SparkOnEKS-EksClusterjhubServiceAcctRole'.
 
+
+5. Now let's take a look at the output table in [Athena](https://console.aws.amazon.com/athena/), to check if the table is populated correctly.
+
+```
+SELECT * FROM default.deltalake_contact WHERE id=12
+```
 
 ## Submit a native Spark job with Spot instance
 
@@ -280,11 +295,15 @@ sh-5.0# exit
 ![](/images/4-spark-output-s3.png)
 
 
-3. Submit the native Spark job.
+3. Submit a native Spark job. 
 
 ```
 kubectl apply -f source/example/native-spark-job.yaml
 kubectl get pod -n spark
+
+# If rerun, delete before apply again
+kubectl delete -f source/example/native-spark-job.yaml
+kubectl apply -f source/example/native-spark-job.yaml
 
 ```
 4. Go to SparkUI to check your job progress and performance. Make sure the driver pod exists.
@@ -300,8 +319,8 @@ kubectl port-forward $driver 4040:4040 -n spark
 5. Examine the auto-scaling and multi-AZs
 
 ```
-# The job requests 15 Spark executors on top of 15 spot instances, ie. 1 executor per ec2 instance. It is configurable to fit all executors into a single or less number of spot instances. 
-# the auto-scaling is triggered across multiple AZs, again it is configurable to trigger the job in a single AZ if required.
+# The sample job will run with 10 Spark executors for 15 mins. It requires 1 Spark executor per EC2 spot instance. Once the job is triggered, you will see the autoscaling kicks in within seconds. It will scale your EKS Cluster from 1 spot to 10 spot nodes. It is configurable to fit the Spark executors into less number of spot instances if you want. 
+# the auto-scaling is fired up across multiple AZs, again it is configurable to trigger the job in a single AZ if required.
 
 kubectl get node --label-columns=lifecycle,topology.kubernetes.io/zone
 kubectl get pod -n spark

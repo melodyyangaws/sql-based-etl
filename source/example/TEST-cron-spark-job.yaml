@@ -43,7 +43,7 @@ spec:
           --conf spark.driver.memory=1g \
           --conf spark.kubernetes.driver.request.cores=2 \
           --conf spark.kubernetes.driver.limit.cores=3 \
-          --conf spark.executor.instances=5 \
+          --conf spark.executor.instances=10 \
           --conf spark.executor.memory=10g \
           --conf spark.kubernetes.executor.request.cores=2 \
           --conf spark.kubernetes.executor.limit.cores=3 \
