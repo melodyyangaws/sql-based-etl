@@ -19,9 +19,9 @@ cd sql-based-etl-with-apache-spark-on-amazon-eks
 
 ```
 
-Build Arc docker image and push it to your container registry ECR. 
+Build Arc docker image and push it to a container registry ECR. 
 The following bash script will help you to prepare the deployment in your AWS account. After the execution, check your `deployment/environment.cfg` file, which should contain a correct envirnoment information.
-NOTE: the `arc` ECR repository name is fixed, however, it can be changed. If that happens, don't forget correcting all of ECR endpoints in your [example ETL jobs](/source/example).
+NOTE: the `arc` ECR repository name is fixed, however, it can be changed. If that happens, don't forget correcting all of ECR endpoints in [example ETL jobs](/source/example).
 
 ```
 bash deployment/pull_and_push_ecr.sh <your_region> <your_account_number> 'arc'
