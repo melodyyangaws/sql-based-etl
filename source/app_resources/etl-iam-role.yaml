@@ -19,6 +19,7 @@
     - s3:DeleteObject
     Resource:
     - arn:aws:s3:::{{codeBucket}}/*
+    - arn:aws:s3:::{{datalakeBucket}}/*
   - Effect: Allow
     Action:
     - kms:Decrypt

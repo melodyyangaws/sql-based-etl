@@ -12,26 +12,21 @@ class EksConst(core.Construct):
     def my_cluster(self):
         return self._my_cluster
 
-    def __init__(self,scope: core.Construct, id:str, eksname: str, eksvpc: ec2.IVpc, noderole: IRole, **kwargs,) -> None:
+    def __init__(self,scope: core.Construct, id:str, eksname: str, eksvpc: ec2.IVpc, noderole: IRole, eks_adminrole: IRole, **kwargs,) -> None:
         super().__init__(scope, id, **kwargs)
 
-# //**********************************************************************//
-# //******************* EKS CLUSTER WITH NO NODE GROUP *******************//
-# //*********************************************************************//
+        # 1.Create EKS cluster without node group
         self._my_cluster = eks.Cluster(self,'EksCluster',
                 vpc= eksvpc,
                 cluster_name=eksname,
+                masters_role=eks_adminrole,
                 output_cluster_name=True,
                 version= eks.KubernetesVersion.V1_18,
                 endpoint_access= eks.EndpointAccess.PUBLIC_AND_PRIVATE,
                 default_capacity=0
         )
 
-# //***********************************************************************//
-# //********************* MANAGED NODE GROUP IN EKS *************************//
-# //***************  compute resource to run Spark jobs *******************//
-# //*********************************************************************//
-
+        # 2.Add Managed NodeGroup to EKS, compute resource to run Spark jobs
         _managed_node = self._my_cluster.add_nodegroup_capacity('managed-nodegroup',
             nodegroup_name = 'etl-job',
             node_role = noderole,
@@ -43,35 +38,33 @@ class EksConst(core.Construct):
             labels = {'app':'spark', 'lifecycle':'OnDemand'},
             subnets = ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE,one_per_az=True)
         )
-        core.Tags.of(_managed_node).add('Name','ManagedNode'+eksname)            
-# //****************************************************************************************//
-# //*********************** Add Spot NodeGroup to EKS *************************************//
-# //************* Run Spark driver on reliable on-demand, exectutor on spot **************//
-# //************ CDK automatically installs the spot interrupt handler daemon ***********//
-# //******************  to handle EC2 Spot Instance Termination Notices.****************//
-# //***********************************************************************************//
+        core.Tags.of(_managed_node).add('Name','MN-'+eksname)            
+    
 
+        # 3. Add Spot self-managed NodeGroup to EKS (Run Spark exectutor on spot)
+        # CDK automatically installs the spot interrupt handler daemon to handle EC2 Spot Instance Termination Notices
         _spot_node = self._my_cluster.add_auto_scaling_group_capacity('spot',
-            instance_type=ec2.InstanceType('r4.xlarge'),
+            instance_type=ec2.InstanceType('r5.xlarge'),
             min_capacity=1,
             max_capacity=30,
             spot_price='1'
         )
-        _spot_node.add_security_group(
-            ec2.SecurityGroup.from_security_group_id(self, 'sharedNodeSG', 
-                self._my_cluster.cluster_security_group_id
-            )
-        )
-        # add auto scaler to the cluster 
+        # Enable node autoscaler by tags 
         core.Tags.of(_spot_node).add('Name', 'Spot-'+eksname)
         core.Tags.of(_spot_node).add('k8s.io/cluster-autoscaler/enabled', 'true')
         core.Tags.of(_spot_node).add('k8s.io/cluster-autoscaler/'+eksname, 'owned')
 
+        # # 4. Add Fargate NodeGroup to EKS to run Spark exeuctors on Fargate
+        # self._my_cluster.add_fargate_profile('FargateEnabled',
+        #     selectors =[{
+        #         "namespace": "spark",
+        #         "labels": {"spark-role": "executor"}
+        #     }],
+        #     fargate_profile_name='sparkETL'
+        # )
 
-# //*********************************************************************//
-# //******************** ADD EFS PERSISTENT STORAGE *********************//
-# //*********** enable S3A staging commiter for faster S3 access ********//
-# //*********************************************************************//
+        # Add EFS persistent storage
+        # To enable S3A staging commiter for faster S3 access
         # _csi_driver_chart = self._my_cluster.add_helm_chart('EFSDriver', 
         #     chart='aws-efs-csi-driver',
         #     release='efs',

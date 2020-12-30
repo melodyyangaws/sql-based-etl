@@ -61,14 +61,12 @@ Finally deploy the stack. It takes two optional parameters `jhubuser` & `datalak
 
 cdk deploy -c env=develop
 
-# Scenario2: Create a username to login Jupyter hub. 
-# Otherwise, login by a default name.
+# Scenario2: create your own username to login Jupyter hub. Otherwise, use the default.
 
 cdk deploy -c env=develop --parameters jhubuser=<random_login_name>
 
-# Scenario3: by default, the `datalakebucket` is pointing to a S3 bucket created by the solution.
-# if you prefer to use an existing bucket that contains real data, replace the placeholder by your bucket name. 
-# NOTE: the bucket must be in the same region as the solution deployment region.
+# Scenario3: by default, the solution creates a new S3 bucket containing sample data and ETL job config. If you want to use real data to build an ETL, replace the `<existing_datalake_bucket>` to your bucket name. 
+# NOTE: your bucket must be in the same region as the deployment region.
 
 cdk deploy -c env=develop --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
 
@@ -85,7 +83,7 @@ You can use the cdk bootstrap command to install the bootstrap stack into an env
 cdk bootstrap aws://<YOUR_ACCOUNT_NUMBER>/<YOUR_REGION> -c env=develop
 ```
 
-3. If an error appears during the CDK deploy `Failed to create resource. IAM role’s policy must include the "ec2:DescribeVpcs" action`, it means you have reach the quota limits of Amazon VPC resources per Region for your AWS account. Please change to a different region or a different account.
+3. If an error appears during the CDK deploy `Failed to create resource. IAM role’s policy must include the "ec2:DescribeVpcs" action`, it means you have reach the quota limits of Amazon VPC resources per Region in your AWS account. Please deploy to a different region or a different account.
 
 
 ## Connect to EKS cluster
@@ -111,17 +109,24 @@ Firstly, let's take a look at a [sample job](https://github.com/tripl-ai/arc-sta
 
 In this example, we will extract the `New York City Taxi Data` from [AWS Open Data Registry](https://registry.opendata.aws/nyc-tlc-trip-records-pds/), ie. a public S3 bucket `s3://nyc-tlc/trip data`, then transform the data from CSV to parquet file format, followed by a SQL-based validation step, to ensure the typing transformation is done correctly. Finally, query the optimized data filtered by a flag column.
 
-1. Copy an Argo dashboard URL from your deployment output, something like this:
+1. Click the Argo dashboard URL from your deployment output, something like this:
 
 ![](/images/0-argo-uri.png)
 
-OPTIONAL: type `argo server` in command line tool, then go to `http://localhost:2746`.
+OPTIONAL: type `argo server` in command line tool to run it locally, the URL is `http://localhost:2746`.
 
-2. Go to the dashboard, click `SUBMIT NEW WORKFLOW`. 
+2. To be able to login, get a token by the following command, and paste it to the Argo website. Make sure you have connected to the EKS Cluster.
+
+```
+argo auth token
+```
+![](/images/1-argologin.png)
+
+3. After login, click `SUBMIT NEW WORKFLOW`. 
 
 ![](/images/1-argoui.png)
 
-3. Replace the existing manifest by the following job definition, then `SUBMIT`.
+4. Replace the existing manifest by the following job definition, then `SUBMIT`.
 
 ```
 apiVersion: argoproj.io/v1alpha1
@@ -147,6 +152,10 @@ spec:
               value: nyctaxi 
             - name: image
               value: ghcr.io/tripl-ai/arc:latest
+            - name: environment
+              value: test    
+            - name: tags
+              value: "project=sqlbasedetl, owner=myang, costcenter=66666"  
             - name: configUri
               value: https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes/nyctaxi.ipynb
             - name: parameters
@@ -216,10 +225,9 @@ argo delete scd2-job-<random_string> -n spark
 </details>
 
 
-3. Go to your Argo dashboard via the deployment output URL link
+3. Go to the Argo dashboard via the URL link from deployment output 
 
 ![](/images/0-argo-uri.png)
-
 
 
 4. Check the job status and applications logs
@@ -229,7 +237,7 @@ argo delete scd2-job-<random_string> -n spark
 5. As an outcome of the ETL pipeline, you will see a [Delta Lake](https://delta.io/) table is created in [Athena](https://console.aws.amazon.com/athena/). Run the following query to check if the table is a SCD2 type.
 
 ```
-SELECT * FROM default.deltalake_contact WHERE id=12
+SELECT * FROM default.contact_snapshot WHERE id=12
 ```
 
 ## Develop & test Spark job in Jupyter
@@ -301,7 +309,7 @@ sh-5.0# exit
 kubectl apply -f source/example/native-spark-job.yaml
 kubectl get pod -n spark
 
-# If rerun, delete before apply again
+# when rerun, delete before apply again
 kubectl delete -f source/example/native-spark-job.yaml
 kubectl apply -f source/example/native-spark-job.yaml
 
@@ -335,19 +343,42 @@ kubectl get pod -n spark
  * `cdk diff`        compare deployed stack with current state
  * `cdk docs`        open CDK documentation
  * `cdk destroy`     delete the stack deployed earlier
- * `kubectl get pod -n spark`                         list all jobs running in the Spark namespace
- * `kubectl get ingress -n argo`                      get argo dashboard URL
- * `kubectl get ingress -n jupyter`                   get Jupyterhub's URL
- * `argo submit source/example/spark-arc-job.yaml`    submit a spark job from a manifest file
- * `argo list --all-namespaces`                       show jobs from all namespaces
- * `kubectl delete pod --all -n spark`                delete all jobs submitted in the Spark namespace
- * `kubectl apply -f source/app_resources/spark-template.yaml` submit a reusable job template for Spark applications
+ * `kubectl get pod -n spark`                         list running Spark jobs
+ * `argo submit source/example/nyctaxi-arc-job.yaml`  submit a spark job via Argo workflow tool
+ * `argo list --all-namespaces`                       show all jobs scheduled via Argo
+ * `kubectl delete pod --all -n spark`                delete all Spark jobs
+ * `kubectl apply -f source/app_resources/spark-template.yaml` create a reusable Spark job template
 
 ## Clean up
 * Delete the s3 bucket with a prefix of `sparkoneks-appcode`, because AWS CloudFormation cannot delete a non-empty bucket automatically. 
-* Delete Application Load Balancer.
+
+```
+aws s3 rb s3://sparkoneks-appcode291f5ddb-rhruv0oca2u4/ --force
+```
+* Delete application load balancer and target group. Replace the region to your deployment region.
+
+```
+# delete ALB
+argoALB=$(aws elbv2 describe-load-balancers --query 'LoadBalancers[?starts_with(DNSName,`k8s-argo`)==`true`].LoadBalancerArn' --output text --region us-west-2)
+jhubALB=$(aws elbv2 describe-load-balancers --query 'LoadBalancers[?starts_with(DNSName,`k8s-jupyter`)==`true`].LoadBalancerArn' --output text --region us-west-2)
+
+aws elbv2 delete-load-balancer --load-balancer-arn $argoALB --region us-west-2 
+aws elbv2 delete-load-balancer --load-balancer-arn $jhubALB --region us-west-2 
+
+# delete target group
+argoTG=$(aws elbv2 describe-target-groups --query 'TargetGroups[?starts_with(TargetGroupName,`k8s-argo`)==`true`].TargetGroupArn' --output text --region us-west-2)
+jhubTG=$(aws elbv2 describe-target-groups --query 'TargetGroups[?starts_with(TargetGroupName,`k8s-jupyter`)==`true`].TargetGroupArn' --output text --region us-west-2)
+
+aws elbv2 delete-target-group --target-group-arn $argoTG --region us-west-2 
+aws elbv2 delete-target-group --target-group-arn $jhubTG --region us-west-2 
+```
+* Delete Athena tables created by ETL jobs.
+
+```
+DROP TABLE default.`contact_snapshot`;
+```
 * Delete the Arc docker image from ECR.
-* Finally, delete the rest of cloud resources via CDK CLI
+* Finally, delete the rest of cloud resources via CDK CLI.
 
 ```
 cdk destroy -c env=develop

@@ -13,7 +13,7 @@ from bin.eks_service_account import EksSAConst
 from bin.eks_base_app import EksBaseAppConst
 from bin.s3_app_code import S3AppCodeConst
 from bin.spark_permission import SparkOnEksSAConst
-from lib.cloud_front_stack import AddCloudFrontStack
+from lib.cloud_front_stack import NestedStack
 from bin.manifest_reader import *
 import json
 
@@ -54,8 +54,8 @@ class SparkOnEksStack(core.Stack):
 
         # 1. Setup EKS base infrastructure
         network_sg = NetworkSgConst(self,'network-sg', eksname)
-        iam_role = IamConst(self,'iam_roles', eksname)
-        eks_cluster = EksConst(self,'eks_cluster', eksname, network_sg.vpc, iam_role.managed_node_role)
+        iam = IamConst(self,'iam_roles', eksname)
+        eks_cluster = EksConst(self,'eks_cluster', eksname, network_sg.vpc, iam.managed_node_role, iam.admin_role)
         eks_security = EksSAConst(self, 'eks_sa', eks_cluster.my_cluster, jhub_secret)
         eks_base_app = EksBaseAppConst(self, 'eks_base_app', eks_cluster.my_cluster, self.region)
 
@@ -115,9 +115,9 @@ class SparkOnEksStack(core.Stack):
         )
         config_hub.node.add_dependency(jhub_install)
    
-        # 5. Retrieve ALB DNS Name to add Cloudfront distribution (OPTIONAL)
-        # The recommended way is to comment out this section.
-        # Generate a certificate with your own domain to enable the HTTPS encryotion.
+        # 5.(OPTIONAL) retrieve ALB DNS Name to enable Cloudfront in the following nested stack.
+        # Recommend to remove this section and the rest of CloudFront component. 
+        # Setup your own certificate then add to ALB, to enable the HTTPS.
         self._argo_alb = eks.KubernetesObjectValue(self, 'argoALB',
             cluster=eks_cluster.my_cluster,
             json_path='.status.loadBalancer.ingress[0].hostname',

@@ -8,17 +8,17 @@ class NetworkSgConst(core.Construct):
     def vpc(self):
         return self._vpc
         
-    @property
-    def efs_sg(self):
-        return self._eks_efs_sg.security_group_id
+    # @property
+    # def efs_sg(self):
+    #     return self._eks_efs_sg.security_group_id
 
 
     def __init__(self,scope: core.Construct, id:str, eksname:str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
         
-# //*************************************************//
-# //******************* NETWORK ********************//
-# //************************************************//
+        # //*************************************************//
+        # //******************* NETWORK ********************//
+        # //************************************************//
         # create VPC
         self._vpc = ec2.Vpc(self, 'eksVpc',max_azs=2)
         core.Tags.of(self._vpc).add('Name', eksname + 'EksVpc')
@@ -43,17 +43,17 @@ class NetworkSgConst(core.Construct):
         self._vpc.add_interface_endpoint("CWLogsEndpoint", service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,security_groups=[self._vpc_endpoint_sg])
         self._vpc.add_interface_endpoint("StsEndpoint", service=ec2.InterfaceVpcEndpointAwsService.STS,security_groups=[self._vpc_endpoint_sg])
 
-# //******************************************************//
-# //******************* SECURITY GROUP ******************//
-# //****************************************************//
-        # EFS SG
-        self._eks_efs_sg = ec2.SecurityGroup(self,'EFSSg',
-            security_group_name=eksname + '-EFS-sg',
-            vpc=self._vpc,
-            description='NFS access to EFS from EKS worker nodes',
-        )
-        self._eks_efs_sg.add_ingress_rule(ec2.Peer.ipv4(self._vpc.vpc_cidr_block),ec2.Port.tcp(port=2049))
+        # //******************************************************//
+        # //******************* SECURITY GROUP ******************//
+        # //****************************************************//
+        # # EFS SG
+        # self._eks_efs_sg = ec2.SecurityGroup(self,'EFSSg',
+        #     security_group_name=eksname + '-EFS-sg',
+        #     vpc=self._vpc,
+        #     description='NFS access to EFS from EKS worker nodes',
+        # )
+        # self._eks_efs_sg.add_ingress_rule(ec2.Peer.ipv4(self._vpc.vpc_cidr_block),ec2.Port.tcp(port=2049))
 
-        core.Tags.of(self._eks_efs_sg).add('kubernetes.io/cluster/' + eksname,'owned')
-        core.Tags.of(self._eks_efs_sg).add('Name', eksname+'-EFS-sg')
+        # core.Tags.of(self._eks_efs_sg).add('kubernetes.io/cluster/' + eksname,'owned')
+        # core.Tags.of(self._eks_efs_sg).add('Name', eksname+'-EFS-sg')
     

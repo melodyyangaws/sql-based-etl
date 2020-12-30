@@ -8,7 +8,7 @@ from aws_cdk import (
     aws_elasticloadbalancingv2 as alb
 )
 
-class AddCloudFrontStack(core.NestedStack):
+class NestedStack(core.NestedStack):
 
     @property
     def jhub_cf(self):

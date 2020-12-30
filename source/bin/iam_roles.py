@@ -12,28 +12,32 @@ class IamConst(core.Construct):
     def managed_node_role(self):
         return self._managed_node_role
 
-    # @property
-    # def fargate_role(self):
-    #     return self._fargate_role
+    @property
+    def admin_role(self):
+        return self._clusterAdminRole
 
     def __init__(self,scope: core.Construct, id:str, cluster_name:str, **kwargs,) -> None:
         super().__init__(scope, id, **kwargs)
 
-        # # fargate role
-        # _fargate_policy = (
-        #     iam.ManagedPolicy.from_aws_managed_policy_name('AmazonEKSFargatePodExecutionRolePolicy')
-        # )
+        # EKS admin role
+        self._clusterAdminRole = iam.Role(self, 'clusterAdmin',
+            assumed_by= iam.AccountRootPrincipal()
+        )
+        self._clusterAdminRole.add_to_policy(iam.PolicyStatement(
+            resources=["*"],
+            actions=[
+                "eks:Describe*",
+                "eks:List*",
+                "eks:AccessKubernetesApi",
+                "ssm:GetParameter",
+                "iam:ListRoles"
+            ],
+        ))
+        core.Tags.of(self._clusterAdminRole).add(
+            key='eks/%s/type' % cluster_name, 
+            value='admin-role'
+        )
 
-        # self._fargate_role = iam.Role(self,'fargate-role',
-        #     role_name='jhub-fargate-NodeInstanceRole',
-        #     assumed_by= iam.ServicePrincipal('eks-fargate-pods.amazonaws.com'),
-        #     managed_policies=[_fargate_policy]
-        # )
-        # core.Tags.of(self._fargate_role).add(
-        #     key='eks/%s/type' % cluster_name, 
-        #     value='fargate-node'
-        # )
-        
         # Managed Node Group Instance Role
         _managed_node_managed_policies = (
             iam.ManagedPolicy.from_aws_managed_policy_name('AmazonEKSWorkerNodePolicy'),

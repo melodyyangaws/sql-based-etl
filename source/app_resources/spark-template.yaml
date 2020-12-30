@@ -88,7 +88,7 @@ spec:
         --etl.config.environment={{inputs.parameters.environment}} \
         --etl.config.ignoreEnvironments=false \
         --etl.config.tags="service=arc workflowId={{workflow.uid}} pod={{pod.name}} serviceAccount={{workflow.serviceAccountName}} namespace={{workflow.namespace}} {{inputs.parameters.tags}}" \
-        --ETL_CONF_EPOCH=$(date '+%s') --ETL_CONF_CURRENT_TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S') \
+        --ETL_CONF_EPOCH=$(date '+%s') --ETL_CONF_CURRENT_TIMESTAMP="'$(date -u '+%Y-%m-%d %H:%M:%S')'" \
         {{inputs.parameters.parameters}}
 
   - name: mediumJob
@@ -175,7 +175,7 @@ spec:
         --etl.config.environment={{inputs.parameters.environment}} \
         --etl.config.ignoreEnvironments=false \
         --etl.config.tags="service=arc workflowId={{workflow.uid}} pod={{pod.name}} serviceAccount={{workflow.serviceAccountName}} namespace={{workflow.namespace}} {{inputs.parameters.tags}}" \
-        --ETL_CONF_EPOCH=$(date '+%s') --ETL_CONF_CURRENT_TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S') \
+        --ETL_CONF_EPOCH=$(date '+%s') --ETL_CONF_CURRENT_TIMESTAMP="'$(date -u '+%Y-%m-%d %H:%M:%S')'" \
         {{inputs.parameters.parameters}}
   
   - name: largeJob
@@ -262,7 +262,7 @@ spec:
         --etl.config.environment={{inputs.parameters.environment}} \
         --etl.config.ignoreEnvironments=false \
         --etl.config.tags="service=arc workflowId={{workflow.uid}} pod={{pod.name}} serviceAccount={{workflow.serviceAccountName}} namespace={{workflow.namespace}} {{inputs.parameters.tags}}" \
-        --ETL_CONF_EPOCH=$(date '+%s') --ETL_CONF_CURRENT_TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S') \
+        --ETL_CONF_EPOCH=$(date '+%s') --ETL_CONF_CURRENT_TIMESTAMP="'$(date -u '+%Y-%m-%d %H:%M:%S')'" \
         {{inputs.parameters.parameters}}
           
   - name: sparkLocal
@@ -334,5 +334,5 @@ spec:
         --etl.config.environment={{inputs.parameters.environment}} \
         --etl.config.ignoreEnvironments=fales \
         --etl.config.tags="service=arc workflowId={{workflow.uid}} pod={{pod.name}} serviceAccount={{workflow.serviceAccountName}} namespace={{workflow.namespace}} {{inputs.parameters.tags}}" \
-        --ETL_CONF_EPOCH=$(date '+%s') --ETL_CONF_CURRENT_TIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S') \
+        --ETL_CONF_EPOCH=$(date '+%s') --ETL_CONF_CURRENT_TIMESTAMP="'$(date -u '+%Y-%m-%d %H:%M:%S')'" \
         {{inputs.parameters.parameters}}

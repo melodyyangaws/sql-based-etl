@@ -1,11 +1,14 @@
 images:
-  tag: v2.11.6
+  tag: v2.12.2
 workflow:
   namespace: spark
   serviceAccount:
     create: false
     name: arcjob
 server:
+  extraArgs:
+  - --auth-mode
+  - client
   ingress:  
     enabled: true  
     annotations:    

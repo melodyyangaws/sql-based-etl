@@ -3,17 +3,9 @@ kind: Workflow
 metadata:
   generateName: nyctaxi-job-
   namespace: spark
-  ## need it if use kubectl to submit the job
-  # name: nyctaxi-job
 spec:
   serviceAccountName: arcjob
   entrypoint: nyctaxi
-  # must complete in 8h
-  activeDeadlineSeconds: 28800
-  ttlStrategy:
-    # keep the workflow for 12h
-    secondsAfterCompletion: 43200
-    SecondsAfterFailure: 43200
   templates:
   - name: nyctaxi
     dag:
@@ -29,7 +21,7 @@ spec:
               value: nyctaxi 
             - name: image
               value: ghcr.io/tripl-ai/arc:latest
-            # in Jupyter notebook, each ETL step associates to an env. So a test step could be skipped if env mismatches 
+            # in Jupyter notebook, each ETL step associates to an env. So a test step could be skipped if the env mismatches 
             - name: environment
               value: test    
             - name: tags

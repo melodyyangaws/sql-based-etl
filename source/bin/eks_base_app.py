@@ -6,10 +6,7 @@ class EksBaseAppConst(core.Construct):
     def __init__(self,scope: core.Construct, id: str, eks_cluster: ICluster, region: str, **kwargs,) -> None:
         super().__init__(scope, id, **kwargs)
 
-# //***********************************************************************************//
-# //********************* Install Cluster Autoscaler **********************************//
-# //*********************************************************************************//
- 
+        # Add Cluster Autoscaler to EKS
         _var_mapping = {
             "{{region_name}}": region, 
             "{{cluster_name}}": eks_cluster.cluster_name, 
@@ -22,11 +19,8 @@ class EksBaseAppConst(core.Construct):
             namespace='kube-system',
             values=loadYamlReplaceVarLocal('../app_resources/autoscaler-values.yaml',_var_mapping)
         )
-        # _scaler_chart.node.add_dependency(eks_sa.scaler_sa) 
 
-# //*************************************************************************************//
-# //************************ CONTAINER INSIGHT (CLOUDWATCH LOG) ************************//
-# //**********************************************************************************//
+        # Add container insight (CloudWatch Log) to EKS
         _cw_log = KubernetesManifest(self,'ContainerInsight',
             cluster=eks_cluster, 
             manifest=loadYamlReplaceVarRemotely('https://raw.githubusercontent.com/aws-samples/amazon-cloudwatch-container-insights/latest/k8s-deployment-manifest-templates/deployment-mode/daemonset/container-insights-monitoring/quickstart/cwagent-fluentd-quickstart.yaml', 
@@ -35,9 +29,7 @@ class EksBaseAppConst(core.Construct):
             )
         )
 
-# //*********************************************************************//
-# //*********************** ALB INGRESS CONTROLLER **********************//
-# //*********************************************************************//
+        # Add ALB ingress controller to EKS
         _alb_chart = eks_cluster.add_helm_chart('ALBChart',
             chart='aws-load-balancer-controller',
             repository='https://aws.github.io/eks-charts',
@@ -52,11 +44,8 @@ class EksBaseAppConst(core.Construct):
                 }
             )
         )
-        # _alb_chart.node.add_dependency(eks_sa.alb_sa)
 
-# //*********************************************************************//
-# //********************* EXTERNAL SECRETS CONTROLLER *******************//
-# //*********************************************************************//
+        # Add external secrets controller to EKS
         _secret_chart = eks_cluster.add_helm_chart('SecretContrChart',
             chart='kubernetes-external-secrets',
             repository='https://external-secrets.github.io/kubernetes-external-secrets/',
@@ -68,5 +57,4 @@ class EksBaseAppConst(core.Construct):
                     '{{region_name}}': region
                 }
             )
-        ) 
-        # _secret_chart.node.add_dependency(eks_sa.secrets_sa)    
+        )

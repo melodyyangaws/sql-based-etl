@@ -1,8 +1,8 @@
 apiVersion: argoproj.io/v1alpha1
 kind: CronWorkflow
 metadata:
-  name: test-cron-wf
   namespace: spark
+  generateName: nyctaxi-job-
 spec:
   schedule: "* 1 * * *"
   concurrencyPolicy: "Replace"
@@ -54,4 +54,5 @@ spec:
           --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml' \
           --conf spark.kubernetes.authenticate.driver.serviceAccountName=nativejob \
           "s3a://{{codeBucket}}/app_code/job/wordcount.py" \
-          "s3a://{{codeBucket}}/app_code/output"
+          "s3a://{{codeBucket}}/app_code/output/native\"
+  

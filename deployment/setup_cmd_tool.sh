@@ -9,6 +9,6 @@ kubectl version
 VERSION=$(curl --silent "https://api.github.com/repos/argoproj/argo/releases/latest" | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
 curl -sLO https://github.com/argoproj/argo/releases/download/${VERSION}/argo-darwin-amd64.gz
 gunzip argo-darwin-amd64.gz
+chmod +x argo-darwin-amd64
 mv ./argo-darwin-amd64 $HOME/bin/argo
-chmod +x $HOME/bin/argo
 argo version --short
