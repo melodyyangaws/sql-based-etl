@@ -21,7 +21,7 @@ cd sql-based-etl-with-apache-spark-on-amazon-eks
 
 Build Arc docker image and push it to a container registry ECR. 
 The following bash script will help you to prepare the deployment in your AWS account. After the execution, check your `deployment/environment.cfg` file, which should contain a correct envirnoment information.
-NOTE: the `arc` ECR repository name is fixed, however, it can be changed. If that happens, don't forget correcting all of ECR endpoints in [example ETL jobs](/source/example).
+NOTE: the `arc` ECR repository name is fixed, however, it can be changed. If that happens, don't forget to correct your ECR endpoints in [example ETL jobs](/source/example).
 
 ```
 bash deployment/pull_and_push_ecr.sh <your_region> <your_account_number> 'arc'
@@ -30,7 +30,7 @@ bash deployment/pull_and_push_ecr.sh <your_region> <your_account_number> 'arc'
 bash deployment/pull_and_push_ecr.sh <your_region> <your_account_number> 'arc' 'skip_ecr'
 ```
 
-Install kubernetes tools on MAC.
+Install kubernetes command tools on MAC.
 If you are running Linux / Windows, please see the [official docs](https://github.com/argoproj/argo/releases) for the download links.
 
 ```
@@ -58,14 +58,12 @@ Finally deploy the stack. It takes two optional parameters `jhubuser` & `datalak
 
 ```
 # Scenario1: Deploy with default settings (recommended)
-
 cdk deploy -c env=develop
 
 # Scenario2: create your own username to login Jupyter hub. Otherwise, use the default.
-
 cdk deploy -c env=develop --parameters jhubuser=<random_login_name>
 
-# Scenario3: by default, the solution creates a new S3 bucket containing sample data and ETL job config. If you want to use real data to build an ETL, replace the `<existing_datalake_bucket>` to your bucket name. 
+# Scenario3: by default, the deployment creates a new S3 bucket containing sample data and ETL job config. If you want to use real data to build an ETL, replace the `<existing_datalake_bucket>` to your bucket name. 
 # NOTE: your bucket must be in the same region as the deployment region.
 
 cdk deploy -c env=develop --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
@@ -77,13 +75,12 @@ cdk deploy -c env=develop --parameters jhubuser=<random_login_name> --parameters
 
 2. If an error says `SparkOnEKS failed: Error: This stack uses assets, so the toolkit stack must be deployed to the environment (Run "cdk bootstrap aws://YOUR_ACCOUNT_NUMBER/REGION")` , it means it is the first time you deploy an AWS CDK app into an environment (account/region), you’ll need to install a “bootstrap stack”. This stack includes resources that are needed for the toolkit’s operation. For example, the stack includes an S3 bucket that is used to store templates and assets during the deployment process.
 
-You can use the cdk bootstrap command to install the bootstrap stack into an environment:
+Run the bootstrap command:
 
 ```
 cdk bootstrap aws://<YOUR_ACCOUNT_NUMBER>/<YOUR_REGION> -c env=develop
 ```
-
-3. If an error appears during the CDK deploy `Failed to create resource. IAM role’s policy must include the "ec2:DescribeVpcs" action`, it means you have reach the quota limits of Amazon VPC resources per Region in your AWS account. Please deploy to a different region or a different account.
+3. If an error appears during the CDK deployment: `Failed to create resource. IAM role’s policy must include the "ec2:DescribeVpcs" action`, it means you have reach the quota limits of Amazon VPC resources per Region in your AWS account. Please deploy to a different region or a different account.
 
 
 ## Connect to EKS cluster
@@ -268,7 +265,7 @@ echo -e "\njupyter login: $JHUB_PWD"
 
 4. Execute each block and observe the result.
 
-NOTE: the variable `${ETL_CONF_DATALAKE_LOC}` is set to a code bucket or an existing DataLake S3 bucket specified at the deployment. An IAM role attached to the Jupyter Hub is controling the data access to the S3 bucket. If you would like to connect to another bucket that wansn't specified at the deployment, you will get an access deny error. In this case, simply add the bucket ARN to the IAM role 'SparkOnEKS-EksClusterjhubServiceAcctRole'.
+NOTE: the variable `${ETL_CONF_DATALAKE_LOC}` is set to a code bucket or an existing DataLake S3 bucket specified at the deployment. An IAM role attached to the Jupyter Hub is controling the data access to the S3 bucket. If you want to connect to a different bucket that wansn't specified at the deployment, you will get an access deny error. In this case, simply add the bucket ARN to the IAM role 'SparkOnEKS-EksClusterjhubServiceAcctRole'.
 
 
 5. Now let's take a look at the output table in [Athena](https://console.aws.amazon.com/athena/), to check if the table is populated correctly.
@@ -364,6 +361,7 @@ jhubALB=$(aws elbv2 describe-load-balancers --query 'LoadBalancers[?starts_with(
 
 aws elbv2 delete-load-balancer --load-balancer-arn $argoALB --region us-west-2 
 aws elbv2 delete-load-balancer --load-balancer-arn $jhubALB --region us-west-2 
+sleep 15
 
 # delete target group
 argoTG=$(aws elbv2 describe-target-groups --query 'TargetGroups[?starts_with(TargetGroupName,`k8s-argo`)==`true`].TargetGroupArn' --output text --region us-west-2)

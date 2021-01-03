@@ -31,7 +31,7 @@ class NestedStack(core.NestedStack):
 # //****************************** add it to the application load balancer *********************************//
 # //*******************************************************************************************************//
 
-        self._jhub_cf = add_distribution(self, 'jhub_dist', jhub_alb_dns_name, 8000)
+        self._jhub_cf = add_distribution(self, 'jhub_dist', jhub_alb_dns_name, 80)
         self._argo_cf = add_distribution(self, 'argo_dist', argo_alb_dns_name, 2746)
 
 

@@ -3,14 +3,7 @@ hub:
     type: sqlite-memory
   extraConfig:
     overrideServiceAccount: |
-      import os
-      origin = '*' 
-      c.JupyterHub.tornado_settings = { 
-          'headers': { 
-            'Access-Control-Allow-Origin': origin, 
-          }
-      } 
-      c.Spawner.args = [f'--NotebookApp.allow_origin={origin}']
+      import os, sys
       c.JupyterHub.authenticator_class = 'jupyterhub.auth.DummyAuthenticator'
       c.DummyAuthenticator.password = os.environ['LOGIN']
       c.Authenticator.admin_users = {"service-admin"}
@@ -23,6 +16,14 @@ hub:
           kube_spawner.service_account = kube_spawner._expand_user_properties(kube_spawner.service_account)
 
       c.KubeSpawner.pre_spawn_hook = override_service_account_hook
+      c.JupyterHub.cookie_max_age_days = 0.0125
+      c.JupyterHub.services = [
+        {
+            "name": "idle_culler",
+            "admin": True,
+            "command": [sys.executable, "-m", "jupyterhub_idle_culler", "--timeout=600"],
+        }
+      ]
 
   extraEnv:
     - name: LOGIN
