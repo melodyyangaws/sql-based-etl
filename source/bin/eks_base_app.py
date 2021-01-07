@@ -1,9 +1,13 @@
-from aws_cdk import core
+from aws_cdk import (
+    core,
+    aws_efs as efs,
+    aws_ec2 as ec2
+)
 from aws_cdk.aws_eks import ICluster, KubernetesManifest
 from bin.manifest_reader import *
 
 class EksBaseAppConst(core.Construct):
-    def __init__(self,scope: core.Construct, id: str, eks_cluster: ICluster, region: str, **kwargs,) -> None:
+    def __init__(self,scope: core.Construct, id: str, eks_cluster: ICluster, region: str, efs_sg: ec2.ISecurityGroup, **kwargs,) -> None:
         super().__init__(scope, id, **kwargs)
 
         # Add Cluster Autoscaler to EKS
@@ -58,3 +62,30 @@ class EksBaseAppConst(core.Construct):
                 }
             )
         )
+
+        # Add EFS persistent storage to EKS across AZs
+        # _csi_driver_chart = eks_cluster.add_helm_chart('EFSDriver', 
+        #     chart='aws-efs-csi-driver',
+        #     release='efs',
+        #     repository='https://kubernetes-sigs.github.io/aws-efs-csi-driver/',
+        #     create_namespace=False,
+        #     namespace='kube-system',
+        # )
+
+        # _k8s_efs = efs.FileSystem(self,'EFSFileSystem',
+        #     vpc=eks_cluster.vpc,
+        #     encrypted=True,
+        #     lifecycle_policy=efs.LifecyclePolicy.AFTER_7_DAYS,
+        #     performance_mode=efs.PerformanceMode.MAX_IO,
+        #     removal_policy=core.RemovalPolicy.DESTROY,
+        #     vpc_subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE, one_per_az=True)
+        # )
+        # _pv= KubernetesManifest(self,'pvClaim',
+        #     cluster=eks_cluster,
+        #     manifest=loadYamlReplaceVarLocal('../app_resources/efs-spec.yaml', 
+        #         fields= {
+        #             "{{FileSystemId}} ": _k8s_efs.file_system_id
+        #         },
+        #         multi_resource=True)
+        # )      
+        # _pv.node.add_dependency(_k8s_efs)

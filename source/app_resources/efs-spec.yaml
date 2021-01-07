@@ -5,19 +5,6 @@ metadata:
 provisioner: efs.csi.aws.com
 
 ---
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: efs-claim
-spec:
-  accessModes:
-    - ReadWriteMany
-  storageClassName: efs-sc
-  resources:
-    requests:
-      storage: 5Gi
-      
----
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -27,7 +14,9 @@ spec:
     storage: 5Gi
   volumeMode: Filesystem
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
+  mountOptions:
+    - tls  
   persistentVolumeReclaimPolicy: Retain
   storageClassName: efs-sc
   csi:
@@ -35,3 +24,17 @@ spec:
     volumeHandle: {{FileSystemId}} 
     volumeAttributes:
       encryptInTransit: "true"
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: efs-claim
+  namespace: jupyter
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: efs-sc
+  resources:
+    requests:
+      storage: 5Gi

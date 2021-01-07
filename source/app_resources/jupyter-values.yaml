@@ -17,13 +17,15 @@ hub:
 
       c.KubeSpawner.pre_spawn_hook = override_service_account_hook
       c.JupyterHub.cookie_max_age_days = 0.0125
-      c.JupyterHub.services = [
-        {
-            "name": "idle_culler",
-            "admin": True,
-            "command": [sys.executable, "-m", "jupyterhub_idle_culler", "--timeout=600"],
-        }
-      ]
+      c.Authenticator.refresh_pre_spawn = True
+      c.Authenticator.auth_refresh_age = 300
+      # c.JupyterHub.services = [
+      #   {
+      #       "name": "idle_culler",
+      #       "admin": True,
+      #       "command": [sys.executable, "-m", "jupyterhub_idle_culler", "--timeout=1800"],
+      #   }
+      # ]
 
   extraEnv:
     - name: LOGIN
@@ -41,9 +43,9 @@ proxy:
   secretToken: "*****"
   service:
     type: ClusterIP
-  # chp:
-  #   nodeSelector:
-  #     lifecycle: Ec2Spot    
+  chp:
+    nodeSelector:
+      lifecycle: OnDemand    
 
 singleuser:
   defaultUrl: "/lab"
@@ -72,10 +74,10 @@ singleuser:
     ETL_CONF_AWS_REGION: {{region}}
   # storage:
   #   capacity: 50G
-  #   type: dynamic
-  #   dynamic:
-      # storageClass: csi-sc
-      # subPath: '{unescaped_username}'
+  #   type: static
+  #   static:
+  #     pvcName: efs-claim
+  #     subPath: 'home/{unescaped_username}'
   profileList:
   - default: True
     display_name: "Small (default): Arc-Jupyter Development Environment"
@@ -95,7 +97,7 @@ singleuser:
 
 prePuller:
   hook:
-    enabled: false     
+    enabled: false 
 
 # autoscacling setting
 scheduling:
