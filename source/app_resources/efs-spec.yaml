@@ -15,8 +15,6 @@ spec:
   volumeMode: Filesystem
   accessModes:
     - ReadWriteMany
-  mountOptions:
-    - tls  
   persistentVolumeReclaimPolicy: Retain
   storageClassName: efs-sc
   csi:
@@ -29,7 +27,7 @@ spec:
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: efs-claim
+  name: jupyter-pvc
   namespace: jupyter
 spec:
   accessModes:

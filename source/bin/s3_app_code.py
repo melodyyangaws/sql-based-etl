@@ -16,7 +16,9 @@ class S3AppCodeConst(core.Construct):
        # Upload application code to S3 bucket 
         artifact_bucket=s3.Bucket(self, id, 
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
-            encryption=s3.BucketEncryption.KMS_MANAGED
+            encryption=s3.BucketEncryption.KMS_MANAGED,
+            removal_policy=core.RemovalPolicy.DESTROY,
+            auto_delete_objects=True
         )  
         s3deploy.BucketDeployment(self, "DeployCode",
             sources=[s3deploy.Source.asset("deployment/app_code")],

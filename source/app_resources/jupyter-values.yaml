@@ -16,16 +16,15 @@ hub:
           kube_spawner.service_account = kube_spawner._expand_user_properties(kube_spawner.service_account)
 
       c.KubeSpawner.pre_spawn_hook = override_service_account_hook
-      c.JupyterHub.cookie_max_age_days = 0.0125
+      c.JupyterHub.cookie_max_age_days = 0.0211
       c.Authenticator.refresh_pre_spawn = True
-      c.Authenticator.auth_refresh_age = 300
-      # c.JupyterHub.services = [
-      #   {
-      #       "name": "idle_culler",
-      #       "admin": True,
-      #       "command": [sys.executable, "-m", "jupyterhub_idle_culler", "--timeout=1800"],
-      #   }
-      # ]
+      c.JupyterHub.services = [
+        {
+            "name": "idle_culler",
+            "admin": True,
+            "command": [sys.executable, "-m", "jupyterhub_idle_culler", "--timeout=1800"],
+        }
+      ]
 
   extraEnv:
     - name: LOGIN
@@ -73,11 +72,11 @@ singleuser:
     ETL_CONF_DATALAKE_LOC: {{codeBucket}}
     ETL_CONF_AWS_REGION: {{region}}
   # storage:
-  #   capacity: 50G
+  #   capacity: 10G
   #   type: static
   #   static:
-  #     pvcName: efs-claim
-  #     subPath: 'home/{unescaped_username}'
+  #     pvcName: jupyter-pvc
+  #     subPath: '{unescaped_username}'
   profileList:
   - default: True
     display_name: "Small (default): Arc-Jupyter Development Environment"

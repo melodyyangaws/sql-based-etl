@@ -218,10 +218,6 @@ Alternatively, submit the job with Argo CLI.
 
 ```
 argo submit source/example/scd2-workflow-job.yaml -n spark --watch
-
-# terminate your job, for example 'scd2-job-vvkgr'
-argo delete scd2-job-<random_string> -n spark
-
 ```
 *** Make sure to comment out a line in the manifest file before your submission. ***
 ![](/images/2-comment-out.png)
@@ -354,11 +350,12 @@ kubectl get pod -n spark
  * `kubectl apply -f source/app_resources/spark-template.yaml` create a reusable Spark job template
 
 ## Clean up
-* Delete the s3 bucket with a prefix of `sparkoneks-appcode`, because AWS CloudFormation cannot delete a non-empty bucket automatically. 
+* Delete Athena tables created by ETL jobs.
 
 ```
-aws s3 rb s3://sparkoneks-appcode291f5ddb-rhruv0oca2u4/ --force
+aws athena start-query-execution --query-string "DROP TABLE default.contact_snapshot" --result-configuration OutputLocation=s3://sparkoneks/
 ```
+
 * Delete application load balancer and target group. Replace the region to your deployment region.
 
 ```
@@ -376,11 +373,6 @@ jhubTG=$(aws elbv2 describe-target-groups --query 'TargetGroups[?starts_with(Tar
 
 aws elbv2 delete-target-group --target-group-arn $argoTG --region us-west-2 
 aws elbv2 delete-target-group --target-group-arn $jhubTG --region us-west-2 
-```
-* Delete Athena tables created by ETL jobs.
-
-```
-DROP TABLE default.`contact_snapshot`;
 ```
 * Delete the Arc docker image from ECR.
 * Finally, delete the rest of cloud resources via CDK CLI.

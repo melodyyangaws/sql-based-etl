@@ -33,4 +33,4 @@
     - glue:CreatePartition
     - glue:UpdatePartition
     Resource:
-    - '*'  
+      - '*'   

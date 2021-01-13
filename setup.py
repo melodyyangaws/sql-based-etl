@@ -33,7 +33,7 @@ setuptools.setup(
         "aws_cdk.aws_elasticloadbalancingv2==1.82.0",
         "aws-cdk.aws_cloudfront==1.82.0",
         "aws-cdk.aws_cloudfront_origins==1.82.0",
-        "aws-cdk.aws_efs==1.82.0",
+        # "aws-cdk.aws_efs==1.82.0",
         "pyyaml==5.3"
     ],
 

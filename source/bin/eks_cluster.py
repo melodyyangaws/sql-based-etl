@@ -53,18 +53,6 @@ class EksConst(core.Construct):
             tags = {'Name':'Spot-'+eksname, 'k8s.io/cluster-autoscaler/enabled': 'true', 'k8s.io/cluster-autoscaler/'+eksname: 'owned'}
         )
 
-        # CDK auto-installs the spot interrupt handler daemon to handle EC2 Spot Instance Termination Notices, not on managed MG yet.
-        # _spot_node = self._my_cluster.add_auto_scaling_group_capacity('spot',
-        #     instance_type=ec2.InstanceType('r5.xlarge'),
-        #     min_capacity=1,
-        #     max_capacity=30,
-        #     spot_price='1'
-        # )
-        # Enable node autoscaler by tags 
-        # core.Tags.of(_spot_node).add('Name', 'Spot-'+eksname)
-        # core.Tags.of(_spot_node).add('k8s.io/cluster-autoscaler/enabled','true')
-        # core.Tags.of(_spot_node).add('k8s.io/cluster-autoscaler/'+eksname, 'owned')
-
         # # 4. Add Fargate NodeGroup to EKS, without setup cluster-autoscaler
         # self._my_cluster.add_fargate_profile('FargateEnabled',
         #     selectors =[{
