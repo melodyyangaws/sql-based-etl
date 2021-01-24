@@ -73,14 +73,14 @@ singleuser:
     ETL_CONF_DATALAKE_LOC: {{codeBucket}}
     ETL_CONF_AWS_REGION: {{region}}
   storage:
-    type: static
+    type: dynamic
     capacity: 10G
-    # mount to EFS  
-    # dynamic:
-    #   storageClass: efs-sc
-    static:
-      pvcName: jupyter-pvc
-      subPath: "{username}"  
+    # mount to EBS  
+    dynamic:
+      storageClass: gp2
+    # static:
+    #   pvcName: jupyter-pvc
+    #   subPath: "/data"  
     # #   volumeNameTemplate: efs-pv
     # extraVolumes:
     #   - name: efs-pv
@@ -88,7 +88,7 @@ singleuser:
     #       claimName: jupyter-pvc
     # extraVolumeMounts:
     #   - name: efs-pv
-    #     mountPath: '/home/jovyan'   
+    #     mountPath: '/home/{unescaped_username}'   
   profileList:
   - default: True
     display_name: "Small (default): Arc-Jupyter Development Environment"

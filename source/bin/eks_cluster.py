@@ -48,7 +48,6 @@ class EksConst(core.Construct):
             disk_size = 50,
             instance_types=[ec2.InstanceType("r5.xlarge"),ec2.InstanceType("r4.xlarge"),ec2.InstanceType("r3.xlarge")],
             labels = {'app':'spark', 'lifecycle':'Ec2Spot'},
-            subnets = ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE,availability_zones=[region+'a']),
             capacity_type=eks.CapacityType.SPOT,
             tags = {'Name':'Spot-'+eksname, 'k8s.io/cluster-autoscaler/enabled': 'true', 'k8s.io/cluster-autoscaler/'+eksname: 'owned'}
         )

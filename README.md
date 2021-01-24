@@ -27,7 +27,8 @@ If you are running Linux / Windows, please see the official [argo doc](https://g
 ```
 
 ### Prepare deployment
-The following bash script will help you to prepare the deployment in your AWS account. 
+The following bash script will help you to prepare the deployment in your AWS account. It creates two environment variables `$CDK_DEPLOY_ACCOUNT` and `$CDK_DEPLOY_REGION` based on your input.
+
 The ECR repository name `arc` is fixed, however, it can be changed. Don't forget to correct your ECR endpoints in [example ETL jobs](/source/example) if you want to use a different ECR repo name.
 
 ```
@@ -55,7 +56,7 @@ source .env/bin/activate
 pip install -e source
 ```
 ### Deploy the whole stack 
-`make sure you are in source directory`
+<span style="color:red">**Make sure you are in the source directory**</span>
 
 With two optional parameters `jhubuser` & `datalakebucket`, the deployment will take up to 30 minutes to complete. See the `troubleshooting` section if you have a problem during the deployment.
 
