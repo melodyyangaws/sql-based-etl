@@ -8,7 +8,6 @@ phases:
       - echo "nothing to do in install"
   pre_build:
     commands:
-      - ls -al
       - echo "Installing dependencies and executing unit tests - `pwd`"
       - chmod +x ./source/run-all-tests.sh && ./source/run-all-tests.sh
       - echo "Installing dependencies and executing unit tests completed `date`"

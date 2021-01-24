@@ -21,7 +21,7 @@ spec:
               value: nyctaxi 
             - name: image
               value: ghcr.io/tripl-ai/arc:latest
-            # in Jupyter notebook, each ETL step associates to an env. So a test step could be skipped if the env mismatches 
+            # in Jupyter notebook, each ETL step associates to an "environment" attribute, eg. a UAT step will be skipped in this case.
             - name: environment
               value: test    
             - name: tags

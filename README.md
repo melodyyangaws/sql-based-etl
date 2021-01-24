@@ -136,7 +136,7 @@ argo auth token
 
 ![](/images/1-argoui.png)
 
-4. Replace the existing manifest by the following job definition, then `SUBMIT`.
+4. Replace the existing manifest by the following, then `SUBMIT`. Or simply upload the sample file from `[source/example/nyctaxi-job-scheduler.yaml]`
 
 ```
 apiVersion: argoproj.io/v1alpha1
@@ -174,7 +174,7 @@ spec:
 ```
 ![](/images/2-argo-submit.png)
 
-4. Click a pod (dot) on the dashboard to examine the job status and application logs.
+4. Click a pod (dot) on the dashboard to examine the job status and application logs. The ETL job/Jupyter notebook can be found at ![/source/example/nyctaxi-job.ipynb](/source/example/nyctaxi-job.ipynb)
 
 ![](/images/3-argo-log.png)
 
@@ -184,20 +184,20 @@ spec:
 We have included a second job manifest file and a Jupyter notebook, as an example of a complex Spark job to solve a real-world data problem. Let's submit it via a command line this time. 
 <details>
 <summary>manifest file</summary>
-The [manifest file](/source/example/scd2-workflow-job.yaml) defines where the Jupyter notebook file (job configuration) and input data are. 
+The [manifest file](/source/example/scd2-job-scheduler.yaml) defines where the Jupyter notebook file (job configuration) and input data are. 
 </details>
 <details>
 <summary>Jupyter notebook</summary>
-The [Jupyter notebook](/source/example/scd2_job.ipynb) specifies what exactly need to do in a data pipeline.
+The [Jupyter notebook](/source/example/scd2-job.ipynb) specifies what exactly need to do in a data pipeline.
 </details>
 
 In general, parquet files are immutable in Data Lake. This example will demonstrate how to address the problem and process data incrementally. It uses `Delta Lake`, an open source storage layer on top of parquet file, to bring the ACID transactions to your modern data architecture. In the example, we will build up a table to support the [Slowly Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) format, to demonstrate how easy to do the ETL with a SQL first approach implemented in a configuration-driven way.
 
 
-1. Open the [scd2 job manifest file](source/example/scd2-workflow-job.yaml) on your computer, replace the S3 bucket placeholder {{codeBucket}}. Either copy & paste the code bucket name from your deployment output, or use the existing s3 bucket name passed in as a parameter to your deployment previously.
+1. Open the [scd2 job scheduler file](source/example/scd2-job-scheduler.yaml) on your computer, replace the S3 bucket placeholder {{codeBucket}}. Either copy & paste the code bucket name from your deployment output, or use the existing s3 bucket name passed in as a parameter to your deployment previously.
 
 ```
-vi source/example/scd2-workflow-job.yaml
+vi source/example/scd2-job-scheduler.yaml
 ```
 ![](/images/4-cfn-output.png)
 ![](/images/3-scd-bucket.png)
@@ -210,11 +210,11 @@ vi source/example/scd2-workflow-job.yaml
 cd sql-based-etl-with-apache-spark-on-amazon-eks
 
 # Start a data pipeline containing 3 spark jobs
-kubectl apply -f source/example/scd2-workflow-job.yaml
+kubectl apply -f source/example/scd2-job-scheduler.yaml
 
 # Delete before submit the same job again
-kubectl delete -f source/example/scd2-workflow-job.yaml
-kubectl apply -f source/example/scd2-workflow-job.yaml
+kubectl delete -f source/example/scd2-job-scheduler.yaml
+kubectl apply -f source/example/scd2-job-scheduler.yaml
 ```
 
 <details>
@@ -223,7 +223,7 @@ Alternatively, submit the job with Argo CLI.
 </summary> 
 
 ```
-argo submit source/example/scd2-workflow-job.yaml -n spark --watch
+argo submit source/example/scd2-job-scheduler.yaml -n spark --watch
 ```
 *** Ensure to comment out a line in the manifest file before your submission. ***
 ![](/images/2-comment-out.png)
@@ -267,7 +267,7 @@ echo -e "\njupyter login: $JHUB_PWD"
 ![](/images/3-jhub-login.png)
 
 
-3. Upload a sample Arc-jupyter notebook from `source/example/scd2_job.ipynb`. Once uploaded, double click the file name to open the notebook.
+3. Upload a sample Arc-jupyter notebook from `source/example/scd2-job.ipynb`. Once uploaded, double click the file name to open the notebook.
 
 ![](/images/3-jhub-open-notebook.png)
 
@@ -303,7 +303,7 @@ sh-5.0# exit
 
 ```
 
-2. Modify the job manifest file [native-spark-job.yaml](source/example/native-spark-job.yaml) stored on your computer, ie. replace the placeholder {{codeBucket}}.
+2. Modify the job manifest file [native-spark-job-scheduler.yaml](source/example/native-spark-job-scheduler.yaml) stored on your computer, ie. replace the placeholder {{codeBucket}}.
 
 ![](/images/4-cfn-output.png)
 ![](/images/4-spark-output-s3.png)
@@ -312,12 +312,12 @@ sh-5.0# exit
 3. Submit a native Spark job. 
 
 ```
-kubectl apply -f source/example/native-spark-job.yaml
+kubectl apply -f source/example/native-spark-job-scheduler.yaml
 kubectl get pod -n spark
 
 # when rerun, delete before apply again
-kubectl delete -f source/example/native-spark-job.yaml
-kubectl apply -f source/example/native-spark-job.yaml
+kubectl delete -f source/example/native-spark-job-scheduler.yaml
+kubectl apply -f source/example/native-spark-job-scheduler.yaml
 
 ```
 4. Go to SparkUI to check your job progress and performance. Make sure the driver pod exists.
