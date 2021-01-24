@@ -27,6 +27,6 @@ aws elbv2 delete-target-group --target-group-arn $jhubTG
 
 
 echo "Delete the rest of Cloud resources via CDK CLI"
-cdk destroy -c env=develop
+cdk destroy
 
 

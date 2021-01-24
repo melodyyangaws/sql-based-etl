@@ -86,7 +86,7 @@ npm install -g aws-cdk@$cdk_version
 
 # Run 'cdk synth' to generate raw solution outputs
 echo "cdk synth --output=$staging_dist_dir"
-cdk synth --output=$staging_dist_dir -c env=develop
+cdk synth --output=$staging_dist_dir
 
 # Remove unnecessary output files
 echo "cd $staging_dist_dir"

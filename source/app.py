@@ -7,24 +7,22 @@ from bin.config import ConfigSectionMap
 from lib.spark_on_eks_stack import SparkOnEksStack
 from lib.cloud_front_stack import NestedStack
 from os import environ
-# from lib.deploy_pipeline_stack import DeploymentPipeline
 
 app = core.App()
 
-# Get environment vars from deployment/enviornment.cfg file 
-# example command is 'cdk synth -c env=develop'
-target_env = app.node.try_get_context('env')
+# Get environment vars from deployment/enviornment.cfg file, run 'cdk synth -c env=develop'
+
+# target_env = app.node.try_get_context('env')
 # account = ConfigSectionMap(target_env)['account']
 # region = ConfigSectionMap(target_env)['region']
 # env = core.Environment(account=account, region=region)
-eks_name = app.node.try_get_context('cluster_name') + '-' + ConfigSectionMap(target_env)['env_str']
+eks_name = app.node.try_get_context('cluster_name') ## + '-' + ConfigSectionMap(target_env)['env_str']
 env=core.Environment(account=environ.get('CDK_DEPLOY_ACCOUNT'), region=environ.get('CDK_DEPLOY_REGION'))
 
 # Spin up the main stack
 eks_stack = SparkOnEksStack(app, 'SparkOnEKS', eks_name, env=env)
 # Recommend to remove the CloudFront stack. Setup your own SSL certificate and add it to ALB.
 cf_nested_stack = NestedStack(eks_stack,'CreateCloudFront', eks_name, eks_stack.argo_url, eks_stack.jhub_url)
-# code_pipeline_stack = DeploymentPipeline(app, "Pipeline", env=env)
 
 core.Tags.of(eks_stack).add('project', 'sqlbasedetl')
 core.Tags.of(cf_nested_stack).add('project', 'sqlbasedetl')

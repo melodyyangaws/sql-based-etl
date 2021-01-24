@@ -52,7 +52,7 @@ After the virtualenv is created, you can use the followings to activate your vir
 
 ```
 source .env/bin/activate
-pip install -e file://$PWD/source
+pip install -e source
 ```
 ### Deploy the whole stack 
 `make sure you are in source directory`
@@ -63,14 +63,14 @@ With two optional parameters `jhubuser` & `datalakebucket`, the deployment will 
 
 ```
 cd source
-cdk deploy -c env=develop
+cdk deploy
 ```
 ### Scenario2: choose your own login name for Jupyter
 To follow the best practice in security, a service account in EKS will be created dynamically, based on your deployment parameter. An IAM role with the least privilege will be assigned to the new service account. 
 
 ```
 cd source
-cdk deploy -c env=develop --parameters jhubuser=<random_login_name>
+cdk deploy --parameters jhubuser=<random_login_name>
 ```
 ### Scenario3: use your own S3 bucket
 By default, the deployment creates a new S3 bucket containing sample data and ETL job config. 
@@ -78,7 +78,7 @@ If you want to use your own data to build an ETL, replace the `<existing_datalak
 
 ```
 cd source
-cdk deploy -c env=develop --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
+cdk deploy --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
 ```
 ## Troubleshooting
 
@@ -89,7 +89,7 @@ cdk deploy -c env=develop --parameters jhubuser=<random_login_name> --parameters
 Run the bootstrap command:
 
 ```
-cdk bootstrap aws://<YOUR_ACCOUNT_NUMBER>/<YOUR_REGION> -c env=develop
+cdk bootstrap aws://<YOUR_ACCOUNT_NUMBER>/<YOUR_REGION>
 ```
 
 3. If an error appears during the CDK deployment: `Failed to create resource. IAM role’s policy must include the "ec2:DescribeVpcs" action`, it means you have reach the quota limits of Amazon VPC resources per Region in your AWS account. Please deploy to a different region or a different account.
