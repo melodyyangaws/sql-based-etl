@@ -63,7 +63,7 @@ class EksBaseAppConst(core.Construct):
             )
         )
 
-        # # Add EFS persistent storage to EKS across AZs
+        # Add EFS persistent storage to EKS across AZs
         # eks_cluster.add_helm_chart('EFSDriver', 
         #     chart='aws-efs-csi-driver',
         #     release='efs-driver',
@@ -73,6 +73,7 @@ class EksBaseAppConst(core.Construct):
         # )
         # _k8s_efs = efs.FileSystem(self,'EFSFileSystem',
         #     vpc=eks_cluster.vpc,
+        #     security_group=efs_sg,
         #     encrypted=True,
         #     lifecycle_policy=efs.LifecyclePolicy.AFTER_7_DAYS,
         #     performance_mode=efs.PerformanceMode.MAX_IO,

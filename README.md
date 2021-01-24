@@ -19,22 +19,22 @@ cd sql-based-etl-with-apache-spark-on-amazon-eks
 
 ```
 
+### Install kubernetes command tool on MAC
+If you are running Linux / Windows, please see the official [argo doc](https://github.com/argoproj/argo/releases) & [kubectl doc](https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-kubectl-on-windows) to find the download links.
+
+```
+./deployment/setup_cmd_tool.sh
+```
+
 ### Prepare deployment
-The following bash script will help you to prepare the deployment in your AWS account. Check your `deployment/environment.cfg` file, once it is executed. It should contain the correct envirnoment information.
+The following bash script will help you to prepare the deployment in your AWS account. 
 The ECR repository name `arc` is fixed, however, it can be changed. Don't forget to correct your ECR endpoints in [example ETL jobs](/source/example) if you want to use a different ECR repo name.
 
 ```
-bash deployment/pull_and_push_ecr.sh <your_region> <your_account_number> 'arc'
+./deployment/pull_and_push_ecr.sh <your_region> <your_account_number> 'arc'
 
 # use `skip_ecr` flag, when rerun the script without a docker push 
-bash deployment/pull_and_push_ecr.sh <your_region> <your_account_number> 'arc' 'skip_ecr'
-```
-
-### Install kubernetes command tool on MAC
-If you are running Linux / Windows, please see the [official docs](https://github.com/argoproj/argo/releases) to find the download links.
-
-```
-bash deployment/setup_cmd_tool.sh
+./deployment/pull_and_push_ecr.sh <your_region> <your_account_number> 'arc' 'skip_ecr'
 ```
 
 ### Create a virtualenv
@@ -52,20 +52,24 @@ After the virtualenv is created, you can use the followings to activate your vir
 
 ```
 source .env/bin/activate
-pip install -r source/requirements.txt
+pip install -e file://$PWD/source
 ```
 ### Deploy the whole stack 
+`make sure you are in source directory`
+
 With two optional parameters `jhubuser` & `datalakebucket`, the deployment will take up to 30 minutes to complete. See the `troubleshooting` section if you have a problem during the deployment.
 
 ### Scenario1: deploy with default settings (recommended)
 
 ```
+cd source
 cdk deploy -c env=develop
 ```
 ### Scenario2: choose your own login name for Jupyter
-To follow the best practice in security, a service account in EKS will be created dynamically, based on your login. An IAM role with the least priviliage will be assigned to the new service account.
+To follow the best practice in security, a service account in EKS will be created dynamically, based on your deployment parameter. An IAM role with the least privilege will be assigned to the new service account. 
 
 ```
+cd source
 cdk deploy -c env=develop --parameters jhubuser=<random_login_name>
 ```
 ### Scenario3: use your own S3 bucket
@@ -73,6 +77,7 @@ By default, the deployment creates a new S3 bucket containing sample data and ET
 If you want to use your own data to build an ETL, replace the `<existing_datalake_bucket>` to your S3 bucket. `NOTE: your bucket must be in the same region as the deployment region.`
 
 ```
+cd source
 cdk deploy -c env=develop --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
 ```
 ## Troubleshooting
@@ -185,7 +190,7 @@ The [manifest file](/source/example/scd2-workflow-job.yaml) defines where the Ju
 The [Jupyter notebook](/source/example/scd2_job.ipynb) specifies what exactly need to do in a data pipeline.
 </details>
 
-In general, parquet files are immutable in Data Lake. This example will demonstrate how to address the problem and process data incrementally. It uses `Delta Lake`, an open source storage layer on top of parquet file, to bring the ACID transactions to your modern data architecture. In the example, we will build up a table to support the [Slowly Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) format, to demostrate how easy to do the ETL with a SQL first approach implemented in a configuration-driven way.
+In general, parquet files are immutable in Data Lake. This example will demonstrate how to address the problem and process data incrementally. It uses `Delta Lake`, an open source storage layer on top of parquet file, to bring the ACID transactions to your modern data architecture. In the example, we will build up a table to support the [Slowly Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) format, to demonstrate how easy to do the ETL with a SQL first approach implemented in a configuration-driven way.
 
 
 1. Open the [scd2 job manifest file](source/example/scd2-workflow-job.yaml) on your computer, replace the S3 bucket placeholder {{codeBucket}}. Either copy & paste the code bucket name from your deployment output, or use the existing s3 bucket name passed in as a parameter to your deployment previously.
@@ -219,7 +224,7 @@ Alternatively, submit the job with Argo CLI.
 ```
 argo submit source/example/scd2-workflow-job.yaml -n spark --watch
 ```
-*** Make sure to comment out a line in the manifest file before your submission. ***
+*** Ensure to comment out a line in the manifest file before your submission. ***
 ![](/images/2-comment-out.png)
 ![](/images/2-argo-scdjob.png)
 </details>
@@ -234,7 +239,7 @@ argo submit source/example/scd2-workflow-job.yaml -n spark --watch
 ![](/images/3-argo-job-dependency.png)
 
 
-5. As an outcome of the ETL pipeline, you will see a [Delta Lake](https://delta.io/) table is created in [Athena](https://console.aws.amazon.com/athena/). Run the following query to check if the table is a SCD2 type.
+5. As an output of the ETL pipeline, you will see a [Delta Lake](https://delta.io/) table is created in [Athena](https://console.aws.amazon.com/athena/) by leveraging Glue Catalog. Run the following query to check if the table is a SCD2 type.
 
 ```
 SELECT * FROM default.contact_snapshot WHERE id=12
@@ -268,13 +273,13 @@ echo -e "\njupyter login: $JHUB_PWD"
 
 4. Execute each block and observe the result.
 
-NOTE: the variable `${ETL_CONF_DATALAKE_LOC}` is set to a code bucket or an existing DataLake S3 bucket specified at the deployment. An IAM role attached to the JupyterHub is controling the data access to the S3 bucket. If you want to connect to a different bucket that wansn't specified at the deployment, you will get an access deny error. In this case, simply add the bucket ARN to the IAM role 'SparkOnEKS-EksClusterjhubServiceAcctRole'.
+NOTE: the variable `${ETL_CONF_DATALAKE_LOC}` is set to a code bucket or an existing DataLake S3 bucket specified at the deployment. An IAM role attached to the JupyterHub is controlling the data access to the S3 bucket. If you want to connect to a different bucket that wasn't specified at the deployment, you will get an access deny error. In this case, simply add the bucket ARN to the IAM role 'SparkOnEKS-EksClusterjhubServiceAcctRole'.
 
 
 5. Now let's take a look at the output table in [Athena](https://console.aws.amazon.com/athena/), to check if the table is populated correctly.
 
 ```
-SELECT * FROM default.deltalake_contact WHERE id=12
+SELECT * FROM default.deltalake_contact_jhub WHERE id=12
 ```
 
 ## Submit a native Spark job with Spot instance
@@ -324,11 +329,12 @@ kubectl port-forward $driver 4040:4040 -n spark
 # go to `localhost:4040` from your web browser
 
 ```
-5. Examine the auto-scaling and multi-AZs
+5. Examine the auto-scaling and multi-AZs support
 
 ```
-# The sample job will run with 10 Spark executors for 15 mins. It requires 1 Spark executor per EC2 spot instance. Once the job is triggered, you will see the autoscaling kicks in within seconds. It will scale your EKS Cluster from 1 spot to 10 spot nodes. It is configurable to fit the Spark executors into less number of spot instances if you want. 
-# the auto-scaling is fired up across multiple AZs, again it is configurable to trigger the job in a single AZ if required.
+# The sample job will run with 10 Spark executors for 15 mins. It requires one Spark executor per EC2 spot instance. Once the job is triggered, you will see the autoscaling kick-in within seconds. It will scale your EKS Cluster from 1 to 10 spot nodes. It is flexible to fit the Spark executors into a smaller number of spot instances if you want. 
+
+# The auto-scaling is fired up across multiple AZs. It is configurable to schedule the job in a single AZ if required.
 
 kubectl get node --label-columns=lifecycle,topology.kubernetes.io/zone
 kubectl get pod -n spark
@@ -350,37 +356,12 @@ kubectl get pod -n spark
  * `kubectl apply -f source/app_resources/spark-template.yaml` create a reusable Spark job template
 
 ## Clean up
-* Delete Athena tables created by ETL jobs.
 
 ```
-aws athena start-query-execution --query-string "DROP TABLE default.contact_snapshot" --result-configuration OutputLocation=s3://sparkoneks/
-```
-
-* Delete application load balancer and target group. Replace the region to your deployment region.
+cd source
+../deployment/delete_all.sh
 
 ```
-# delete ALB
-argoALB=$(aws elbv2 describe-load-balancers --query 'LoadBalancers[?starts_with(DNSName,`k8s-argo`)==`true`].LoadBalancerArn' --output text --region us-west-2)
-jhubALB=$(aws elbv2 describe-load-balancers --query 'LoadBalancers[?starts_with(DNSName,`k8s-jupyter`)==`true`].LoadBalancerArn' --output text --region us-west-2)
-
-aws elbv2 delete-load-balancer --load-balancer-arn $argoALB --region us-west-2 
-aws elbv2 delete-load-balancer --load-balancer-arn $jhubALB --region us-west-2 
-sleep 15
-
-# delete target group
-argoTG=$(aws elbv2 describe-target-groups --query 'TargetGroups[?starts_with(TargetGroupName,`k8s-argo`)==`true`].TargetGroupArn' --output text --region us-west-2)
-jhubTG=$(aws elbv2 describe-target-groups --query 'TargetGroups[?starts_with(TargetGroupName,`k8s-jupyter`)==`true`].TargetGroupArn' --output text --region us-west-2)
-
-aws elbv2 delete-target-group --target-group-arn $argoTG --region us-west-2 
-aws elbv2 delete-target-group --target-group-arn $jhubTG --region us-west-2 
-```
-* Delete the Arc docker image from ECR.
-* Finally, delete the rest of cloud resources via CDK CLI.
-
-```
-cdk destroy -c env=develop
-``` 
-
 
 ## Security
 

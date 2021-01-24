@@ -5,6 +5,7 @@ curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv
 unzip -q -o /tmp/awscliv2.zip -d /tmp
 sudo /tmp/aws/install --update
 aws --version
+
 # install k8s command tool kubectl 
 curl -o kubectl "https://amazon-eks.s3.us-west-2.amazonaws.com/1.18.9/2020-11-02/bin/linux/amd64/kubectl"
 chmod +x kubectl

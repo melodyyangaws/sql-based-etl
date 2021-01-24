@@ -2,7 +2,7 @@
 # // SPDX-License-Identifier: MIT-0
 import setuptools
 
-with open("README.md") as fp:
+with open("../README.md") as fp:
     long_description = fp.read()
 
 setuptools.setup(
@@ -15,8 +15,8 @@ setuptools.setup(
     
     author="meloyang",
 
-    package_dir={"": "source"},
-    packages=setuptools.find_packages(where="source"),
+    package_dir={"": "./"},
+    packages=setuptools.find_packages(where="./"),
 
     install_requires=[
         "aws-cdk.core==1.82.0",

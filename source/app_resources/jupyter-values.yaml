@@ -16,13 +16,13 @@ hub:
           kube_spawner.service_account = kube_spawner._expand_user_properties(kube_spawner.service_account)
 
       c.KubeSpawner.pre_spawn_hook = override_service_account_hook
-      c.JupyterHub.cookie_max_age_days = 0.0211
+      c.JupyterHub.cookie_max_age_days = 0.0105
       c.Authenticator.refresh_pre_spawn = True
       c.JupyterHub.services = [
         {
             "name": "idle_culler",
             "admin": True,
-            "command": [sys.executable, "-m", "jupyterhub_idle_culler", "--timeout=1800"],
+            "command": [sys.executable, "-m", "jupyterhub_idle_culler", "--timeout=900"],
         }
       ]
 
@@ -68,15 +68,27 @@ singleuser:
     guarantee: 4G
     limit: 4G
   extraEnv:
+    CONF_ALLOW_EXPORT: "true"
     JAVA_OPTS: -Xmx4G
     ETL_CONF_DATALAKE_LOC: {{codeBucket}}
     ETL_CONF_AWS_REGION: {{region}}
-  # storage:
-  #   capacity: 10G
-  #   type: static
-  #   static:
-  #     pvcName: jupyter-pvc
-  #     subPath: '{unescaped_username}'
+  storage:
+    type: static
+    capacity: 10G
+    # mount to EFS  
+    # dynamic:
+    #   storageClass: efs-sc
+    static:
+      pvcName: jupyter-pvc
+      subPath: "{username}"  
+    # #   volumeNameTemplate: efs-pv
+    # extraVolumes:
+    #   - name: efs-pv
+    #     persistentVolumeClaim:
+    #       claimName: jupyter-pvc
+    # extraVolumeMounts:
+    #   - name: efs-pv
+    #     mountPath: '/home/jovyan'   
   profileList:
   - default: True
     display_name: "Small (default): Arc-Jupyter Development Environment"

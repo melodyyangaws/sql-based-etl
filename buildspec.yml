@@ -3,37 +3,34 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      python: 3.8
-      nodejs: 12 
+      nodejs: 10    
     commands:
-      - npm install -g aws-cdk
-      - pip3 install .
+      - echo "nothing to do in install"
   pre_build:
     commands:
-      - export REGION=$(aws configure get region)
-      - export ACCOUNTNUMBER=$(aws sts get-caller-identity --query Account --output text)
-      - echo "Starting deploy docker images `date` in `pwd`"
-      - bash deployment/pull_and_push_ecr.sh $REGION $ACCOUNTNUMBER 'arc'
-      - echo "Docker images pull and push are completed `date`"
+      - ls -al
+      - echo "Installing dependencies and executing unit tests - `pwd`"
+      - chmod +x ./source/run-all-tests.sh && ./source/run-all-tests.sh
+      - echo "Installing dependencies and executing unit tests completed `date`"
   build:
     commands:
-      - echo Build started on `date`
-      - echo "Starting deploy CDK `date` in `pwd`"
-      - pip install -r source/requirements.txt
-      - cdk bootstrap -c stage=$STAGE aws://$ACCOUNTNUMBER/$REGION
-      - cdk deploy SparkOnEKS --require-approval never -c env=develop
-      - cdk deploy CreateCF --require-approval never -c env=develop
-      - echo "CDK deployment is completed `date`"
+      - echo "Starting build `date` in `pwd`"
+      - chmod +x ./deployment/build-s3-dist.sh && ./deployment/build-s3-dist.sh $DIST_OUTPUT_BUCKET $SOLUTION_NAME $VERSION
+      - echo "Build completed `date`"
+      - echo "Starting open-source-dist `date` in `pwd`"
+      - chmod +x ./deployment/build-open-source-dist.sh && ./deployment/build-open-source-dist.sh $SOLUTION_NAME
+      - echo "Open Source Dist completed `date`"
+
   post_build:
     commands:
-      - echo Build completed on `date`
       - echo "Retrieving next stage buildspec `date` in `pwd`"
-      # - aws s3 cp s3://solutions-build-assets/changelog-spec.yml ../buildspec.yml
+      - aws s3 cp s3://solutions-build-assets/changelog-spec.yml ../buildspec.yml
       - echo "Retrieving next stage buildspec complete"
       - echo "Post build completed on `date`"
 
 artifacts:
   files:
       - deployment/**/*
+      - source/*
       - buildspec.yml
       - CHANGELOG.md

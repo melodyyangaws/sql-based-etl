@@ -1,5 +1,5 @@
 {
-  "app": "python3 source/app.py",
+  "app": "python3 app.py",
   "context": {
     "cluster_name": "spark-on-eks",
     "@aws-cdk/core:enableStackNameDuplicates": "true",

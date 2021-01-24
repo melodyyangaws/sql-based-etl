@@ -1,7 +1,6 @@
 from aws_cdk import (
     core,
     aws_iam as iam
-    # aws_efs as efs
 )
 from aws_cdk.aws_secretsmanager import ISecret
 from aws_cdk.aws_eks import ICluster

@@ -10,7 +10,7 @@ class NetworkSgConst(core.Construct):
         
     @property
     def efs_sg(self):
-        return self._eks_efs_sg.security_group_id
+        return self._eks_efs_sg
 
 
     def __init__(self,scope: core.Construct, id:str, eksname:str, **kwargs) -> None:
@@ -39,14 +39,13 @@ class NetworkSgConst(core.Construct):
                                                  ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE)])
                                                  
         self._vpc.add_interface_endpoint("EcrDockerEndpoint",service=ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER, security_groups=[self._vpc_endpoint_sg])
-        self._vpc.add_interface_endpoint("Ec2Endpoint", service=ec2.InterfaceVpcEndpointAwsService.EC2,security_groups=[self._vpc_endpoint_sg])
         self._vpc.add_interface_endpoint("CWLogsEndpoint", service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,security_groups=[self._vpc_endpoint_sg])
-        self._vpc.add_interface_endpoint("StsEndpoint", service=ec2.InterfaceVpcEndpointAwsService.STS,security_groups=[self._vpc_endpoint_sg])
-
+        self._vpc.add_interface_endpoint("AthenaEndpoint", service=ec2.InterfaceVpcEndpointAwsService.ATHENA,security_groups=[self._vpc_endpoint_sg])
+        self._vpc.add_interface_endpoint("KMSEndpoint", service=ec2.InterfaceVpcEndpointAwsService.KMS,security_groups=[self._vpc_endpoint_sg])
         # //******************************************************//
         # //******************* SECURITY GROUP ******************//
         # //****************************************************//
-        # # EFS SG
+        # EFS SG
         self._eks_efs_sg = ec2.SecurityGroup(self,'EFSSg',
             security_group_name=eksname + '-EFS-sg',
             vpc=self._vpc,

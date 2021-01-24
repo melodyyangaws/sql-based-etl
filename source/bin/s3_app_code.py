@@ -3,6 +3,7 @@ from aws_cdk import (
     aws_s3 as s3,
     aws_s3_deployment as s3deploy
 )
+from os import path
 
 class S3AppCodeConst(core.Construct):
 
@@ -20,8 +21,9 @@ class S3AppCodeConst(core.Construct):
             removal_policy=core.RemovalPolicy.DESTROY,
             auto_delete_objects=True
         )  
+        code_path=path.dirname(path.abspath(__file__))
         s3deploy.BucketDeployment(self, "DeployCode",
-            sources=[s3deploy.Source.asset("deployment/app_code")],
+            sources=[s3deploy.Source.asset(code_path+"/../../deployment/app_code")],
             destination_bucket= artifact_bucket,
             destination_key_prefix="app_code"
         )
