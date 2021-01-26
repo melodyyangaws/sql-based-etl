@@ -56,7 +56,7 @@ source .env/bin/activate
 pip install -e source
 ```
 ### Deploy the whole stack 
-<span style="color:red">**Make sure you are in the source directory**</span>
+<span style="color: red;">Make sure you are in the source directory</span>
 
 With two optional parameters `jhubuser` & `datalakebucket`, the deployment will take up to 30 minutes to complete. See the `troubleshooting` section if you have a problem during the deployment.
 
@@ -351,16 +351,17 @@ kubectl get pod -n spark
  * `cdk docs`        open CDK documentation
  * `cdk destroy`     delete the stack deployed earlier
  * `kubectl get pod -n spark`                         list running Spark jobs
- * `argo submit source/example/nyctaxi-arc-job.yaml`  submit a spark job via Argo workflow tool
+ * `argo submit source/example/nyctaxi-job-scheduler.yaml`  submit a spark job via Argo workflow tool
  * `argo list --all-namespaces`                       show all jobs scheduled via Argo
  * `kubectl delete pod --all -n spark`                delete all Spark jobs
  * `kubectl apply -f source/app_resources/spark-template.yaml` create a reusable Spark job template
 
 ## Clean up
+Go to the root directory of the GitHub reporsitory, then run the clean up script.
 
 ```
-cd source
-../deployment/delete_all.sh
+cd sql-based-etl-with-apache-spark-on-amazon-eks
+./deployment/delete_all.sh
 
 ```
 

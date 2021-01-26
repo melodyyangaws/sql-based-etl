@@ -7,6 +7,7 @@ aws ecr delete-repository --repository-name arc --force
 
 echo "Drop a Delta Lake table default.contact_snapshot"
 aws athena start-query-execution --query-string "DROP TABLE default.contact_snapshot" --result-configuration OutputLocation=s3://sparkoneks/
+aws athena start-query-execution --query-string "DROP TABLE default.contact_snapshot_jhub" --result-configuration OutputLocation=s3://sparkoneks/
 
 
 echo "Delete ALB"

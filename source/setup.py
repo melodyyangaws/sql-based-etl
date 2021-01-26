@@ -2,8 +2,11 @@
 # // SPDX-License-Identifier: MIT-0
 import setuptools
 
-with open("../README.md") as fp:
-    long_description = fp.read()
+try:
+    with open("../README.md") as fp:
+        long_description = fp.read()
+except IOError as e:
+    long_description = ''
 
 setuptools.setup(
     name="sql-based-etl",
