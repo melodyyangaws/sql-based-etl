@@ -81,6 +81,7 @@ spec:
         --conf spark.kubernetes.namespace={{workflow.namespace}} \
         --conf spark.network.crypto.enabled=true \
         --conf spark.ui.enabled=true \
+        --conf spark.sql.ansi.enabled=true \
         {{inputs.parameters.sparkConf}} \
         local:///opt/spark/jars/arc.jar \
         --etl.config.uri={{inputs.parameters.configUri}} \
@@ -168,6 +169,7 @@ spec:
         --conf spark.kubernetes.namespace={{workflow.namespace}} \
         --conf spark.network.crypto.enabled=true \
         --conf spark.ui.enabled=true \
+        --conf spark.sql.ansi.enabled=true \
         {{inputs.parameters.sparkConf}} \
         local:///opt/spark/jars/arc.jar \
         --etl.config.uri={{inputs.parameters.configUri}} \
@@ -255,6 +257,7 @@ spec:
         --conf spark.kubernetes.namespace={{workflow.namespace}} \
         --conf spark.network.crypto.enabled=true \
         --conf spark.ui.enabled=true \
+        --conf spark.sql.ansi.enabled=true \
         {{inputs.parameters.sparkConf}} \
         local:///opt/spark/jars/arc.jar \
         --etl.config.uri={{inputs.parameters.configUri}} \
@@ -327,6 +330,7 @@ spec:
         --conf spark.sql.adaptive.enabled=true \
         --conf spark.network.crypto.enabled=true \
         --conf spark.ui.enabled=true \
+        --conf spark.sql.ansi.enabled=true \
         {{inputs.parameters.sparkConf}} \
         local:///opt/spark/jars/arc.jar \
         --etl.config.uri={{inputs.parameters.configUri}} \

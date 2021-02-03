@@ -89,7 +89,7 @@ class SparkOnEksStack(core.Stack):
             chart='jupyterhub',
             repository='https://jupyterhub.github.io/helm-chart',
             release='jhub',
-            version='0.10.6',
+            version='0.11.1',
             namespace='jupyter',
             create_namespace=False,
             values=loadYamlReplaceVarLocal('../app_resources/jupyter-values.yaml', 
