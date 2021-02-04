@@ -25,7 +25,7 @@ If you are running Linux / Windows, please see the official [argo doc](https://g
 ```
 ./deployment/setup_cmd_tool.sh
 ```
-Additionally, you might need the [CDK toolkit](https://cdkworkshop.com/15-prerequisites/500-toolkit.html) to deploy the solution. Please igore the CDK CLI installation, if you intend to deploy the solution via AWS CloudFormation.
+Additionally, you might need the [CDK toolkit](https://cdkworkshop.com/15-prerequisites/500-toolkit.html) to deploy the solution. Please igore the installation, if you intend to deploy the solution via AWS CloudFormation.
 
 
 ### Prepare deployment

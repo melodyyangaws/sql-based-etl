@@ -63,6 +63,15 @@ class EksBaseAppConst(core.Construct):
             )
         )
 
+        # # Add Metric Server for Horizontal Pod Autoscaller
+        # _hpa = KubernetesManifest(self,'PodAutoscaller',
+        #     cluster=eks_cluster, 
+        #     manifest=loadYamlReplaceVarRemotely('https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml', 
+        #             fields=_var_mapping,
+        #             multi_resource=True
+        #     )
+        # )
+
         # Add EFS persistent storage to EKS across AZs
         # eks_cluster.add_helm_chart('EFSDriver', 
         #     chart='aws-efs-csi-driver',

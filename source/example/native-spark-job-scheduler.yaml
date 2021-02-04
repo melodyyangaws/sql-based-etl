@@ -40,6 +40,7 @@ spec:
         --conf spark.hadoop.fs.s3a.committer.staging.conflict-mode=append \
         --conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' \
         --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml' \
+        --conf spark.sql.ansi.enabled=true \
         \"s3a://{{codeBucket}}/app_code/job/wordcount.py\" \
         \"s3a://{{codeBucket}}/app_code/output/native\""
         ]
