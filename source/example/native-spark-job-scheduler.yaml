@@ -1,46 +1,74 @@
-apiVersion: batch/v1
-kind: Job
+apiVersion: "sparkoperator.k8s.io/v1beta2"
+kind: SparkApplication
 metadata:
   name: word-count
   namespace: spark
 spec:
-  template:
-    spec:
-      serviceAccountName: nativejob
-      restartPolicy: Never 
-      containers:
-      - name: word-count
-        image: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
-        command: [
-        "/bin/sh",
-        "-c",
-        "/opt/spark/bin/spark-submit \
-        --master k8s://kubernetes.default.svc:443 \
-        --deploy-mode cluster \
-        --name 'Word Count' \  
-        --conf spark.executor.instances=10 \
-        --conf spark.kubernetes.allocation.batch.size=10 \ 
-        --conf spark.kubernetes.driver.request.cores=2 \
-        --conf spark.kubernetes.driver.limit.cores=3 \
-        --conf spark.executor.memory=10g \
-        --conf spark.kubernetes.executor.request.cores=2 \
-        --conf spark.kubernetes.executor.limit.cores=3 \
-        --conf spark.kubernetes.container.image={{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest \
-        --conf spark.kubernetes.container.image.pullPolicy=Always \
-        --conf spark.kubernetes.authenticate.driver.serviceAccountName=nativejob \
-        --conf spark.kubernetes.namespace=spark \
-        --conf spark.io.encryption.enabled=true \
-        --conf spark.kubernetes.authenticate.caCertFile=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
-        --conf spark.kubernetes.authenticate.oauthTokenFile=/var/run/secrets/kubernetes.io/serviceaccount/token \
-        --conf spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem \
-        --conf spark.hadoop.fs.s3a.fast.upload=true \
-        --conf spark.hadoop.fs.s3a.aws.credentials.provider=com.amazonaws.auth.WebIdentityTokenCredentialsProvider \
-        --conf spark.hadoop.mapreduce.outputcommitter.factory.scheme.s3a=org.apache.hadoop.fs.s3a.commit.S3ACommitterFactory \
-        --conf spark.hadoop.fs.s3a.committer.name=directory \
-        --conf spark.hadoop.fs.s3a.committer.staging.conflict-mode=append \
-        --conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' \
-        --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml' \
-        --conf spark.sql.ansi.enabled=true \
-        \"s3a://{{codeBucket}}/app_code/job/wordcount.py\" \
-        \"s3a://{{codeBucket}}/app_code/output/native\""
-        ]
+  type: Python
+  pythonVersion: "3"
+  mode: cluster
+  image: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
+  imagePullPolicy: Always
+  mainApplicationFile: "s3a://{{codeBucket}}/app_code/job/wordcount.py"
+  arguments: ["s3a://{{codeBucket}}/app_code/output/native"]
+  sparkVersion: "3.0.1"
+  sparkConf:
+    "spark.hadoop.fs.s3a.impl": "org.apache.hadoop.fs.s3a.S3AFileSystem"
+    "spark.hadoop.fs.s3a.aws.credentials.provider": "com.amazonaws.auth.WebIdentityTokenCredentialsProvider"
+    "spark.kubernetes.allocation.batch.size": "10" 
+    "spark.io.encryption.enabled": "true"
+    "spark.kubernetes.local.dirs.tmpfs": "true"
+  driver:
+    affinity:
+      podAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:  
+          nodeSelectorTerms:
+              - matchExpressions:
+                - key: lifecycle 
+                  operator: In 
+                  values: 
+                  - OnDemand
+  executor:
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:     
+          nodeSelectorTerms:
+                - matchExpressions:
+                  - key: lifecycle 
+                    operator: In 
+                    values: 
+                    - Ec2Spot           
+  volumes:
+    - name: spark-local-dir-1
+      hostPath:
+        path: "/tmp"
+        type: Directory      
+  dynamicAllocation:
+    enabled: true
+    initialExecutors: 1
+    minExecutors: 1
+    maxExecutors: 20
+  restartPolicy:
+    type: OnFailure
+    onFailureRetries: 3
+    onFailureRetryInterval: 10
+    onSubmissionFailureRetries: 5
+    onSubmissionFailureRetryInterval: 20
+  driver:
+    cores: 1
+    memory: "1G"
+    labels:
+      role: driver
+    serviceAccount: nativejob
+    volumeMounts:
+      - name: spark-local-dir-1
+        mountPath: "/tmp"
+  executor:
+    cores: 1
+    instances: 10
+    memory: "4G"
+    labels:
+      role: executor
+    volumeMounts:
+      - name: spark-local-dir-1
+        mountPath: "/tmp"

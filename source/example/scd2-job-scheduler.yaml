@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
-  # only need if using ArgoCLI
+  # only need if using Argo console or CLI
   # generateName: scd2-job-
   namespace: spark
   ## only need if use kubectl
@@ -51,7 +51,6 @@ spec:
             - name: parameters
               value: "--ETL_CONF_DATALAKE_LOC={{codeBucket}}"  
   
-
         - name: SCD2-merge
           dependencies: [initial-load, delta-load]
           templateRef:
@@ -69,6 +68,4 @@ spec:
             - name: parameters
               value: "--ETL_CONF_DATALAKE_LOC={{codeBucket}}"           
             - name: sparkConf
-              value: "--conf spark.databricks.delta.merge.repartitionBeforeWrite.enabled=true \
-                      --conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' \
-                      --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml'"   
+              value: "--conf spark.databricks.delta.merge.repartitionBeforeWrite.enabled=true" 

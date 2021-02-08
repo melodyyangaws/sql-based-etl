@@ -60,14 +60,13 @@ singleuser:
   lifecycleHooks:
     postStart:
       exec:
-        # wait for the repo to be public, use the deequ for now.
         command:
           - "bash"
           - "-c"
           - >
             cp -r /opt/.jupyter $HOME/.jupyter;
             echo "git clone https://github.com/awslabs/sql-based-etl-with-apache-spark-on-amazon-eks";
-            git clone https://github.com/awslabs/deequ;          
+            git clone https://github.com/melodyyangaws/sql-based-etl;
   serviceAccountName: "{unescaped_username}"
   cpu:
     guarantee: 0.25

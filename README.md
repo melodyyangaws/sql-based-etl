@@ -4,9 +4,14 @@ This is a project developed with Python [CDK](https://docs.aws.amazon.com/cdk/la
 We introduce a quality-aware design to increase data process productivity, by leveraging an open-source data framework [Arc](https://arc.tripl.ai/) for a user-centered declarative ETL solution. Additionally, we take considerations of the needs and expected skills from customers in data analytics, and accelerate their interaction with ETL practice in order to foster simplicity, while maximizing efficiency.
 
 ## Prerequisites 
-Python is needed in this project. Specifically, you will need version 3.6 or later. You can find information about downloading and installing Python [here](https://www.python.org/downloads/). Additionally you will need to have the Python package installer (pip) installed. See installation instructions [here](https://pypi.org/project/pip/).
+1. Python is needed in this project. Specifically, you will need version 3.6 or later. You can find information about downloading and installing Python [here](https://www.python.org/downloads/). Additionally you will need to have the Python package installer (pip) installed. See installation instructions [here](https://pypi.org/project/pip/).
 
 If you use Windows, be sure Python is on your PATH. 
+
+2. AWS CLI version 1 is required. 
+
+    Windows: [MSI installer](https://docs.aws.amazon.com/cli/latest/userguide/install-windows.html#install-msi-on-windows)
+    Linux, macOS or Unix: [Bundled installer](https://docs.aws.amazon.com/cli/latest/userguide/install-macos.html#install-macosos-bundled)
 
 
 ## Deploy Infrastructure
@@ -25,12 +30,15 @@ If you are running Linux / Windows, please see the official [argo doc](https://g
 ```
 ./deployment/setup_cmd_tool.sh
 ```
-Additionally, you might need the [CDK toolkit](https://cdkworkshop.com/15-prerequisites/500-toolkit.html) to deploy the solution. Please igore the installation, if you intend to deploy the solution via AWS CloudFormation.
+Additionally, you might need the [CDK toolkit](https://cdkworkshop.com/15-prerequisites/500-toolkit.html) to deploy the solution. Please igore the installation, if you intend to deploy via AWS CloudFormation.
 
 
 ### Prepare deployment
-The following bash script will help you to prepare the deployment in your AWS account. It creates two environment variables `$CDK_DEPLOY_ACCOUNT` and `$CDK_DEPLOY_REGION` based on your input.
+The following bash script will help you to prepare the deployment in your AWS account. It creates two environment variables `$CDK_DEPLOY_ACCOUNT` and `$CDK_DEPLOY_REGION` based on your input. Assume your AWS CLI can communicate with services in the `CDK_DEPLOY_ACCOUNT` as a default profile, if not, run the following configuration to setup your AWS account access.
 
+```
+aws configure
+```
 The ECR repository name `arc` is fixed, however, it can be changed. Don't forget to correct your ECR endpoints in [example ETL jobs](/source/example) if you want to use a different ECR repo name.
 
 ```
@@ -110,24 +118,24 @@ aws eks update-kubeconfig --name <EKS_cluster_name> --region <region> --role-arn
 
 ## Submit a Spark job on web interface
 
-Once the CDK deployment is completed, we can start to `submit a Spark job` on [Argo](https://argoproj.github.io/).
+Once the CDK deployment is finished, let's start to `submit a Spark job` on [Argo](https://argoproj.github.io/) console. For the best practice in security, your authentication token will be refreshed about 10mins. Simply regenerate your token and login again. 
 
 <details>
 <summary>Argo definition</summary>
 An open source container-native workflow tool to orchestrate parallel jobs on Kubernetes. Argo Workflows is implemented as a Kubernetes CRD (Custom Resource Definition). It triggers time-based or event-based workflows via configuration files.
 </details>
 
-Firstly, let's take a look at a [sample job](https://github.com/tripl-ai/arc-starter/tree/master/examples/kubernetes/nyctaxi.ipynb) developed in Jupyter Notebook.  It uses a thin Spark wrapper called [Arc](https://arc.tripl.ai/) to create an ETL job in a codeless, declarative way. The opinionated standard approach enables rapid application development, and simplifies data pipeline build. Additionally, it makes [self-service analytics](https://github.com/melodyyangaws/aws-service-catalog-reference-architectures/blob/customize_ecs/ecs/README.md) possible.
+Firstly, let's take a look at a [sample job](https://github.com/tripl-ai/arc-starter/tree/master/examples/kubernetes/nyctaxi.ipynb) developed in Jupyter Notebook.  It uses a thin Spark wrapper called [Arc](https://arc.tripl.ai/) to create an ETL job in a codeless, declarative way. The opinionated standard approach enables the shift in data ownership to analysts who understand business problem better, simplifies data pipeline build and enforces the best practice in Data DevOps or GitOps. Additionally, we can apply a product-thinking to the declarative ETL as a [self-service service](https://github.com/melodyyangaws/aws-service-catalog-reference-architectures/blob/customize_ecs/ecs/README.md), which is highly scalable, predictable and reusable.
 
-In this example, we will extract the `New York City Taxi Data` from [AWS Open Data Registry](https://registry.opendata.aws/nyc-tlc-trip-records-pds/), ie. a public S3 bucket `s3://nyc-tlc/trip data`, then transform the data from CSV to parquet file format, followed by a SQL-based validation step, to ensure the typing transformation is done correctly. Finally, query the optimized data filtered by a flag column.
+In this example, we extract the `New York City Taxi Data` from [AWS Open Data Registry](https://registry.opendata.aws/nyc-tlc-trip-records-pds/), ie. a public S3 bucket `s3://nyc-tlc/trip data`, then transform the data from CSV to parquet file format, followed by a SQL based validation step to ensure the typing transformation is done correctly. Finally, query the optimized data filtered by a flag column.
 
 1. Click the Argo dashboard URL from your deployment output, something like this:
 
 ![](/images/0-argo-uri.png)
 
-OPTIONAL: type `argo server` in command line tool to run it locally, the URL is `http://localhost:2746`.
+OPTIONAL: type `argo server` in command line tool to run it locally to avoid the token timeout, the URL is `http://localhost:2746`.
 
-2. To be able to login, get a token by the following command, and paste it to the Argo website. Make sure you have connected to the EKS Cluster.
+2. To be able to login, get a token by the following command, and paste it to your website. Make sure you have connected to the EKS Cluster via a command previously.
 
 ```
 argo auth token
@@ -138,7 +146,7 @@ argo auth token
 
 ![](/images/1-argoui.png)
 
-4. Replace the existing manifest by the following, then `SUBMIT`. Or simply upload the sample file from `[source/example/nyctaxi-job-scheduler.yaml]`
+4. Replace the manifest by the following, then `SUBMIT`. Or simply upload the sample file from `[source/example/nyctaxi-job-scheduler.yaml]`
 
 ```
 apiVersion: argoproj.io/v1alpha1
@@ -156,18 +164,14 @@ spec:
         - name: step1-query
           templateRef:
             name: spark-template
-            template: smallJob
+            template: sparkLocal
             clusterScope: true   
           arguments:
             parameters:
             - name: jobId
-              value: nyctaxi 
-            - name: image
-              value: ghcr.io/tripl-ai/arc:latest
-            - name: environment
-              value: test    
+              value: nyctaxi  
             - name: tags
-              value: "project=sqlbasedetl, owner=myang, costcenter=66666"  
+              value: "project=sqlbasedetl, owner=myowner, costcenter=66666"  
             - name: configUri
               value: https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes/nyctaxi.ipynb
             - name: parameters
@@ -193,7 +197,7 @@ The [manifest file](/source/example/scd2-job-scheduler.yaml) defines where the J
 The [Jupyter notebook](/source/example/scd2-job.ipynb) specifies what exactly need to do in a data pipeline.
 </details>
 
-In general, parquet files are immutable in Data Lake. This example will demonstrate how to address the problem and process data incrementally. It uses `Delta Lake`, an open source storage layer on top of parquet file, to bring the ACID transactions to your modern data architecture. In the example, we will build up a table to support the [Slowly Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) format, to demonstrate how easy to do the ETL with a SQL first approach implemented in a configuration-driven way.
+In general, parquet files are immutable in Data Lake. This example will demonstrate how to address the problem and process data incrementally. It uses `Delta Lake`, an open source storage layer on top of parquet file, to bring the ACID transactions to your modern data architecture. In the example, we will build up a table to support the [Slowly Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) format. You wil have a hands-on experience to do the SQL-based ETL to achieve the incremental data load in Data Lake.
 
 
 1. Open the [scd2 job scheduler file](source/example/scd2-job-scheduler.yaml) on your computer, replace the S3 bucket placeholder {{codeBucket}}. Either copy & paste the code bucket name from your deployment output, or use the existing s3 bucket name passed in as a parameter to your deployment previously.
@@ -214,9 +218,8 @@ cd sql-based-etl-with-apache-spark-on-amazon-eks
 # Start a data pipeline containing 3 spark jobs
 kubectl apply -f source/example/scd2-job-scheduler.yaml
 
-# Delete before submit the same job again
-kubectl delete -f source/example/scd2-job-scheduler.yaml
-kubectl apply -f source/example/scd2-job-scheduler.yaml
+# run the CLI to watch the progress, or go to Argo site.
+kubectl get pod -n spark
 ```
 
 <details>
@@ -233,26 +236,28 @@ argo submit source/example/scd2-job-scheduler.yaml -n spark --watch
 </details>
 
 
-3. Go to the Argo dashboard via the URL link from deployment output 
+3. Go to the Argo dashboard via an URL link of your deployment output 
 
 ![](/images/0-argo-uri.png)
 
 
-4. Check the job status and applications logs
+4. Watch the job status and applications logs
 ![](/images/3-argo-job-dependency.png)
 
 
-5. As an output of the ETL pipeline, you will see a [Delta Lake](https://delta.io/) table is created in [Athena](https://console.aws.amazon.com/athena/) by leveraging Glue Catalog. Run the following query to check if the table is a SCD2 type.
+5. As a data pipeline output, you will see a [Delta Lake](https://delta.io/) table is created in [Athena](https://console.aws.amazon.com/athena/). Run the query in Athena console, to check if the table is a SCD2 type.
 
 ```
 SELECT * FROM default.contact_snapshot WHERE id=12
 ```
 
-## Develop & test Spark job in Jupyter
+## Build & test Spark job in Jupyter
 
-Apart from orchestrating Spark jobs with a declarative approach, we introduce a configuration-driven design for increasing data process productivity, by leveraging an open-source [data framework Arc](https://arc.tripl.ai/) for a SQL-centric ETL solution. We take considerations of the needs and expected skills from our customers in data, and accelerate their interaction with ETL practice in order to foster simplicity, while maximizing efficiency.
+Apart from orchestrating Spark jobs in a declarative approach, we introduce a configuration-driven design to increase the data process productivity, by leveraging an open-source [data framework Arc](https://arc.tripl.ai/) for a SQL-centric ETL solution. We take considerations of the needs and expected skills from our customers, and accelerate their interaction with ETL practice in order to foster simplicity, while maximizing efficiency. Furthermore, we enforce the best practice in Data DevOps. Ensure every single ETL artefact are source & version controlled. Git should be the single source of truth for your ETL development and deployment. 
 
-1. Login to JupyterHub user interface:
+NOTE: To follow the security best practice, we timeout your Jupyter session every 15 minutes. You may loss your work, if it hasn't been saved back to your GIT repository. To reconfigure the Jupyter, such as timeout or add your own source repository URL, check out the file `[source/app_resources/jupyter-values.yaml]`
+
+1. Login to JupyterHub web soncole:
 
 ![](/images/3-jupyter-url.png)
 
@@ -269,14 +274,20 @@ echo -e "\njupyter login: $JHUB_PWD"
 ![](/images/3-jhub-login.png)
 
 
-3. Upload a sample Arc-jupyter notebook from `source/example/scd2-job.ipynb`. Once uploaded, double click the file name to open the notebook.
+3. Locate a sample Arc-jupyter notebook at `source/example/scd2-job.ipynb`. Douuble click the file name to open the notebook. 
+
+To demostrate the DevOps best practice, we clone the latest source files from the Git repository to your Jupyter instance each time when you login. In this example, you have granted permission to download notebooks to your local computer, before the 15mins tiemout. 
 
 ![](/images/3-jhub-open-notebook.png)
+
+In real practice, you must check-in all the artefacts to your source repository, in order to save and trigger your ETL pipeline.
+
+![](/images/3-git-commit-notebook.png)
 
 
 4. Execute each block and observe the result.
 
-NOTE: the variable `${ETL_CONF_DATALAKE_LOC}` is set to a code bucket or an existing DataLake S3 bucket specified at the deployment. An IAM role attached to the JupyterHub is controlling the data access to the S3 bucket. If you want to connect to a different bucket that wasn't specified at the deployment, you will get an access deny error. In this case, simply add the bucket ARN to the IAM role 'SparkOnEKS-EksClusterjhubServiceAcctRole'.
+NOTE: the variable `${ETL_CONF_DATALAKE_LOC}` is set to a code bucket or an existing DataLake S3 bucket specified at the deployment. An IAM role attached to the JupyterHub is controlling the data access to the S3 bucket. If you want to connect to a different bucket that wasn't specified at the deployment, you will get an access deny error. For the testing purpose, simply add the bucket ARN to the IAM role 'SparkOnEKS-EksClusterjhubServiceAcctRole'.
 
 
 5. Now let's take a look at the output table in [Athena](https://console.aws.amazon.com/athena/), to check if the table is populated correctly.
@@ -285,60 +296,76 @@ NOTE: the variable `${ETL_CONF_DATALAKE_LOC}` is set to a code bucket or an exis
 SELECT * FROM default.deltalake_contact_jhub WHERE id=12
 ```
 
-## Submit a native Spark job with Spot instance
+## Submit a native Spark job with a Kubernetes operator
 
-As an addition of the solution, to meet customer's preference of running native Spark jobs, we will demonstrate how easy to submit a job with a fat jar file in EKS. In this case, the Jupyter notebook still can be used, as an interactive development environment for PySpark apps. 
+As an addition, to meet customer's need to run a native Spark job, we will reuse the same Arc docker image. Without any changes, let's directly submit a native Spark application defined in a declarative manner. In other words, we will use the popular Kubernetes operator for Apache Spark, [Spark Operator](https://operatorhub.io/operator/spark-gcp) for short, to specify and run a job, which is as easy as running other workload in kuberntes. We will save lots of efforts on the DevOps operation, as the way of deploying Spark application follows the same declaraltive apporach in Kubernetes, which is consistent with other business applications deployment.
 
-In Spark, driver is a single point of failure in data processing. If driver dies, all other linked components will be discarded as well. To achieve the optimal performance and cost, we will run the driver on a reliable managed EC2 instance on EKS, and the rest of executors will be on spot instances.
+The example demostrates:
+* Saving cost with Amazon EC2 Spot instance type
+* Dynamically scale a Spark application - [Dynamic Resource Allocaiton](https://spark.apache.org/docs/3.0.0-preview/job-scheduling.html#dynamic-resource-allocation)
+* Self-recovery after lossing a Spark driver
+* Monitor the job on a Spark WebUI
 
-1. [OPTIONAL] Run a dummy container to validate the spot template file. 
-NOTE: update the placeholder with corret information.
 
-```
-kubectl run --generator=run-pod/v1 jump-pod --rm -i --tty --serviceaccount=nativejob --namespace=spark --image <your_account_number>.dkr.ecr.<your_region>.amazonaws.com/arc:latest sh
-
-# after login to the container, validate a file
-# ensure the service account is `nativejob` and the lifecycle value is `Ec2Spot` in the template
-sh-5.0# ls 
-sh-5.0# cat executor-pod-template.yaml
-sh-5.0# exit
-
-```
-
-2. Modify the job manifest file [native-spark-job-scheduler.yaml](source/example/native-spark-job-scheduler.yaml) stored on your computer, ie. replace the placeholder {{codeBucket}}.
+1. Modify the job manifest file [native-spark-job-scheduler.yaml](source/example/native-spark-job-scheduler.yaml) stored on your computer, ie. replace the placeholder {{codeBucket}}.
 
 ![](/images/4-cfn-output.png)
 ![](/images/4-spark-output-s3.png)
 
 
-3. Submit a native Spark job. 
+2. Submit the job. 
 
 ```
 kubectl apply -f source/example/native-spark-job-scheduler.yaml
 kubectl get pod -n spark
+```
 
-# when rerun, delete before apply again
-kubectl delete -f source/example/native-spark-job-scheduler.yaml
-kubectl apply -f source/example/native-spark-job-scheduler.yaml
+3. Go to SparkUI to check your job progress and performance. Make sure the driver pod exists.
 
 ```
-4. Go to SparkUI to check your job progress and performance. Make sure the driver pod exists.
-
-```
-driver=$(kubectl get pod -n spark -l spark-role=driver -o jsonpath="{.items[*].metadata.name}" --field-selector=status.phase=Running)
-echo "driver pod is $driver"
-kubectl port-forward $driver 4040:4040 -n spark
+kubectl port-forward word-count-driver 4040:4040 -n spark
 
 # go to `localhost:4040` from your web browser
+```
+
+4. [OPTIONAL] The job takes 10 minutes to finish. Let's test if the Spark job is fault tolerant.
+
+Spark application has a build-in self-recovery mechanism. The nature of Kubernetes has made it much easier, by leveraging its HA feature with multi-AZ support.
+
+As mentioned before, if Spark's driver dies, the entire application will fail. Outside of k8s, it requires extra effort to set up a rerun job to cope with this type of situation. However, it is simpler in our example. 
+
+Let's manually kill the driver first: 
 
 ```
-5. Examine the auto-scaling and multi-AZs support
+kubectl delete -n spark pod word-count-driver --force
+
+# has your driver come back immidiately?
+kubectl get po -n spark
+```
+
+Now kill one of executors: 
 
 ```
-# The sample job will run with 10 Spark executors for 15 mins. It requires one Spark executor per EC2 spot instance. Once the job is triggered, you will see the autoscaling kick-in within seconds. It will scale your EKS Cluster from 1 to 10 spot nodes. It is flexible to fit the Spark executors into a smaller number of spot instances if you want. 
+# replace to your pod name with the amazon-reviews-word-count prefix
+kubectl delete -n spark pod amazon-reviews-word-count-51ac6d777f7cf184-exec-1 --force
 
-# The auto-scaling is fired up across multiple AZs. It is configurable to schedule the job in a single AZ if required.
+# has it come back with a different number suffix? 
+kubectl get po -n spark
+```
 
+5. [OPTIONAL] Check Spot intance usage and cost savings
+
+In Spark, driver is a single point of failure in data processing. If driver dies, all other linked components will be discarded as well. To achieve the optimal cost performance, we have placed the driver on a reliable On-Demand managed EC2 instance in EKS, and the rest of executors is on spot instances. The example application starts with triggering 5 spot instances, running 10 executors(k8s pods). After a few minutes, it intelligently scales up to 10 spot, that is 20 executors in total. Once the job is completed, the Spark cluster will be automatically scaled down from 10 to 1 spot. Check your [Spot Request](https://console.aws.amazon.com/ec2sp/v2/) console -> Saving Summary, to find out how much running cost have you just saved.
+
+![](/images/4-spot-console.png)
+
+6. [OPTIONAL] Explore the feature of EKS Auto Scaling with Multi-AZ support, and Spark's Dynamic Allocation.
+
+This job will end up with 20 Spark executors/pods on 10 spot EC2 instances for about 10 minutes. Based on the resource allocation defined by the job manifest file, it runs two executors per EC2 spot instance. As soon as the job is kicked in, you will see the autoscaling is triggered within seconds. It scales the EKS cluster from 1 spot compute node to 5, then from 5 to 10 fired up by Spark's DynamicAllocation.
+
+The auto-scaling is configured to be balanced within two AZs. Depending on your business requirement, you can fit a job into a single AZ if needed.
+
+```
 kubectl get node --label-columns=lifecycle,topology.kubernetes.io/zone
 kubectl get pod -n spark
 ```
@@ -353,13 +380,13 @@ kubectl get pod -n spark
  * `cdk docs`        open CDK documentation
  * `cdk destroy`     delete the stack deployed earlier
  * `kubectl get pod -n spark`                         list running Spark jobs
- * `argo submit source/example/nyctaxi-job-scheduler.yaml`  submit a spark job via Argo workflow tool
+ * `argo submit source/example/nyctaxi-job-scheduler.yaml`  submit a spark job via Argo
  * `argo list --all-namespaces`                       show all jobs scheduled via Argo
  * `kubectl delete pod --all -n spark`                delete all Spark jobs
  * `kubectl apply -f source/app_resources/spark-template.yaml` create a reusable Spark job template
 
 ## Clean up
-Go to the root directory of the GitHub reporsitory, then run the clean up script.
+Go to the repo's root directory, and run the cleanup script.
 
 ```
 cd sql-based-etl-with-apache-spark-on-amazon-eks

@@ -63,6 +63,16 @@ class EksBaseAppConst(core.Construct):
             )
         )
 
+        # Add Spark Operator to EKS
+        _spark_operator_chart = eks_cluster.add_helm_chart('SparkOperatorChart',
+            chart='spark-operator',
+            repository='https://googlecloudplatform.github.io/spark-on-k8s-operator',
+            release='spark-operator',
+            create_namespace=True,
+            namespace='spark-operator',
+            values=loadYamlReplaceVarLocal('../app_resources/spark-operator-values.yaml',fields={'':''})
+        )
+
         # # Add Metric Server for Horizontal Pod Autoscaller
         # _hpa = KubernetesManifest(self,'PodAutoscaller',
         #     cluster=eks_cluster, 

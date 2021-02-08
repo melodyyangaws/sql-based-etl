@@ -5,6 +5,9 @@ metadata:
   namespace: spark
 spec:
   serviceAccountName: arcjob
+  ttlStrategy:
+    # keep workflows for 30m
+    secondsAfterCompletion: 1800
   entrypoint: nyctaxi
   templates:
   - name: nyctaxi
@@ -13,19 +16,14 @@ spec:
         - name: step1-query
           templateRef:
             name: spark-template
-            template: smallJob
+            template: sparkLocal
             clusterScope: true   
           arguments:
             parameters:
             - name: jobId
               value: nyctaxi 
-            - name: image
-              value: ghcr.io/tripl-ai/arc:latest
-            # in Jupyter notebook, each ETL step associates to an "environment" attribute, eg. a UAT step will be skipped in this case.
-            - name: environment
-              value: test    
             - name: tags
-              value: "project=sqlbasedetl, owner=myang, costcenter=66666"  
+              value: "project=sqlbasedetl owner=myowner costcenter=66666" 
             - name: configUri
               value: https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes/nyctaxi.ipynb
             - name: parameters

@@ -7,6 +7,7 @@ spec:
   - name: smallJob
     retryStrategy:
       limit: 3
+      retryPolicy: "Always"
     inputs:
       # override defaults here
       parameters:
@@ -60,7 +61,6 @@ spec:
         --conf spark.driver.extraJavaOptions="-XX:+UseG1GC" \
         --conf spark.driver.host=$(hostname -I)  \
         --conf spark.driver.memory=921m \
-        --conf spark.driver.pod.name=$(hostname) \
         --conf spark.executor.cores={{inputs.parameters.executorCores}} \
         --conf spark.executor.extraJavaOptions="-XX:+UseG1GC" \
         --conf spark.executor.instances={{inputs.parameters.executorInstances}} \
@@ -75,12 +75,11 @@ spec:
         --conf spark.kubernetes.driver.pod.name=$(hostname) \
         --conf spark.kubernetes.executor.label.workflowId={{workflow.uid}} \
         --conf spark.kubernetes.executor.limit.cores={{inputs.parameters.executorCores}} \
-        --conf spark.kubernetes.executor.podNamePrefix=$(hostname)-spark \
+        --conf spark.kubernetes.executor.podNamePrefix=$(hostname) \
         --conf spark.kubernetes.executor.request.cores={{inputs.parameters.executorCores}} \
-        --conf spark.kubernetes.local.dirs.tmpfs=false \
+        --conf spark.kubernetes.local.dirs.tmpfs=true \
         --conf spark.kubernetes.namespace={{workflow.namespace}} \
         --conf spark.network.crypto.enabled=true \
-        --conf spark.ui.enabled=true \
         --conf spark.sql.ansi.enabled=true \
         {{inputs.parameters.sparkConf}} \
         local:///opt/spark/jars/arc.jar \
@@ -95,6 +94,7 @@ spec:
   - name: mediumJob
     retryStrategy:
       limit: 3
+      retryPolicy: "Always"
     inputs:
       # override defaults here
       parameters:
@@ -148,7 +148,6 @@ spec:
         --conf spark.driver.extraJavaOptions="-XX:+UseG1GC" \
         --conf spark.driver.host=$(hostname -I)  \
         --conf spark.driver.memory=2g \
-        --conf spark.driver.pod.name=$(hostname) \
         --conf spark.executor.cores={{inputs.parameters.executorCores}} \
         --conf spark.executor.extraJavaOptions="-XX:+UseG1GC" \
         --conf spark.executor.instances={{inputs.parameters.executorInstances}} \
@@ -163,12 +162,11 @@ spec:
         --conf spark.kubernetes.driver.pod.name=$(hostname) \
         --conf spark.kubernetes.executor.label.workflowId={{workflow.uid}} \
         --conf spark.kubernetes.executor.limit.cores={{inputs.parameters.executorCores}} \
-        --conf spark.kubernetes.executor.podNamePrefix=$(hostname)-spark \
+        --conf spark.kubernetes.executor.podNamePrefix=$(hostname) \
         --conf spark.kubernetes.executor.request.cores={{inputs.parameters.executorCores}} \
-        --conf spark.kubernetes.local.dirs.tmpfs=false \
+        --conf spark.kubernetes.local.dirs.tmpfs=true \
         --conf spark.kubernetes.namespace={{workflow.namespace}} \
         --conf spark.network.crypto.enabled=true \
-        --conf spark.ui.enabled=true \
         --conf spark.sql.ansi.enabled=true \
         {{inputs.parameters.sparkConf}} \
         local:///opt/spark/jars/arc.jar \
@@ -183,6 +181,7 @@ spec:
   - name: largeJob
     retryStrategy:
       limit: 3
+      retryPolicy: "Always"
     inputs:
       # override defaults here
       parameters:
@@ -236,7 +235,6 @@ spec:
         --conf spark.driver.extraJavaOptions="-XX:+UseG1GC" \
         --conf spark.driver.host=$(hostname -I)  \
         --conf spark.driver.memory=4g \
-        --conf spark.driver.pod.name=$(hostname) \
         --conf spark.executor.cores={{inputs.parameters.executorCores}} \
         --conf spark.executor.extraJavaOptions="-XX:+UseG1GC" \
         --conf spark.executor.instances={{inputs.parameters.executorInstances}} \
@@ -251,12 +249,11 @@ spec:
         --conf spark.kubernetes.driver.pod.name=$(hostname) \
         --conf spark.kubernetes.executor.label.workflowId={{workflow.uid}} \
         --conf spark.kubernetes.executor.limit.cores={{inputs.parameters.executorCores}} \
-        --conf spark.kubernetes.executor.podNamePrefix=$(hostname)-spark \
+        --conf spark.kubernetes.executor.podNamePrefix=$(hostname) \
         --conf spark.kubernetes.executor.request.cores={{inputs.parameters.executorCores}} \
-        --conf spark.kubernetes.local.dirs.tmpfs=false \
+        --conf spark.kubernetes.local.dirs.tmpfs=true \
         --conf spark.kubernetes.namespace={{workflow.namespace}} \
         --conf spark.network.crypto.enabled=true \
-        --conf spark.ui.enabled=true \
         --conf spark.sql.ansi.enabled=true \
         {{inputs.parameters.sparkConf}} \
         local:///opt/spark/jars/arc.jar \
@@ -272,6 +269,7 @@ spec:
     inputs:
       retryStrategy:
         limit: 3
+        retryPolicy: "Always"
       # override defaults here
       parameters:
       - name: jobId
@@ -325,7 +323,7 @@ spec:
         --class ai.tripl.arc.ARC \
         --name arc \
         --conf spark.driver.host=$(hostname -I)  \
-        --conf spark.driver.pod.name=$(hostname) \
+        --conf spark.driver.pod.name=$(hostname)-driver \
         --conf spark.io.encryption.enabled=true \
         --conf spark.sql.adaptive.enabled=true \
         --conf spark.network.crypto.enabled=true \
@@ -339,4 +337,4 @@ spec:
         --etl.config.ignoreEnvironments=fales \
         --etl.config.tags="service=arc workflowId={{workflow.uid}} pod={{pod.name}} serviceAccount={{workflow.serviceAccountName}} namespace={{workflow.namespace}} {{inputs.parameters.tags}}" \
         --ETL_CONF_EPOCH=$(date '+%s') --ETL_CONF_CURRENT_TIMESTAMP="'$(date -u '+%Y-%m-%d %H:%M:%S')'" \
-        {{inputs.parameters.parameters}}
+        {{inputs.parameters.parameters}}        
