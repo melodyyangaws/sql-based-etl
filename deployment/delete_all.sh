@@ -12,8 +12,8 @@ aws athena start-query-execution --query-string "DROP TABLE default.contact_snap
 
 echo "Delete ALB"
 # delete ALB
-argoALB=$(aws elbv2 describe-load-balancers --query 'LoadBalancers[?starts_with(DNSName,`k8s-argo`)==`true`].LoadBalancerArn' --output text --region us-west-2)
-jhubALB=$(aws elbv2 describe-load-balancers --query 'LoadBalancers[?starts_with(DNSName,`k8s-jupyter`)==`true`].LoadBalancerArn' --output text --region us-west-2)
+argoALB=$(aws elbv2 describe-load-balancers --query 'LoadBalancers[?starts_with(DNSName,`k8s-argo`)==`true`].LoadBalancerArn' --output text)
+jhubALB=$(aws elbv2 describe-load-balancers --query 'LoadBalancers[?starts_with(DNSName,`k8s-jupyter`)==`true`].LoadBalancerArn' --output text)
 
 aws elbv2 delete-load-balancer --load-balancer-arn $argoALB
 aws elbv2 delete-load-balancer --load-balancer-arn $jhubALB

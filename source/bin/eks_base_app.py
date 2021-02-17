@@ -1,6 +1,6 @@
 from aws_cdk import (
     core,
-    # aws_efs as efs,
+    aws_efs as efs,
     aws_ec2 as ec2
 )
 from aws_cdk.aws_eks import ICluster, KubernetesManifest
@@ -82,11 +82,11 @@ class EksBaseAppConst(core.Construct):
         #     )
         # )
 
-        # Add EFS persistent storage to EKS across AZs
+        # # Add EFS persistent storage to EKS across AZs
         # eks_cluster.add_helm_chart('EFSDriver', 
         #     chart='aws-efs-csi-driver',
         #     release='efs-driver',
-        #     repository='https://gazal-k.github.io/aws-efs-csi-driver/',
+        #     repository='https://kubernetes-sigs.github.io/aws-efs-csi-driver/',
         #     create_namespace=False,
         #     namespace='kube-system',
         # )

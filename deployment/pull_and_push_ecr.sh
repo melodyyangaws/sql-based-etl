@@ -38,6 +38,6 @@ else
 	echo "Update ECR url in sample job files"
 	sed -i.bak "s/{{ACCOUNTNUMBER}}/$CDK_DEPLOY_ACCOUNT/" source/example/*.yaml
 	sed -i.bak "s/{{REGION}}/$CDK_DEPLOY_REGION/" source/example/*.yaml
-
 	find . -type f -name "*.bak" -delete
+
 fi

@@ -55,8 +55,7 @@ class EksConst(core.Construct):
         # # 4. Add Fargate NodeGroup to EKS, without setup cluster-autoscaler
         # self._my_cluster.add_fargate_profile('FargateEnabled',
         #     selectors =[{
-        #         "namespace": "spark",
-        #         "labels": {"spark-role": "executor"}
+        #         "namespace": "spark"
         #     }],
         #     fargate_profile_name='sparkETL'
         # )

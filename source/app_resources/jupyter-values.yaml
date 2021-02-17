@@ -4,7 +4,7 @@ hub:
   extraConfig:
     overrideServiceAccount: |
       import os, sys
-      c.notebookapp.notebook_dir = f"/home/{os.environ['NB_USER']}"
+      
       c.JupyterHub.authenticator_class = 'jupyterhub.auth.DummyAuthenticator'
       c.DummyAuthenticator.password = os.environ['LOGIN']
       c.Authenticator.admin_users = {"service-admin"}
@@ -15,8 +15,10 @@ hub:
       async def override_service_account_hook(kube_spawner):
         if kube_spawner.service_account is not None:
           kube_spawner.service_account = kube_spawner._expand_user_properties(kube_spawner.service_account)
-
+          kube_spawner.env['USER_NAME'] = kube_spawner._expand_user_properties("{unescaped_username}")
       c.KubeSpawner.pre_spawn_hook = override_service_account_hook
+      
+      # setup timeout
       c.JupyterHub.cookie_max_age_days = 0.0105
       c.Authenticator.refresh_pre_spawn = True
       c.JupyterHub.services = [
@@ -33,8 +35,6 @@ hub:
         secretKeyRef:
           name: jupyter-external-secret
           key: password
-    - name: NB_USER
-      value: "{unescaped_username}"    
   nodeSelector:
     lifecycle: Ec2Spot
   readinessProbe:
@@ -65,9 +65,12 @@ singleuser:
           - "-c"
           - >
             cp -r /opt/.jupyter $HOME/.jupyter;
+            # git config --global user.name "${USER_NAME}";
+            # git config --global user.email "${USER_NAME}@abc.com";
             echo "git clone https://github.com/awslabs/sql-based-etl-with-apache-spark-on-amazon-eks";
             git clone https://github.com/melodyyangaws/sql-based-etl;
-  serviceAccountName: "{unescaped_username}"
+
+  serviceAccountName: "{username}"
   cpu:
     guarantee: 0.25
     limit: 0.5
@@ -84,7 +87,7 @@ singleuser:
   # storage:
   #   type: dynamic
   #   capacity: 10G
-  #   homeMountPath: '/home/{unescaped_username}/data'
+  #   homeMountPath: '/home/{username}/data'
   #   # mount to EBS  
   #   dynamic:
   #     storageClass: gp2 
