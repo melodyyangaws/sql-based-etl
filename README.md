@@ -20,8 +20,8 @@ We introduce a quality-aware design to increase data process productivity, by le
 ### Clone the project
 
 ```
-git clone https://github.com/awslabs/sql-based-etl-with-apache-spark-on-amazon-eks.git
-cd sql-based-etl-with-apache-spark-on-amazon-eks
+git clone https://github.com/melodyyangaws/sql-based-etl
+cd sql-based-etl
 
 ```
 
