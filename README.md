@@ -4,7 +4,7 @@ This is a project developed with Python [CDK](https://docs.aws.amazon.com/cdk/la
 We introduce a quality-aware design to increase data process productivity, by leveraging an open-source data framework [Arc](https://arc.tripl.ai/) for a user-centered declarative ETL solution. Additionally, we take considerations of the needs and expected skills from customers in data analytics, and accelerate their interaction with ETL practice in order to foster simplicity, while maximizing efficiency.
 
 ## Architecture Overview
-![Architecture](images/architecture.png)
+![](/images/architecture.png)
 
 ## Prerequisites 
 1. Python 3.6 or later. You can find information about downloading and installing Python [here](https://www.python.org/downloads/).
