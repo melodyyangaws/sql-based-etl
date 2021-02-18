@@ -224,7 +224,7 @@ kubectl apply -f source/example/scd2-job-scheduler.yaml
 
 # run the CLI to watch the progress, or go to Argo site.
 kubectl get pod -n spark
-``
+```
 
 <details>
 <summary> 
