@@ -7,7 +7,11 @@ from aws_cdk.aws_eks import ICluster, KubernetesManifest
 from bin.manifest_reader import *
 
 class EksBaseAppConst(core.Construct):
-    def __init__(self,scope: core.Construct, id: str, eks_cluster: ICluster, region: str, efs_sg: ec2.ISecurityGroup, **kwargs,) -> None:
+    def __init__(self,scope: core.Construct, id: str, 
+    eks_cluster: ICluster, 
+    region: str, 
+    # efs_sg: ec2.ISecurityGroup, 
+    **kwargs,) -> None:
         super().__init__(scope, id, **kwargs)
 
         # Add Cluster Autoscaler to EKS

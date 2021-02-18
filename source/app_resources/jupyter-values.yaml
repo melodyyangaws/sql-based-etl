@@ -66,7 +66,6 @@ singleuser:
           - >
             cp -r /opt/.jupyter $HOME/.jupyter;
             # git config --global user.name "${USER_NAME}";
-            # git config --global user.email "${USER_NAME}@abc.com";
             echo "git clone https://github.com/awslabs/sql-based-etl-with-apache-spark-on-amazon-eks";
             git clone https://github.com/melodyyangaws/sql-based-etl;
 

@@ -57,7 +57,7 @@ class SparkOnEksStack(core.Stack):
         iam = IamConst(self,'iam_roles', eksname)
         eks_cluster = EksConst(self,'eks_cluster', eksname, network_sg.vpc, iam.managed_node_role, iam.admin_role, self.region)
         eks_security = EksSAConst(self, 'eks_sa', eks_cluster.my_cluster, jhub_secret)
-        eks_base_app = EksBaseAppConst(self, 'eks_base_app', eks_cluster.my_cluster, self.region, network_sg.efs_sg)
+        eks_base_app = EksBaseAppConst(self, 'eks_base_app', eks_cluster.my_cluster, self.region)
 
         # 2. Setup Spark application access control
         self.app_s3 = S3AppCodeConst(self,'appcode')
