@@ -9,102 +9,31 @@ We introduce a quality-aware design to increase data processing productivity, by
 
 ## Deploy Infrastructure
 1. Open AWS CloudShell in us-east-1: [link to AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1)
-2. Download the project
+2. Install kubernetes command tool
  ```bash
- wget https://github.com/melodyyangaws/sql-based-etl/archive/master.zip && unzip master.zip && mv sql-based-etl-master sql-based-etl &&  cd sql-based-etl
-
- curl https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/master/deployment/setup_cmd_tool.sh
+ curl https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/blog/deployment/setup_cmd_tool.sh | bash
  ```
-4. Provising
+3. Provising
 Click the "Deploy to AWS" to deploy the infrastructure to your account. It works in us-east-1 region only.
+With two optional parameters `jhubuser` & `datalakebucket`, the deployment will take up to 30 minutes to complete. 
 
 ![](/images/00-cf-create.png)
 
-
-### Create a virtualenv
-This project is set up like a standard Python project. The `cdk.json` file tells where the application entry point is.
-
-``` 
-python3 -m venv .env
-```
-If you are in a Windows platform, you would activate the virtualenv like this:
-
-```
-% .env\Scripts\activate.bat
-```
-After the virtualenv is created, you can use the followings to activate your virtualenv and install the required dependencies.
-
-```
-source .env/bin/activate
-pip install -e source
-```
-### Deploy the whole stack 
-<span style="color: red;">Make sure you are in the source directory</span>
-
-With two optional parameters `jhubuser` & `datalakebucket`, the deployment will take up to 30 minutes to complete. See the `troubleshooting` section if you have a problem during the deployment.
-
 ### Scenario1: deploy with default settings (recommended)
-
-```
-cd source
-cdk deploy
-```
 ### Scenario2: choose your own login name for Jupyter
-To follow the best practice in security, a service account in EKS will be created dynamically, based on your deployment parameter. An IAM role with the least privilege will be assigned to the new service account. 
-
-```
-cd source
-cdk deploy --parameters jhubuser=<random_login_name>
-```
 ### Scenario3: use your own S3 bucket
 By default, the deployment creates a new S3 bucket containing sample data and ETL job config. 
 If you want to use your own data to build an ETL, replace the `<existing_datalake_bucket>` to your S3 bucket. `NOTE: your bucket must be in the same region as the deployment region.`
 
-```
-cd source
-cdk deploy --parameters jhubuser=<random_login_name> --parameters datalakebucket=<existing_datalake_bucket>
-```
-## Troubleshooting
-
-1. If you see the issue `[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: unable to get local issuer certificate (_ssl.c:1123)`, most likely it means no default certificate authority for your Python installation on OSX. Refer to the [answer](https://stackoverflow.com/questions/52805115/0nd installing `Install Certificates.command` should fix your local environment. Otherwise, use [Cloud9](https://aws.amazon.com/cloud9/details/) to deploy the CDK instead.
-
-2. If an error says `SparkOnEKS failed: Error: This stack uses assets, so the toolkit stack must be deployed to the environment (Run "cdk bootstrap aws://YOUR_ACCOUNT_NUMBER/REGION")` , it means it is the first time you deploy an AWS CDK app into an environment (account/region), you’ll need to install a “bootstrap stack”. This stack includes resources that are needed for the toolkit’s operation. For example, the stack includes an S3 bucket that is used to store templates and assets during the deployment process.
-
-Run the bootstrap command:
-
-```
-cdk bootstrap aws://<YOUR_ACCOUNT_NUMBER>/<YOUR_REGION>
-```
-
-3. If an error appears during the CDK deployment: `Failed to create resource. IAM role’s policy must include the "ec2:DescribeVpcs" action`, it means you have reach the quota limits of Amazon VPC resources per Region in your AWS account. Please deploy to a different region or a different account.
-
-
 ## Connect to EKS cluster
-
 Before running any commands against a new EKS cluster, you need to connect to it first. Get the connection command from your deployment output, something like this:
 
 ```
 aws eks update-kubeconfig --name <EKS_cluster_name> --region <region> --role-arn arn:aws:iam::<account_number>:role/<role_name>
 ```
-![](/images/0-eks-config.png)
 
-
-## Submit a Spark job on web interface
-
-Once the CDK deployment is finished, let's start to `submit a Spark job` on [Argo](https://argoproj.github.io/) console. For the best practice in security, your authentication token will be refreshed about 10mins. Simply regenerate your token and login again. 
-
-<details>
-<summary>Argo definition</summary>
-An open source container-native workflow tool to orchestrate parallel jobs on Kubernetes. Argo Workflows is implemented as a Kubernetes CRD (Custom Resource Definition). It triggers time-based or event-based workflows via configuration files.
-</details>
-
-Firstly, let's take a look at a [sample job](https://github.com/tripl-ai/arc-starter/tree/master/examples/kubernetes/nyctaxi.ipynb) developed in Jupyter Notebook.  It uses a thin Spark wrapper called [Arc](https://arc.tripl.ai/) to create an ETL job in a codeless, declarative way. The opinionated standard approach enables the shift in data ownership to analysts who understand business problem better, simplifies data pipeline build and enforces the best practice in Data DevOps or GitOps. Additionally, we can apply a product-thinking to the declarative ETL as a [self-service service](https://github.com/melodyyangaws/aws-service-catalog-reference-architectures/blob/customize_ecs/ecs/README.md), which is highly scalable, predictable and reusable.
-
-In this example, we extract the `New York City Taxi Data` from [AWS Open Data Registry](https://registry.opendata.aws/nyc-tlc-trip-records-pds/), ie. a public S3 bucket `s3://nyc-tlc/trip data`, then transform the data from CSV to parquet file format, followed by a SQL based validation step to ensure the typing transformation is done correctly. Finally, query the optimized data filtered by a flag column.
-
-1. Click the Argo dashboard URL from your deployment output, something like this:
-
-![](/images/0-argo-uri.png)
+## Submit a Spark job on Argo
+1. Click the Argo dashboard URL at your deployment output.
 
 OPTIONAL: type `argo server` in command line tool to run it locally to avoid the token timeout, the URL is `http://localhost:2746`.
 
