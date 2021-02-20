@@ -9,54 +9,39 @@ We introduce a quality-aware design to increase data processing productivity, by
 
 ## Deploy Infrastructure
 1. Open AWS CloudShell in `us-east-1`: [link to AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1)
-2. Install kubernetes command tool
+2. Paste the command to CloudShell, in order to install kubernetes tools
 
- ```
+ ```bash
  curl https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/blog/deployment/setup_cmd_tool.sh | bash
  ```
-3. Provising via CloudFormation template.
-
-Click the "Deploy to AWS" to spin up the infrastructure. It works in `us-east-1` region only.
-With two optional parameters `jhubuser` & `datalakebucket`, the deployment will take up to 30 minutes to complete. 
+3. Provisionning via CloudFormation template, which takes approx. 30 minutes. You can deploy it with default settings, or fill in the optional parameters to customize the solution.
 
 |   Region  |   Launch Template |
 |  ---------------------------   |   -----------------------  |
 |  ---------------------------   |   -----------------------  |
 **N.Virginia** (us-east-1) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SparkOnEks&templateURL=https://solutions-test-reference.s3.amazonaws.com/Sql-based-etl-with-apache-spark-on-amazon-eks/v1.0.0/SparkOnEKS.template)  
 
-### Scenario1: deploy with default settings (recommended)
-### Scenario2: input your login name for Jupyter
-### Scenario3: ETL data from your S3 bucket DataLake
-
-By default, the deployment creates a new S3 bucket containing sample data and ETL job config. 
-If you want to use your own data to build an ETL, replace the `<existing_datalake_bucket>` to your S3 bucket. `NOTE: your bucket must be in the same region as the deployment region.`
+If you want to ETL your own data, fill in the box `datalakebucket` by your S3 bucket name. 
+`NOTE: the bucket must be in the same region as the deployment region.`
 
 ## Post Deployment
-Connect to you EKS cluster. Get the connection command from your [CloudFormation Output](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/stackinfo?filteringStatus=active&filteringText=&viewNested=true&hideStacks=false), something like this:
+1. Connect to the new EKS cluster. Get the connection command from your [CloudFormation Output](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/stackinfo?filteringStatus=active&filteringText=&viewNested=true&hideStacks=false), something like this:
 
-```
+```bash
 aws eks update-kubeconfig --name <EKS_cluster_name> --region <region> --role-arn arn:aws:iam::<account_number>:role/<role_name>
 ```
 
-## Submit a Spark job on Argo
-1. Click the Argo dashboard URL at your deployment output.
+2. Login to Argo
 
-OPTIONAL: type `argo server` in command line tool to run it locally to avoid the token timeout, the URL is `http://localhost:2746`.
+Go to the Argo website found in your depoloyment output, run command `argo auth token` in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1) to get a login token. Paste it to your website. Make sure you have connected to the EKS Cluster before hand.
 
-2. To be able to login, get a token by the following command, and paste it to your website. Make sure you have connected to the EKS Cluster via a command previously.
-
-```
-argo auth token
-```
 ![](/images/1-argologin.png)
 
-3. After login, click `SUBMIT NEW WORKFLOW`. 
 
-![](/images/1-argoui.png)
+3. Submit a Spark job on Argo
+Click `SUBMIT NEW WORKFLOW` button, paste the following to the window, then `SUBMIT`. Click a pod (dot) to check application logs.
 
-4. Replace the manifest by the following, then `SUBMIT`. Or simply upload the sample file from `[source/example/nyctaxi-job-scheduler.yaml]`
-
-```
+```yaml
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
@@ -88,27 +73,13 @@ spec:
 ```
 ![](/images/2-argo-submit.png)
 
-4. Click a pod (dot) on the dashboard to examine the job status and application logs. The ETL job/Jupyter notebook can be found at ![/source/example/nyctaxi-job.ipynb](/source/example/nyctaxi-job.ipynb)
 
-![](/images/3-argo-log.png)
-
-
-## Submit a Spark job via command line
-
-We have included a second job manifest file and a Jupyter notebook, as an example of a complex Spark job to solve a real-world data problem. Let's submit it via a command line this time. 
-<details>
-<summary>manifest file</summary>
-The [manifest file](/source/example/scd2-job-scheduler.yaml) defines where the Jupyter notebook file (job configuration) and input data are. 
-</details>
-<details>
-<summary>Jupyter notebook</summary>
-The [Jupyter notebook](/source/example/scd2-job.ipynb) specifies what exactly need to do in a data pipeline.
-</details>
-
-In general, parquet files are immutable in Data Lake. This example will demonstrate how to address the problem and process data incrementally. It uses `Delta Lake`, an open source storage layer on top of parquet file, to bring the ACID transactions to your modern data architecture. In the example, we will build up a table to support the [Slowly Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) format. You will have a hands-on experience to do the SQL-based ETL to achieve the incremental data load in Data Lake.
-
-
-1. Open the [scd2 job scheduler file](source/example/scd2-job-scheduler.yaml) on your computer, replace the S3 bucket placeholder {{codeBucket}}. Either copy & paste the code bucket name from your deployment output, or use the existing s3 bucket name passed in as a parameter to your deployment previously.
+4. Submit a Spark job via Argo CLI
+This example demonstrates how to process data incrementally via an open source `Delta Lake`. Paste the command to [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1)
+```bash
+argo submit source/example/scd2-job-scheduler.yaml -n spark --watch
+```
+1. bucket placeholder {{codeBucket}}. Either copy & paste the code bucket name from your deployment output, or use the existing s3 bucket name passed in as a parameter to your deployment previously.
 
 ```
 vi source/example/scd2-job-scheduler.yaml

@@ -9,12 +9,6 @@ metadata:
 spec:
   serviceAccountName: arcjob
   entrypoint: scd2-process
-  ## must complete in 4h
-  activeDeadlineSeconds: 14400
-  ttlStrategy:
-    # keep workflows for 8h
-    secondsAfterCompletion: 28800
-    SecondsAfterFailure: 28800
   templates:
   - name: scd2-process
     dag:
@@ -29,12 +23,11 @@ spec:
             - name: jobId
               value: initial-load
             - name: image
-              value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
+              value: ghcr.io/tripl-ai/arc:arc_3.7.0_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.4.0
             - name: configUri
               value: "s3a://{{codeBucket}}/app_code/job/initial_load.ipynb"
             - name: parameters
               value: "--ETL_CONF_DATALAKE_LOC={{codeBucket}}"
-
         - name: delta-load
           templateRef:
             name: spark-template
@@ -45,12 +38,11 @@ spec:
             - name: jobId
               value: delta-load 
             - name: image
-              value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
+              value: ghcr.io/tripl-ai/arc:arc_3.7.0_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.4.0
             - name: configUri
               value: "s3a://{{codeBucket}}/app_code/job/delta_load.ipynb"
             - name: parameters
               value: "--ETL_CONF_DATALAKE_LOC={{codeBucket}}"  
-  
         - name: SCD2-merge
           dependencies: [initial-load, delta-load]
           templateRef:
@@ -62,7 +54,7 @@ spec:
             - name: jobId
               value: SCD2-merge 
             - name: image
-              value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
+              value: ghcr.io/tripl-ai/arc:arc_3.7.0_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.4.0
             - name: configUri
               value: "s3a://{{codeBucket}}/app_code/job/SCD2_merge.ipynb"
             - name: parameters
