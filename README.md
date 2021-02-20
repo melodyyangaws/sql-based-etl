@@ -1,56 +1,25 @@
-# SQL-based ETL with Apache Spark on Amazon EKS
-This is a project developed with Python [CDK](https://docs.aws.amazon.com/cdk/latest/guide/home.html) for the solution - SQL based ETL with a declarative framework powered by Apache Spark. 
+# SQL-based ETL with Spark on EKS
+This is a project for a solution - SQL based ETL with a declarative framework powered by Apache Spark. 
 
-We introduce a quality-aware design to increase data process productivity, by leveraging an open-source data framework [Arc](https://arc.tripl.ai/) for a user-centered declarative ETL solution. Additionally, we take considerations of the needs and expected skills from customers in data analytics, and accelerate their interaction with ETL practice in order to foster simplicity, while maximizing efficiency.
+We introduce a quality-aware design to increase data processing productivity, by leveraging an open-source data framework [Arc](https://arc.tripl.ai/) for a user-centered declarative ETL solution. Additionally, we take considerations of the needs and expected skills from customers in data analytics, and accelerate their interaction with ETL practice in order to foster simplicity, while maximizing efficiency.
 
 ## Architecture Overview
 ![](/images/architecture.png)
 
-## Prerequisites 
-1. Python 3.6 or later. You can find information about downloading and installing Python [here](https://www.python.org/downloads/).
-2. AWS CLI version 1 
-  Windows: [MSI installer](https://docs.aws.amazon.com/cli/latest/userguide/install-windows.html#install-msi-on-windows)
-  Linux, macOS or Unix: [Bundled installer](https://docs.aws.amazon.com/cli/latest/userguide/install-macos.html#install-macosos-bundled)
-3. The AWS CDK uses Node.js (>= 10.3.0). To install Node.js visit the[website](https://nodejs.org/).
-  Verify that you have a compatible version:
-
-  ```
-  node --version
-  ```
 
 ## Deploy Infrastructure
+1. Open AWS CloudShell in us-east-1: [link to AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1)
+2. Download the project
+ ```bash
+ wget https://github.com/melodyyangaws/sql-based-etl/archive/master.zip && unzip master.zip && mv sql-based-etl-master sql-based-etl &&  cd sql-based-etl
 
-### Clone the project
+ curl https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/master/deployment/setup_cmd_tool.sh
+ ```
+4. Provising
+Click the "Deploy to AWS" to deploy the infrastructure to your account. It works in us-east-1 region only.
 
-```
-git clone https://github.com/melodyyangaws/sql-based-etl
-cd sql-based-etl
+![](/images/00-cf-create.png)
 
-```
-
-### Install kubernetes command tool on MAC
-If you are running Linux / Windows, please see the official [argo doc](https://github.com/argoproj/argo/releases) & [kubectl doc](https://kubernetes.io/docs/tasks/tools/install-kubectl/#install-kubectl-on-windows) to find the download links.
-
-```
-./deployment/setup_cmd_tool.sh
-```
-Additionally, you might need the [CDK toolkit](https://cdkworkshop.com/15-prerequisites/500-toolkit.html) to deploy the solution. Please igore the installation, if you intend to deploy via AWS CloudFormation.
-
-
-### Prepare deployment
-The following bash script will help you to prepare the deployment in your AWS account. It creates two environment variables `$CDK_DEPLOY_ACCOUNT` and `$CDK_DEPLOY_REGION` based on your input. Assume your AWS CLI can communicate with services in the `CDK_DEPLOY_ACCOUNT` as a default profile, if not, run the following configuration to setup your AWS account access.
-
-```
-aws configure
-```
-The ECR repository name `arc` is fixed, however, it can be changed. Don't forget to correct your ECR endpoints in [example ETL jobs](/source/example) if you want to use a different ECR repo name.
-
-```
-./deployment/pull_and_push_ecr.sh <your_region> <your_account_number> 'arc'
-
-# use `skip_ecr` flag, when rerun the script without a docker push 
-./deployment/pull_and_push_ecr.sh <your_region> <your_account_number> 'arc' 'skip_ecr'
-```
 
 ### Create a virtualenv
 This project is set up like a standard Python project. The `cdk.json` file tells where the application entry point is.

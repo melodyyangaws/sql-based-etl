@@ -2,10 +2,10 @@ apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
   # only need if using Argo console or CLI
-  # generateName: scd2-job-
+  generateName: scd2-job-
   namespace: spark
   ## only need if use kubectl
-  name: scd2-job
+  # name: scd2-job
 spec:
   serviceAccountName: arcjob
   entrypoint: scd2-process
