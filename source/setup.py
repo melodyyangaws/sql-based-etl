@@ -22,17 +22,17 @@ setuptools.setup(
     packages=setuptools.find_packages(where="./"),
 
     install_requires=[
-        "aws-cdk.core==1.89.0",
-        "aws-cdk.aws_iam==1.89.0",
-        "aws-cdk.aws_eks==1.89.0",
-        "aws-cdk.aws_ec2==1.89.0",
-        "aws-cdk.aws_s3==1.89.0",
-        "aws-cdk.aws_s3_deployment==1.89.0",
-        "aws_cdk.aws_secretsmanager==1.89.0",
-        "aws_cdk.aws_elasticloadbalancingv2==1.89.0",
-        "aws-cdk.aws_cloudfront==1.89.0",
-        "aws-cdk.aws_cloudfront_origins==1.89.0",
-        "aws-cdk.aws_efs==1.89.0",
+        "aws-cdk.core==1.90.0",
+        "aws-cdk.aws_iam==1.90.0",
+        "aws-cdk.aws_eks==1.90.0",
+        "aws-cdk.aws_ec2==1.90.0",
+        "aws-cdk.aws_s3==1.90.0",
+        "aws-cdk.aws_s3_deployment==1.90.0",
+        "aws_cdk.aws_secretsmanager==1.90.0",
+        "aws_cdk.aws_elasticloadbalancingv2==1.90.0",
+        "aws-cdk.aws_cloudfront==1.90.0",
+        "aws-cdk.aws_cloudfront_origins==1.90.0",
+        "aws-cdk.aws_efs==1.90.0",
         "pyyaml==5.3"
     ],
 

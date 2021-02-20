@@ -19,7 +19,8 @@ class S3AppCodeConst(core.Construct):
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
             encryption=s3.BucketEncryption.KMS_MANAGED,
             removal_policy=core.RemovalPolicy.DESTROY,
-            auto_delete_objects=True
+            auto_delete_objects=True,
+            server_access_logs_prefix="bucketAccessLog"
         )  
         code_path=path.dirname(path.abspath(__file__))
         s3deploy.BucketDeployment(self, "DeployCode",

@@ -1,6 +1,7 @@
 from aws_cdk import (
     core,
-    aws_ec2 as ec2
+    aws_ec2 as ec2,
+    aws_s3 as s3
 )
 class NetworkSgConst(core.Construct):
 
@@ -13,7 +14,7 @@ class NetworkSgConst(core.Construct):
     #     return self._eks_efs_sg
 
 
-    def __init__(self,scope: core.Construct, id:str, eksname:str, **kwargs) -> None:
+    def __init__(self,scope: core.Construct, id:str, eksname:str, codebucket: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
         
         # //*************************************************//
@@ -23,14 +24,19 @@ class NetworkSgConst(core.Construct):
         self._vpc = ec2.Vpc(self, 'eksVpc',max_azs=2)
         core.Tags.of(self._vpc).add('Name', eksname + 'EksVpc')
 
+        self._log_bucket=s3.Bucket.from_bucket_name(self,'vpc_logbucket', codebucket)
+        self._vpc.add_flow_log("FlowLogCloudWatch",
+            destination=ec2.FlowLogDestination.to_s3(self._log_bucket),
+            traffic_type=ec2.FlowLogTrafficType.REJECT
+        )
         # VPC endpoint security group
         self._vpc_endpoint_sg = ec2.SecurityGroup(self,'EndpointSg',
-            security_group_name=eksname+'-vpcEndpointSG',
+            security_group_name='SparkOnEKS-VPCEndpointSg',
             vpc=self._vpc,
             description='Security Group for Endpoint',
         )
         self._vpc_endpoint_sg.add_ingress_rule(ec2.Peer.ipv4(self._vpc.vpc_cidr_block),ec2.Port.tcp(port=443))
-        core.Tags.of(self._vpc_endpoint_sg).add('Name',eksname+'-vpcEndpointSG')
+        core.Tags.of(self._vpc_endpoint_sg).add('Name','SparkOnEKS-VPCEndpointSg')
 
         # Add VPC endpoint 
         self._vpc.add_gateway_endpoint("S3GatewayEndpoint",

@@ -3,7 +3,7 @@
 
 #!/usr/bin/env python3
 from aws_cdk import core
-from bin.config import ConfigSectionMap
+# from bin.config import ConfigSectionMap
 from lib.spark_on_eks_stack import SparkOnEksStack
 from lib.cloud_front_stack import NestedStack
 from os import environ
@@ -22,10 +22,21 @@ env=core.Environment(account=environ.get('CDK_DEPLOY_ACCOUNT'), region=environ.g
 # Spin up the main stack
 eks_stack = SparkOnEksStack(app, 'SparkOnEKS', eks_name, env=env)
 # Recommend to remove the CloudFront stack. Setup your own SSL certificate and add it to ALB.
-cf_nested_stack = NestedStack(eks_stack,'CreateCloudFront', eks_name, eks_stack.argo_url, eks_stack.jhub_url)
+cf_nested_stack = NestedStack(eks_stack,'CreateCloudFront', eks_stack.code_bucket, eks_name, eks_stack.argo_url, eks_stack.jhub_url)
 
 core.Tags.of(eks_stack).add('project', 'sqlbasedetl')
 core.Tags.of(cf_nested_stack).add('project', 'sqlbasedetl')
+
+# # add metadata to suppress cfn_nag scan 
+# eks_stack.cfn_options.metadata = {
+# "cfn_nag":{
+#     "rules_to_suppress": [
+#         {
+#             "id": "W33",
+#             "reason": "This is a public facing ALB and ingress from the internet should be permitted."
+#         }
+#     ]}
+# }
 
 # Deployment Output
 core.CfnOutput(eks_stack,'CODE_BUCKET', value=eks_stack.code_bucket)

@@ -1,8 +1,0 @@
-test/
-node_modules/
-deployment/regional-s3-assets/
-deployment/app_code/
-README.md
-CONTRIBUTING.md
-CODE_OF_CONDUCT.md
-source/services/admin/lib/user.admin.js:557

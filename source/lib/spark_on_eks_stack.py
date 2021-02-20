@@ -36,7 +36,7 @@ class SparkOnEksStack(core.Stack):
 
         # Cloudformation input params
         datalake_bucket = core.CfnParameter(self, "datalakebucket", type="String",
-            description="An existing S3 bucket to be accessed by Jupyter Notebook and ETL job",
+            description="You existing S3 bucket to be accessed by Jupyter Notebook and ETL job. Default: blank",
             default=""
         )
         login_name = core.CfnParameter(self, "jhubuser", type="String",
@@ -52,15 +52,17 @@ class SparkOnEksStack(core.Stack):
                 generate_string_key="password")
         )
 
+        # A new bucket to store app code and access logs
+        self.app_s3 = S3AppCodeConst(self,'appcode')
+
         # 1. Setup EKS base infrastructure
-        network_sg = NetworkSgConst(self,'network-sg', eksname)
+        network_sg = NetworkSgConst(self,'network-sg', eksname, self.app_s3.code_bucket)
         iam = IamConst(self,'iam_roles', eksname)
         eks_cluster = EksConst(self,'eks_cluster', eksname, network_sg.vpc, iam.managed_node_role, iam.admin_role, self.region)
         eks_security = EksSAConst(self, 'eks_sa', eks_cluster.my_cluster, jhub_secret)
         eks_base_app = EksBaseAppConst(self, 'eks_base_app', eks_cluster.my_cluster, self.region)
 
         # 2. Setup Spark application access control
-        self.app_s3 = S3AppCodeConst(self,'appcode')
         app_security = SparkOnEksSAConst(self,'spark_service_account', 
             eks_cluster.my_cluster, 
             login_name.value_as_string,
