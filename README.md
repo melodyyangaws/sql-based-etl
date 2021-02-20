@@ -8,25 +8,31 @@ We introduce a quality-aware design to increase data processing productivity, by
 
 
 ## Deploy Infrastructure
-1. Open AWS CloudShell in us-east-1: [link to AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1)
+1. Open AWS CloudShell in `us-east-1`: [link to AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1)
 2. Install kubernetes command tool
- ```bash
+
+ ```
  curl https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/blog/deployment/setup_cmd_tool.sh | bash
  ```
-3. Provising
-Click the "Deploy to AWS" to deploy the infrastructure to your account. It works in us-east-1 region only.
+3. Provising via CloudFormation template.
+
+Click the "Deploy to AWS" to spin up the infrastructure. It works in `us-east-1` region only.
 With two optional parameters `jhubuser` & `datalakebucket`, the deployment will take up to 30 minutes to complete. 
 
-![](/images/00-cf-create.png)
+|   Region  |   Launch Template |
+|  ---------------------------   |   -----------------------  |
+|  ---------------------------   |   -----------------------  |
+**N.Virginia** (us-east-1) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SparkOnEks&templateURL=https://solutions-test-reference.s3.amazonaws.com/Sql-based-etl-with-apache-spark-on-amazon-eks/v1.0.0/SparkOnEKS.template)  
 
 ### Scenario1: deploy with default settings (recommended)
-### Scenario2: choose your own login name for Jupyter
-### Scenario3: use your own S3 bucket
+### Scenario2: input your login name for Jupyter
+### Scenario3: ETL data from your S3 bucket DataLake
+
 By default, the deployment creates a new S3 bucket containing sample data and ETL job config. 
 If you want to use your own data to build an ETL, replace the `<existing_datalake_bucket>` to your S3 bucket. `NOTE: your bucket must be in the same region as the deployment region.`
 
-## Connect to EKS cluster
-Before running any commands against a new EKS cluster, you need to connect to it first. Get the connection command from your deployment output, something like this:
+## Post Deployment
+Connect to you EKS cluster. Get the connection command from your [CloudFormation Output](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/stackinfo?filteringStatus=active&filteringText=&viewNested=true&hideStacks=false), something like this:
 
 ```
 aws eks update-kubeconfig --name <EKS_cluster_name> --region <region> --role-arn arn:aws:iam::<account_number>:role/<role_name>
