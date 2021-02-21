@@ -10,7 +10,10 @@ spec:
   mode: cluster
   env:
   - name: codeBucket
-    value: cfn_value
+    valueFrom:
+      configMapKeyRef:
+        name: special-config
+        key: codeBucket  
   image: ghcr.io/tripl-ai/arc:arc_3.7.0_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.4.0
   imagePullPolicy: Always
   mainApplicationFile: "s3a://$(codeBucket)/app_code/job/wordcount.py"

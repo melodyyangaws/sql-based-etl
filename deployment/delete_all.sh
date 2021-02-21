@@ -1,10 +1,5 @@
 #!/bin/bash
 
-
-echo "Delete a container repository from ECR"
-aws ecr delete-repository --repository-name arc --force
-
-
 echo "Drop a Delta Lake table default.contact_snapshot"
 aws athena start-query-execution --query-string "DROP TABLE default.contact_snapshot" --result-configuration OutputLocation=s3://sparkoneks/
 aws athena start-query-execution --query-string "DROP TABLE default.contact_snapshot_jhub" --result-configuration OutputLocation=s3://sparkoneks/
@@ -26,6 +21,8 @@ jhubTG=$(aws elbv2 describe-target-groups --query 'TargetGroups[?starts_with(Tar
 aws elbv2 delete-target-group --target-group-arn $argoTG 
 aws elbv2 delete-target-group --target-group-arn $jhubTG 
 
+echo "Delete EKS cluster"
+aws eks delete-cluster --name spark-on-eks
 
 echo "Delete the rest of resources by CDK CLI or CloudFormation, ensure the stack name is correct"
 # cd source
