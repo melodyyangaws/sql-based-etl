@@ -19,7 +19,7 @@ We introduce a quality-aware design to increase data processing productivity, by
 |   Region  |   Launch Template |
 |  ---------------------------   |   -----------------------  |
 |  ---------------------------   |   -----------------------  |
-**N.Virginia** (us-east-1) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SparkOnEks&templateURL=https://solutions-test-reference.s3.amazonaws.com/Sql-based-etl-with-apache-spark-on-amazon-eks/v1.0.0/SparkOnEKS.template)  
+**N.Virginia** (us-east-1) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SparkOnEks&templateURL=https://aws-solution-test-us-east-1.s3.amazonaws.com/global-s3-assets/SparkOnEKS.template)  
 
 If you want to ETL your own data, fill in the box `datalakebucket` by your S3 bucket name. 
 `NOTE: the bucket must be in the same region as the deployment region.`
