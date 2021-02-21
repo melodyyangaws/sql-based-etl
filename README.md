@@ -1,7 +1,7 @@
 # SQL-based ETL with Spark on EKS
 This is a project for a solution - SQL based ETL with a declarative framework powered by Apache Spark. 
 
-We introduce a quality-aware design to increase data processing productivity, by leveraging an open-source data framework [Arc](https://arc.tripl.ai/) for a user-centered declarative ETL solution. Additionally, we take considerations of the needs and expected skills from customers in data analytics, and accelerate their interaction with ETL practice in order to foster simplicity, while maximizing efficiency.
+We introduce a quality-aware design to increase data processing productivity, by leveraging an open-source [Arc data framework](https://arc.tripl.ai/) for a user-centered declarative ETL solution. Additionally, we take considerations of the needs and expected skills from customers in data analytics, and accelerate their interaction with ETL practice in order to foster simplicity, while maximizing efficiency.
 
 ## Architecture Overview
 ![](/images/architecture.png)
@@ -10,31 +10,58 @@ We introduce a quality-aware design to increase data processing productivity, by
 ## Deploy Infrastructure
 1. Open AWS CloudShell in `us-east-1`: [link to AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1)
 2. Paste the command to CloudShell, in order to install kubernetes tools
-
  ```bash
  curl https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/blog/deployment/setup_cmd_tool.sh | bash
  ```
 3. Provisionning via CloudFormation template, which takes approx. 30 minutes. 
 
-You can deploy it with default settings, or fill in parameters to customize the solution. If you want to ETL your own data, fill in the box `datalakebucket` by your S3 bucket name.
+Deploy with default settings or fill in parameters to customize the solution. If ETL your own data, input the parameter `datalakebucket` by your S3 bucket.
 
-`NOTE: the bucket must be in the same region as the deployment region.`
+`NOTE: your S3 bucket must be in the same region as the deployment region.`
 
-|   Region  |   Launch Template |
-|  ---------------------------   |   -----------------------  |
-|  ---------------------------   |   -----------------------  |
-**N.Virginia** (us-east-1) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SparkOnEks&templateURL=https://aws-solution-test-us-east-1.s3.amazonaws.com/global-s3-assets/SparkOnEKS.template)  
-
+  |   Region  |   Launch Template |
+  |  ---------------------------   |   -----------------------  |
+  |  ---------------------------   |   -----------------------  |
+  **N.Virginia** (us-east-1) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SparkOnEks&templateURL=https://aws-solution-test-us-east-1.s3.amazonaws.com/global-s3-assets/SparkOnEKS.template)  
 
 
 ## Post Deployment
+
+### Build & test ETL job in Arc Jupyter
+1. Login to the Arc Jupyter found at [CloudFormation Output](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/stackinfo?filteringStatus=active&filteringText=&viewNested=true&hideStacks=false)
+
+* username -  `sparkoneks`, or your own login name specified at the deployment earlier. 
+* password - run the command in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1)
+```bash
+JHUB_PWD=$(kubectl -n jupyter get secret jupyter-external-secret -o jsonpath="{.data.password}" | base64 --decode)
+echo -e "\nJupyter password: $JHUB_PWD"
+```
+NOTE: Your Jupyter session will end, if it is inactive for 30 minutes. You may lose your work, if it hasn't been saved back to the Git repository. Alternatively, you can download the work to your compute, which can be disabled in Production, in order to further enhance your data security.
+<!-- 
+
+We introduce a configuration-driven design to increase the data process productivity, by leveraging an open-source [data framework Arc](https://arc.tripl.ai/) for a SQL-centric ETL solution. Furthermore, we enforce the best practice in Data DevOps. Ensure every single ETL artefact are source & version controlled. Git should be the single source of truth for your ETL development and deployment. 
+ -->
+2. Locate the sample ETL job `sql-based-etl/source/example/scd2-job.ipynb`. It demonstrates how to process data incrementally using SQL scripts and the `Delta Lake` technique. 
+
+To demonstrate the DevOps best practice, your Jupyter instance clones the latest source artifact from a Git repository each time when you login. In real practice, you must check-in all the changes to your source repository, in order to save and trigger the ETL pipeline.
+
+![](/images/3-git-commit-notebook.png)
+
+3. Execute each block and observe the result.
+4. Now let's take a look at the output table in [Athena](https://console.aws.amazon.com/athena/), to check if the table is populated correctly.
+```bash
+SELECT * FROM default.deltalake_contact_jhub WHERE id=12
+```
+
+### Submit & Orchestrate Arc ETL job
 1. Connect to the new EKS cluster. Get the connection command from your [CloudFormation Output](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/stackinfo?filteringStatus=active&filteringText=&viewNested=true&hideStacks=false), something like this:
 
-```bash
-aws eks update-kubeconfig --name <EKS_cluster_name> --region <region> --role-arn <role_arn>
-# check the connection
-kubectl get svc
-```
+  ```bash
+  aws eks update-kubeconfig --name <eks_name> --region <region> --role-arn <role_arn>
+
+  # check the connection
+  kubectl get svc
+  ```
 
 2. Login to Argo
 
@@ -43,112 +70,58 @@ Go to the Argo website found in the Cloudformation output, run `argo auth token`
 ![](/images/1-argologin.png)
 
 
-3. Submit a Spark job on Argo.
+3. Submit an Arc ETL job on Argo.
 
-Click `SUBMIT NEW WORKFLOW` button, replace the content by the followings, then `SUBMIT`. Click a pod (dot) to check application logs.
+  Click `SUBMIT NEW WORKFLOW` button, replace the content by the followings, then `SUBMIT`. Click a pod (dot) to check application logs.
 
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Workflow
-metadata:
-  generateName: nyctaxi-job-
-  namespace: spark
-spec:
-  serviceAccountName: arcjob
-  entrypoint: nyctaxi
-  templates:
-  - name: nyctaxi
-    dag:
-      tasks:
-        - name: step1-query
-          templateRef:
-            name: spark-template
-            template: sparkLocal
-            clusterScope: true   
-          arguments:
-            parameters:
-            - name: jobId
-              value: nyctaxi  
-            - name: tags
-              value: "project=sqlbasedetl, owner=myowner, costcenter=66666"  
-            - name: configUri
-              value: https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes/nyctaxi.ipynb
-            - name: parameters
-              value: "--ETL_CONF_DATA_URL=s3a://nyc-tlc/trip*data --ETL_CONF_JOB_URL=https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes"
+  ```yaml
+  apiVersion: argoproj.io/v1alpha1
+  kind: Workflow
+  metadata:
+    generateName: nyctaxi-job-
+    namespace: spark
+  spec:
+    serviceAccountName: arcjob
+    entrypoint: nyctaxi
+    templates:
+    - name: nyctaxi
+      dag:
+        tasks:
+          - name: step1-query
+            templateRef:
+              name: spark-template
+              template: sparkLocal
+              clusterScope: true   
+            arguments:
+              parameters:
+              - name: jobId
+                value: nyctaxi  
+              - name: tags
+                value: "project=sqlbasedetl, owner=myowner, costcenter=66666"  
+              - name: configUri
+                value: https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes/nyctaxi.ipynb
+              - name: parameters
+                value: "--ETL_CONF_DATA_URL=s3a://nyc-tlc/trip*data \
+                --ETL_CONF_JOB_URL=https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes"
+  ```
 
-```
+4. Submit an Arc job via Argo CLI. Check logs on your Argo website.
 
-4. Submit a Spark job via Argo CLI, check job status & logs on the Argo dashboard.
+  Replace the bucket placeholder by yours found on the [CloudFormation Output](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/stackinfo?filteringStatus=active&filteringText=&viewNested=true&hideStacks=false). Run the command on [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1)
+  ```bash
+  argo submit https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/blog/source/example/scd2-job-scheduler.yaml -n spark --watch  -p codeBucket=<your_codeBucket_name>
+  ```
+  ![](/images/3-argo-job-dependency.png)
 
-This example demonstrates how to process data incrementally via an open source `Delta Lake`. Paste the command to [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1)
-```bash
-argo submit https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/blog/source/example/scd2-job-scheduler.yaml -n spark --watch  -p codeBucket=<your_codeBucket_name>
-```
-
-
-3.
-
-![](/images/0-argo-uri.png)
-
-
-4. Watch the job status and applications logs
-![](/images/3-argo-job-dependency.png)
-
-
-5. As a data pipeline output, you will see a [Delta Lake](https://delta.io/) table is created in [Athena](https://console.aws.amazon.com/athena/). Run the query in Athena console, to check if the table is a SCD2 type.
+5. The job outputs a [Delta Lake](https://delta.io/) table. Run the query in [Athena] console (https://console.aws.amazon.com/athena/), in order to check if it is a SCD2 type. 
 
 ```
 SELECT * FROM default.contact_snapshot WHERE id=12
 ```
 
-## Build & test Spark job in Jupyter
+### Submit a native Spark job
 
-Apart from orchestrating Spark jobs in a declarative approach, we introduce a configuration-driven design to increase the data process productivity, by leveraging an open-source [data framework Arc](https://arc.tripl.ai/) for a SQL-centric ETL solution. We take considerations of the needs and expected skills from our customers, and accelerate their interaction with ETL practice in order to foster simplicity, while maximizing efficiency. Furthermore, we enforce the best practice in Data DevOps. Ensure every single ETL artefact are source & version controlled. Git should be the single source of truth for your ETL development and deployment. 
-
-NOTE: To follow the security best practice, we timeout your Jupyter session every 15 minutes. You may lose your work, if it hasn't been saved back to your GIT repository. To reconfigure the Jupyter, such as timeout or add your own source repository URL, check out the file `[source/app_resources/jupyter-values.yaml]`
-
-1. Login to JupyterHub web soncole:
-
-![](/images/3-jupyter-url.png)
-
-* username -  `sparkoneks`, or use your own login name defined at the deployment earlier. 
-* password - see below command.
-
-```
-JHUB_PWD=$(kubectl -n jupyter get secret jupyter-external-secret -o jsonpath="{.data.password}" | base64 --decode)
-echo -e "\njupyter login: $JHUB_PWD"
-```
-
-2. Start the default IDE (development environment). Use the bigger instance to author your ETL job if needed.
-
-![](/images/3-jhub-login.png)
-
-
-3. Locate a sample Arc-jupyter notebook at `source/example/scd2-job.ipynb`. Double click the file name to open the notebook. 
-
-To demonstrate the DevOps best practice, we clone the latest source files from the Git repository to your Jupyter instance each time when you login. In this example, you have granted permission to be able to download notebooks to your local computer before the 15mins timeout. 
-
-![](/images/3-jhub-open-notebook.png)
-
-In the real practice, you must check-in all the changes to your source repository, in order to save and trigger your ETL pipeline.
-
-![](/images/3-git-commit-notebook.png)
-
-
-4. Execute each block and observe the result.
-
-NOTE: the variable `${ETL_CONF_DATALAKE_LOC}` is set to a code bucket or an existing DataLake S3 bucket specified at the deployment. An IAM role attached to the JupyterHub is controlling the data access to the S3 bucket. If you want to connect to a different bucket that wasn't specified at the deployment, you will get an access deny error. For the testing purpose, simply add the bucket ARN to the IAM role 'SparkOnEKS-EksClusterjhubServiceAcctRole'.
-
-
-5. Now let's take a look at the output table in [Athena](https://console.aws.amazon.com/athena/), to check if the table is populated correctly.
-
-```
-SELECT * FROM default.deltalake_contact_jhub WHERE id=12
-```
-
-## Submit a native Spark job with a Kubernetes operator
-
-In an addition, to meet customer's need to run a native Spark job, we will reuse the same Arc docker image. Without any changes, let's directly submit a native Spark application defined in a declarative manner. In other words, we will use the popular Kubernetes operator for Apache Spark, [Spark Operator](https://operatorhub.io/operator/spark-gcp) for short, to specify and run a job, which is as easy as running other workloads in Kubernetes. We will save lots of efforts on the DevOps operation, as the way of deploying Spark application follows the same declarative approach in Kubernetes, which is consistent with other business applications deployment.
+Without any changes, we will reuse the Arc docker image, submit a native Spark application defined in a declarative apporach. It saves lots of efforts on DevOps operation, as the way of deploying Spark application follows the same declarative approach in Kubernetes, which is consistent with other business applications deployment.
 
 The example demonstrates:
 * Saving cost with Amazon EC2 Spot instance type
@@ -157,7 +130,12 @@ The example demonstrates:
 * Monitor the job on a Spark WebUI
 
 
-1. Modify the job manifest file [native-spark-job-scheduler.yaml](source/example/native-spark-job-scheduler.yaml) stored on your computer, ie. replace the placeholder {{codeBucket}}.
+1. Submit a native Spark job to EKS on [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1). The job definition utlizes k8s's CRD [Spark Operator](https://operatorhub.io/operator/spark-gcp).
+```bash
+kubectl create -f https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/blog/source/example/native-spark-job-scheduler.yaml
+kubectl get pod -n spark
+```
+2. Modify the job manifest file [native-spark-job-scheduler.yaml](source/example/native-spark-job-scheduler.yaml) stored on your computer, ie. replace the placeholder {{codeBucket}}.
 
 ![](/images/4-cfn-output.png)
 ![](/images/4-spark-output-s3.png)
@@ -165,9 +143,7 @@ The example demonstrates:
 
 2. Submit the job. 
 
-```
-kubectl apply -f source/example/native-spark-job-scheduler.yaml
-kubectl get pod -n spark
+
 ```
 
 3. Go to SparkUI to check your job progress and performance. Make sure the driver pod exists.

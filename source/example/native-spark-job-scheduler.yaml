@@ -6,12 +6,15 @@ metadata:
 spec:
   type: Python
   pythonVersion: "3"
-  mode: cluster
-  image: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
-  imagePullPolicy: Always
-  mainApplicationFile: "s3a://{{codeBucket}}/app_code/job/wordcount.py"
-  arguments: ["s3a://{{codeBucket}}/app_code/output/native"]
   sparkVersion: "3.0.1"
+  mode: cluster
+  env:
+  - name: codeBucket
+    value: cfn_value
+  image: ghcr.io/tripl-ai/arc:arc_3.7.0_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.4.0
+  imagePullPolicy: Always
+  mainApplicationFile: "s3a://$(codeBucket)/app_code/job/wordcount.py"
+  arguments: ["s3a://$(codeBucket)/app_code/output/native"]
   sparkConf:
     "spark.hadoop.fs.s3a.impl": "org.apache.hadoop.fs.s3a.S3AFileSystem"
     "spark.hadoop.fs.s3a.aws.credentials.provider": "com.amazonaws.auth.WebIdentityTokenCredentialsProvider"

@@ -25,7 +25,7 @@ hub:
         {
             "name": "idle_culler",
             "admin": True,
-            "command": [sys.executable, "-m", "jupyterhub_idle_culler", "--timeout=900"],
+            "command": [sys.executable, "-m", "jupyterhub_idle_culler", "--timeout=1800"],
         }
       ]
 
