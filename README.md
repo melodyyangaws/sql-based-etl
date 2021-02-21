@@ -11,12 +11,18 @@ We introduce a quality-aware design to increase data processing productivity, by
 * [Post Deployment](#Post-Deployment)
   * [Install klubernetes tool](#Install-klubernetes-tool)
   * [Test ETL job in Jupyter](#Test-an-ETL-job-in-Jupyter)
-  * [Submit & Orchestrate Arc ETL job](#Submit-Arc-ETL-job)
+  * [Submit & Orchestrate Arc ETL job](#Submit-&-Orchestrate-Arc-ETL-job)
     * [Submit a job on Argo UI](#Submit-a-job-on-Argo-UI)
-    * [Orchestrate a job via Argo CLI](#Submit-a-job-via-Argo-CLI)
-  * [Submit native Spark job](#Submit-a-native-Spark-job)
+    * [Submit a job via Argo CLI](#Submit-a-job-via-Argo-CLI)
+  * [Submit a native Spark job](#Submit-a-native-Spark-job)
     * [Submit a job via kubectl](#Submit-a-job-via-kubectl)
     * [Self-recovery test](#Self-recovery-test)
+    * [Cost savings with spot instance](#Check-Spot-instance-usage-and-cost-savings)
+    * [Auto Scaling across Multi-AZ, and Spark's DynamicAllocation support](#Explore-EKS-features-Auto-Scaling-across-Multi-AZ-and-Spark's-Dynamic-Allocation-support)
+* [Useful commands](#Useful-commands)  
+* [Clean Up](#clean-up)
+* [Security](#Security)
+* [License](#License)
 
 
 ## Deploy Infrastructure
@@ -25,8 +31,8 @@ Provisionning via CloudFormation template, which takes approx. 30 minutes.
   |   Region  |   Launch Template |
   |  ---------------------------   |   -----------------------  |
   |  ---------------------------   |   -----------------------  |
-  **N.Virginia** (us-east-1) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SparkOnEKS&templateURL=https://aws-solution-test-us-east-1.s3.amazonaws.com/global-s3-assets/SparkOnEKS.template)  |
-  **Oregon** (us-west-2) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=SparkOnEKS&templateURL=https://aws-solution-test-us-west-2.s3.amazonaws.com/global-s3-assets/SparkOnEKS.template)  
+  **N.Virginia** (us-east-1) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SparkOnEKS&templateURL=https://aws-solution-test-us-east-1.s3.amazonaws.com/global-s3-assets/SparkOnEKS.template) | 
+  | **Oregon** (us-west-2) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=SparkOnEKS&templateURL=https://aws-solution-test-us-west-2.s3.amazonaws.com/global-s3-assets/SparkOnEKS.template) |
 
 Option1: Deploy with default.
 Option2: Jupyter login with a customized username.
@@ -59,7 +65,7 @@ It demonstrates how to process data incrementally using SQL and [Delta Lake](htt
     ```
 [*^ back to top*](#Table-of-Contents)
 
-### Submit Arc ETL job
+### Submit & Orchestrate Arc ETL job
 * Run a EKS connection command from [CloudFormation Output](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/stackinfo?filteringStatus=active&filteringText=&viewNested=true&hideStacks=false) in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1), something like this:
 
     ```bash
@@ -157,7 +163,6 @@ kubectl delete -n spark pod word-count-driver --force
 # has the driver come back immediately?
 kubectl get po -n spark
 ```
-
 * Now kill one of executors: 
 ```bash
 # replace the example pod name by yours
@@ -166,28 +171,23 @@ kubectl delete -n spark pod <example:amazon-reviews-word-count-51ac6d777f7cf184-
 # has it come back with a different number suffix? 
 kubectl get po -n spark
 ```
-
 [*^ back to top*](#Table-of-Contents)
-5. [OPTIONAL] Check Spot instance usage and cost savings
+#### Check Spot instance usage and cost savings
+Check your [Spot Request](https://console.aws.amazon.com/ec2sp/v2/) console -> Saving Summary, to find out how much running cost have you just saved.
 
-As mentioned before, if Spark's driver dies, the entire application will fail. To achieve the optimal cost performance, we have placed the driver on a reliable On-Demand managed EC2 instance in EKS, and the rest of executors is on spot instances. 
+#### Explore EKS features: Auto Scaling across Multi-AZ, and Spark's Dynamic Allocation support
 
-The example job starts with triggering 5 spot instances, running 10 executors(k8s pods). After a few minutes, it intelligently scales up to 10 spot, that is 20 executors in total. Once the job is completed, the Spark cluster will be automatically scaled down from 10 to 1 spot. Check your [Spot Request](https://console.aws.amazon.com/ec2sp/v2/) console -> Saving Summary, to find out how much running cost have you just saved.
+This job will end up with 20 Spark executors/pods on 10 spot EC2 instances for about 10 minutes. Based on the resource allocation defined by the job manifest file, it runs two executors per EC2 spot instance. As soon as the job is kicked in, you will see the autoscaling is triggered within seconds. It scales the EKS cluster from 1 spot compute node to 5, then from 5 to 10 triggered by Spark's DynamicAllocation.
 
-![](/images/4-spot-console.png)
+The auto-scaling is configured to be balanced within two AZs. Depending on your business requirement, you can fit an ETL job into a single AZ if needed.
 
-6. [OPTIONAL] Explore EKS feature of Auto Scaling with Multi-AZ support, and Spark's Dynamic Allocation.
-
-This job will end up with 20 Spark executors/pods on 10 spot EC2 instances for about 10 minutes. Based on the resource allocation defined by the job manifest file, it runs two executors per EC2 spot instance. As soon as the job is kicked in, you will see the autoscaling is triggered within seconds. It scales the EKS cluster from 1 spot compute node to 5, then from 5 to 10 fired up by Spark's DynamicAllocation.
-
-The auto-scaling is configured to be balanced within two AZs. Depending on your business requirement, you can fit a job into a single AZ if needed.
-
-```
+```bash
 kubectl get node --label-columns=lifecycle,topology.kubernetes.io/zone
 kubectl get pod -n spark
 ```
 ![](/images/4-auto-scaling.png)
 
+[*^ back to top*](#Table-of-Contents)
 ## Useful commands
 
  * `cdk ls`          list all stacks in the app
@@ -205,10 +205,8 @@ kubectl get pod -n spark
 ## Clean up
 Go to the repo's root directory, and run the clean up script.
 
-```
-cd sql-based-etl-with-apache-spark-on-amazon-eks
+```bash
 ./deployment/delete_all.sh
-
 ```
 
 ## Security
