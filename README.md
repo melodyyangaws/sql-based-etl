@@ -10,11 +10,11 @@ We introduce a quality-aware design to increase data processing productivity, by
 * [Deploy Infrastructure](#Deploy-Infrastructure)
 * [Post Deployment](#Post-Deployment)
   * [Install klubernetes tool](#Install-klubernetes-tool)
-  * [Test ETL job in Jupyter](#Test-ETL-in-Jupyter)
-  * [Submit & Orchestrate Arc ETL job](#Submit-&-Orchestrate-Arc-ETL-job)
+  * [Test ETL job in Jupyter](#Test-an-ETL-job-in-Jupyter)
+  * [Submit & Orchestrate Arc ETL job](#Submit-Arc-ETL-job)
     * [Submit a job on Argo UI](#Submit-a-job-on-Argo-UI)
-    * [Submit a job via Argo CLI](#Submit-a-job-via-Argo-CLI)
-  * [Submit a native Spark job](#Submit-a-native-Spark-job)
+    * [Orchestrate a job via Argo CLI](#Submit-a-job-via-Argo-CLI)
+  * [Submit native Spark job](#Submit-a-native-Spark-job)
     * [Submit a job via kubectl](#Submit-a-job-via-kubectl)
     * [Self-recovery test](#Self-recovery-test)
 
@@ -25,8 +25,7 @@ Provisionning via CloudFormation template, which takes approx. 30 minutes.
   |   Region  |   Launch Template |
   |  ---------------------------   |   -----------------------  |
   |  ---------------------------   |   -----------------------  |
-  **N.Virginia** (us-east-1) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SparkOnEKS&templateURL=https://aws-solution-test-us-east-1.s3.amazonaws.com/global-s3-assets/SparkOnEKS.template)  
-    |  ---------------------------   |   -----------------------  |
+  **N.Virginia** (us-east-1) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SparkOnEKS&templateURL=https://aws-solution-test-us-east-1.s3.amazonaws.com/global-s3-assets/SparkOnEKS.template)  |
   **Oregon** (us-west-2) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=SparkOnEKS&templateURL=https://aws-solution-test-us-west-2.s3.amazonaws.com/global-s3-assets/SparkOnEKS.template)  
 
 Option1: Deploy with default.
@@ -40,7 +39,7 @@ Open AWS CloudShell in your deployment region `us-east-1` or `us-west-1`: [link 
  ```bash
  curl https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/blog/deployment/setup_cmd_tool.sh | bash
  ```
-### Test ETL in Jupyter
+### Test an ETL job in Jupyter
 * Login to the Jupyter found at [CloudFormation Output](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/stackinfo?filteringStatus=active&filteringText=&viewNested=true&hideStacks=false)
 
   * username -  `sparkoneks`, or your own login name specified at the deployment earlier. 
@@ -60,7 +59,7 @@ It demonstrates how to process data incrementally using SQL and [Delta Lake](htt
     ```
 [*^ back to top*](#Table-of-Contents)
 
-### Submit & Orchestrate Arc ETL job
+### Submit Arc ETL job
 * Run a EKS connection command from [CloudFormation Output](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/stackinfo?filteringStatus=active&filteringText=&viewNested=true&hideStacks=false) in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1), something like this:
 
     ```bash
@@ -147,6 +146,7 @@ kubectl get pod -n spark
 kubectl port-forward word-count-driver 4040:4040 -n spark
 # go to `localhost:4040` from your web browser
 ```
+[*^ back to top*](#Table-of-Contents)
 #### Self-recovery test
 In Spark, driver is a single point of failure in data processing. If driver dies, all other linked components will be discarded too. Outside of k8s, it requires extra effort to set up a job rerun, in order to manage the situation, however It is much simpler in EKS. 
 
@@ -167,6 +167,7 @@ kubectl delete -n spark pod <example:amazon-reviews-word-count-51ac6d777f7cf184-
 kubectl get po -n spark
 ```
 
+[*^ back to top*](#Table-of-Contents)
 5. [OPTIONAL] Check Spot instance usage and cost savings
 
 As mentioned before, if Spark's driver dies, the entire application will fail. To achieve the optimal cost performance, we have placed the driver on a reliable On-Demand managed EC2 instance in EKS, and the rest of executors is on spot instances. 
