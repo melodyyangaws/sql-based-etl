@@ -14,32 +14,38 @@ We introduce a quality-aware design to increase data processing productivity, by
  ```bash
  curl https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/blog/deployment/setup_cmd_tool.sh | bash
  ```
-3. Provisionning via CloudFormation template, which takes approx. 30 minutes. You can deploy it with default settings, or fill in the optional parameters to customize the solution.
+3. Provisionning via CloudFormation template, which takes approx. 30 minutes. 
+
+You can deploy it with default settings, or fill in parameters to customize the solution. If you want to ETL your own data, fill in the box `datalakebucket` by your S3 bucket name.
+
+`NOTE: the bucket must be in the same region as the deployment region.`
 
 |   Region  |   Launch Template |
 |  ---------------------------   |   -----------------------  |
 |  ---------------------------   |   -----------------------  |
 **N.Virginia** (us-east-1) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SparkOnEks&templateURL=https://aws-solution-test-us-east-1.s3.amazonaws.com/global-s3-assets/SparkOnEKS.template)  
 
-If you want to ETL your own data, fill in the box `datalakebucket` by your S3 bucket name. 
-`NOTE: the bucket must be in the same region as the deployment region.`
+
 
 ## Post Deployment
 1. Connect to the new EKS cluster. Get the connection command from your [CloudFormation Output](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/stackinfo?filteringStatus=active&filteringText=&viewNested=true&hideStacks=false), something like this:
 
 ```bash
-aws eks update-kubeconfig --name <EKS_cluster_name> --region <region> --role-arn arn:aws:iam::<account_number>:role/<role_name>
+aws eks update-kubeconfig --name <EKS_cluster_name> --region <region> --role-arn <role_arn>
+# check the connection
+kubectl get svc
 ```
 
 2. Login to Argo
 
-Go to the Argo website found in your depoloyment output, run command `argo auth token` in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1) to get a login token. Paste it to your website. Make sure you have connected to the EKS Cluster before hand.
+Go to the Argo website found in the Cloudformation output, run `argo auth token` in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1) to get a login token. Paste it to the Argo website.
 
 ![](/images/1-argologin.png)
 
 
-3. Submit a Spark job on Argo
-Click `SUBMIT NEW WORKFLOW` button, paste the following to the window, then `SUBMIT`. Click a pod (dot) to check application logs.
+3. Submit a Spark job on Argo.
+
+Click `SUBMIT NEW WORKFLOW` button, replace the content by the followings, then `SUBMIT`. Click a pod (dot) to check application logs.
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -71,51 +77,16 @@ spec:
               value: "--ETL_CONF_DATA_URL=s3a://nyc-tlc/trip*data --ETL_CONF_JOB_URL=https://raw.githubusercontent.com/tripl-ai/arc-starter/master/examples/kubernetes"
 
 ```
-![](/images/2-argo-submit.png)
 
+4. Submit a Spark job via Argo CLI, check job status & logs on the Argo dashboard.
 
-4. Submit a Spark job via Argo CLI
 This example demonstrates how to process data incrementally via an open source `Delta Lake`. Paste the command to [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1)
 ```bash
-argo submit source/example/scd2-job-scheduler.yaml -n spark --watch
-```
-1. bucket placeholder {{codeBucket}}. Either copy & paste the code bucket name from your deployment output, or use the existing s3 bucket name passed in as a parameter to your deployment previously.
-
-```
-vi source/example/scd2-job-scheduler.yaml
-```
-![](/images/4-cfn-output.png)
-![](/images/3-scd-bucket.png)
-
-
-2. Submit Arc Spark job
-
-```
-# Make sure you are in the project root directory
-cd sql-based-etl-with-apache-spark-on-amazon-eks
-
-# Start a data pipeline containing 3 spark jobs
-kubectl apply -f source/example/scd2-job-scheduler.yaml
-
-# run the CLI to watch the progress, or go to Argo site.
-kubectl get pod -n spark
+argo submit https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/blog/source/example/scd2-job-scheduler.yaml -n spark --watch  -p codeBucket=<your_codeBucket_name>
 ```
 
-<details>
-<summary> 
-Alternatively, submit the job with Argo CLI. 
-</summary> 
 
-```
-argo submit source/example/scd2-job-scheduler.yaml -n spark --watch
-```
-*** Ensure to comment out a line in the manifest file before your submission. ***
-![](/images/2-comment-out.png)
-![](/images/2-argo-scdjob.png)
-</details>
-
-
-3. Go to the Argo dashboard via an URL link of your deployment output 
+3.
 
 ![](/images/0-argo-uri.png)
 
