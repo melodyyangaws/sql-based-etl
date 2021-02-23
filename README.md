@@ -11,7 +11,7 @@ We introduce a quality-aware design to increase data processing productivity, by
 * [Post Deployment](#Post-Deployment)
   * [Install klubernetes tool](#Install-klubernetes-tool)
   * [Test ETL job in Jupyter](#Test-an-ETL-job-in-Jupyter)
-  * [Submit & Orchestrate Arc ETL job](#Submit-&-Orchestrate-Arc-ETL-job)
+  * [Submit & Orchestrate Arc ETL job](#submit--orchestrate-arc-etl-job)
     * [Submit a job on Argo UI](#Submit-a-job-on-Argo-UI)
     * [Submit a job via Argo CLI](#Submit-a-job-via-Argo-CLI)
   * [Submit a native Spark job](#Submit-a-native-Spark-job)
@@ -38,10 +38,11 @@ Option1: Deploy with default.
 Option2: Jupyter login with a customized username.
 Option3: If ETL your own data, input the parameter `datalakebucket` with your S3 bucket. `NOTE: the S3 bucket must be in the same region as the deployment region.`
 
-## Post Deployment
+[*^ back to top*](#Table-of-Contents)
 
-### Install klubernetes tool
-Open AWS CloudShell in your deployment region `us-east-1` or `us-west-1`: [link to AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1), run the command:
+## Post Deployment
+### Install kubernetes tool
+Install command tools via AWS CloudShell in your deployment region `us-east-1` or `us-west-2`: [link to AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1). Each CloudShell session will timeout after idle for 20 minutes, the below installation command must run again in a new session.
  ```bash
  curl https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/blog/deployment/setup_cmd_tool.sh | bash
  ```
@@ -57,7 +58,10 @@ Open AWS CloudShell in your deployment region `us-east-1` or `us-west-1`: [link 
   NOTE: The Jupyter session will end if it is inactive for 30 minutes. You may lose your work, if it hasn't been saved back to the Git repository. Alternatively, you can download it to your computer, which can be disabled in order to further enhance your data security.
 
 * Open the scd2 ETL job notebook `sql-based-etl/source/example/scd2-job.ipynb`. 
-It demonstrates how to process data incrementally using SQL and [Delta Lake](https://delta.io/) technique. To demonstrate the DevOps best practice, your Jupyter instance clones the latest source artifact from the current Git repository each time when you login. In real practice, you must check-in all the changes to your source repository, in order to save and run the ETL pipeline.
+
+In thius example, we will create a table to support the [Slowly Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) format. You will have a hands-on experience to do the SQL-based ETL to implement the incremental data load in Data Lake.
+
+To demonstrate the DevOps best practice, your Jupyter instance clones the latest source artifact from the current Git repository each time when you login. In real practice, you must check-in all the changes to your source repository, in order to save and run the ETL pipeline.
 * Execute each block and observe the result. Change the data processing logic in SQL if you want.
 * The sample notebook outputs a `Delta Lake` table. Run a query in [Athena](https://console.aws.amazon.com/athena/) console to check if it is a SCD2 type. 
     ```bash
@@ -202,13 +206,15 @@ kubectl get pod -n spark
  * `kubectl delete pod --all -n spark`                delete all Spark jobs
  * `kubectl apply -f source/app_resources/spark-template.yaml` create a reusable Spark job template
 
+[*^ back to top*](#Table-of-Contents)
 ## Clean up
 Go to the repo's root directory, and run the clean up script.
 
 ```bash
+cd sql-based-etl
 ./deployment/delete_all.sh
 ```
-
+[*^ back to top*](#Table-of-Contents)
 ## Security
 
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.

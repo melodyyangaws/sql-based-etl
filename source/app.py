@@ -17,7 +17,7 @@ app = core.App()
 # region = ConfigSectionMap(target_env)['region']
 # env = core.Environment(account=account, region=region)
 eks_name = app.node.try_get_context('cluster_name') ## + '-' + ConfigSectionMap(target_env)['env_str']
-env=core.Environment(account=environ.get('CDK_DEPLOY_ACCOUNT'), region=environ.get('CDK_DEPLOY_REGION'))
+env=core.Environment(account=environ.get('CDK_DEPLOY_ACCOUNT'), region=environ.get('AWS_REGION'))
 
 # Spin up the main stack
 eks_stack = SparkOnEksStack(app, 'SparkOnEKS', eks_name, env=env)
@@ -26,17 +26,6 @@ cf_nested_stack = NestedStack(eks_stack,'CreateCloudFront', eks_stack.code_bucke
 
 core.Tags.of(eks_stack).add('project', 'sqlbasedetl')
 core.Tags.of(cf_nested_stack).add('project', 'sqlbasedetl')
-
-# # add metadata to suppress cfn_nag scan 
-# eks_stack.cfn_options.metadata = {
-# "cfn_nag":{
-#     "rules_to_suppress": [
-#         {
-#             "id": "W33",
-#             "reason": "This is a public facing ALB and ingress from the internet should be permitted."
-#         }
-#     ]}
-# }
 
 # Deployment Output
 core.CfnOutput(eks_stack,'CODE_BUCKET', value=eks_stack.code_bucket)

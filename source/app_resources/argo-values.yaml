@@ -20,7 +20,14 @@ server:
     hosts:  
     - ''
     extraPaths:
-      - path: /*
-        backend:
-          serviceName: argo-server
-          servicePort: 2746
+    - path: /*
+      backend:
+        serviceName: argo-server
+        servicePort: 2746
+      # - path: /
+      #   pathType: Prefix
+      #   backend:
+      #     service:
+      #       name: argo-server
+      #       port:
+      #         number: 2746

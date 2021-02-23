@@ -26,7 +26,7 @@ class NetworkSgConst(core.Construct):
 
         self._log_bucket=s3.Bucket.from_bucket_name(self,'vpc_logbucket', codebucket)
         self._vpc.add_flow_log("FlowLogCloudWatch",
-            destination=ec2.FlowLogDestination.to_s3(self._log_bucket),
+            destination=ec2.FlowLogDestination.to_s3(self._log_bucket,'vpcRejectlog/'),
             traffic_type=ec2.FlowLogTrafficType.REJECT
         )
         # VPC endpoint security group

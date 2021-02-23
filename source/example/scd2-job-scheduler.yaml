@@ -1,7 +1,6 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
-  # only need if using Argo console or CLI
   generateName: scd2-job-
   namespace: spark
 spec:

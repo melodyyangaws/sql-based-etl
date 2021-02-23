@@ -13,6 +13,8 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 
 ---
+# wait for EKS 1.20 upgrade
+# apiVersion: networking.k8s.io/v1
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -35,6 +37,13 @@ spec:
         backend:
           serviceName: proxy-public
           servicePort: 80
+      # - path: /
+      #   pathType: Prefix
+      #   backend:
+      #     service:
+      #         name: proxy-public
+      #         port:
+      #           number: 80
           
 ---
 apiVersion: kubernetes-client.io/v1

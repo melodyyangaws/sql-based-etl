@@ -8,7 +8,7 @@ spec:
   pythonVersion: "3"
   mode: cluster
   env:
-    - name: CODEBUCKET
+  - name: CODEBUCKET
     valueFrom:
       configMapKeyRef:
         name: special-config
