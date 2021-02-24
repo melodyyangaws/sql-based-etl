@@ -1,5 +1,5 @@
 # SQL-based ETL with Spark on EKS
-This is a project for a solution - SQL based ETL with a declarative framework powered by Apache Spark. 
+This is a project for a solution - SQL based Extract Transform Load (ETL) with a declarative framework powered by Apache Spark. 
 
 We introduce a quality-aware design to increase data processing productivity, by leveraging an open-source [Arc data framework](https://arc.tripl.ai/) for a user-centered declarative ETL solution. Additionally, we take considerations of the needs and expected skills from customers in data analytics, and accelerate their interaction with ETL practice in order to foster simplicity, while maximizing efficiency.
 
