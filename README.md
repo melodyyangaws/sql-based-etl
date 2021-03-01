@@ -31,14 +31,14 @@ Provisionning via CloudFormation template, which takes approx. 30 minutes.
   |   Region  |   Launch Template |
   |  ---------------------------   |   -----------------------  |
   |  ---------------------------   |   -----------------------  |
-  **N.Virginia-blog** (us-east-1) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SparkOnEKS&templateURL=https://aws-solution-test-us-east-1.s3.amazonaws.com/global-s3-assets/SparkOnEKS.template) | 
+  **N.Virginia-blog** (us-east-1) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SparkOnEKS&templateURL=https://aws-solution-test-us-east-1.s3.amazonaws.com/sql-based-etl/v1.0.0/SparkOnEKS.template) | 
   | **Oregon-solution** (us-west-2) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=SparkOnEKS&templateURL=https://aws-solution-test-us-west-2.s3.amazonaws.com/global-s3-assets/SparkOnEKS.template) |
 
 Option1: Deploy with default.
 Option2: Jupyter login with a customized username.
 Option3: If ETL your own data, input the parameter `datalakebucket` with your S3 bucket. `NOTE: the S3 bucket must be in the same region as the deployment region.`
 
-You can customize the solution and generate the CFN in your region: 
+You can customize the solution and generate the CloudFormation template in your region: 
 ```bash
 export DIST_OUTPUT_BUCKET=my-bucket-name # bucket where customized code will reside
 export SOLUTION_NAME=sql-based-etl
@@ -49,6 +49,8 @@ export AWS_REGION=your-region
 
 aws s3 cp ./deployment/global-s3-assets/ s3://$DIST_OUTPUT_BUCKET/$SOLUTION_NAME/$VERSION/ --recursive --acl bucket-owner-full-control
 aws s3 cp ./deployment/regional-s3-assets/ s3://$DIST_OUTPUT_BUCKET/$SOLUTION_NAME/$VERSION/ --recursive --acl bucket-owner-full-control
+echo "The CloudFormation URL is:"
+echo "https://$DIST_OUTPUT_BUCKET.s3.amazonaws.com/$SOLUTION_NAME/$VERSION/SparkOnEKS.template"
 ```
 
 [*^ back to top*](#Table-of-Contents)
