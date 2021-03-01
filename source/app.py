@@ -17,7 +17,8 @@ app = core.App()
 # region = ConfigSectionMap(target_env)['region']
 # env = core.Environment(account=account, region=region)
 eks_name = app.node.try_get_context('cluster_name') ## + '-' + ConfigSectionMap(target_env)['env_str']
-env=core.Environment(account=environ.get('CDK_DEPLOY_ACCOUNT'), region=environ.get('AWS_REGION'))
+env=core.Environment(account=environ.get("CDK_DEPLOY_ACCOUNT", environ["CDK_DEFAULT_ACCOUNT"]),
+                    region=environ.get("AWS_REGION", environ["CDK_DEFAULT_REGION"]))
 
 # Spin up the main stack
 eks_stack = SparkOnEksStack(app, 'SparkOnEKS', eks_name, env=env)

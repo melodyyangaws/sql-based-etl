@@ -57,7 +57,7 @@ spec:
             - name: image
               value: ghcr.io/tripl-ai/arc:arc_3.7.0_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.4.0
             - name: configUri
-              value: "s3a://{{workflow.parameters.codeBucket}}/app_code/job/SCD2_merge.ipynb"
+              value: "s3a://{{workflow.parameters.codeBucket}}/app_code/job/scd2_merge.ipynb"
             - name: parameters
               value: "--ETL_CONF_DATALAKE_LOC={{workflow.parameters.codeBucket}}"           
             - name: sparkConf

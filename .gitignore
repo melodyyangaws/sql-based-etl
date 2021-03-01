@@ -1,27 +1,38 @@
-# Environments
-.env
-.vscode
+# Git
 .git
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-*.DS_Store
 
-# CDK Context & Staging files
-.cdk.staging/
-cdk.out/
-cdk.context.json
-
+### VisualStudioCode ###
+.vscode/*
+### IntelliJ/ PyCharm ###
+.idea/*
+# System Files
+**/.DS_Store
+# CDK
+**/cdk.out
+**/cdk.context.json
 *.swp
-package-lock.json
-.pytest_cache
-*.egg-info
+**/node_modules
+**/package-lock.json
 
+# compiled output
+**/global-s3-assets
+**/regional-s3-assets
+**/open-source
+
+### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
-
+# Python Distribution / packaging
+*.egg-info/
+*.egg
+# Python Virtual Environments
+**/venv*
+**/.venv*
+**/.env
+## Python Testing
+.pytest_cache
+**/.pytest_cache
+**/.coverage
+**/coverage-reports/

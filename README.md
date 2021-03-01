@@ -9,7 +9,7 @@ We introduce a quality-aware design to increase data processing productivity, by
 #### Table of Contents
 * [Deploy Infrastructure](#Deploy-Infrastructure)
 * [Post Deployment](#Post-Deployment)
-  * [Install klubernetes tool](#Install-klubernetes-tool)
+  * [Install kubernetes tool](#Install-kubernetes-tool)
   * [Test ETL job in Jupyter](#Test-an-ETL-job-in-Jupyter)
   * [Submit & Orchestrate Arc ETL job](#submit--orchestrate-arc-etl-job)
     * [Submit a job on Argo UI](#Submit-a-job-on-Argo-UI)
@@ -38,9 +38,28 @@ Option1: Deploy with default.
 Option2: Jupyter login with a customized username.
 Option3: If ETL your own data, input the parameter `datalakebucket` with your S3 bucket. `NOTE: the S3 bucket must be in the same region as the deployment region.`
 
-[*^ back to top*](#Table-of-Contents)
+You can customize the solution and generate the CFN in your region: 
+```bash
+export DIST_OUTPUT_BUCKET=my-bucket-name # bucket where customized code will reside
+export SOLUTION_NAME=sql-based-etl
+export VERSION=v1.0.0 # version number for the customized code
+export AWS_REGION=your-region
 
+./deployment/build-s3-dist.sh $DIST_OUTPUT_BUCKET $SOLUTION_NAME $VERSION $DIST_OUTPUT_BUCKET
+
+aws s3 cp ./deployment/global-s3-assets/ s3://$DIST_OUTPUT_BUCKET/$SOLUTION_NAME/$VERSION/ --recursive --acl bucket-owner-full-control
+aws s3 cp ./deployment/regional-s3-assets/ s3://$DIST_OUTPUT_BUCKET/$SOLUTION_NAME/$VERSION/ --recursive --acl bucket-owner-full-control
+```
+
+[*^ back to top*](#Table-of-Contents)
 ## Post Deployment
+Run a EKS connection command that can be found on [CloudFormation Output](https://console.aws.amazon.com/cloudformation/home?region=us-east-1). It looks like this:
+```bash
+aws eks update-kubeconfig --name <eks_name> --region <region> --role-arn <role_arn>
+
+# check the connection
+kubectl get svc
+```
 ### Install kubernetes tool
 Install command tools via AWS CloudShell in your deployment region `us-east-1` or `us-west-2`: [link to AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1). Each CloudShell session will timeout after idle for 20 minutes, the below installation command must run again in a new session.
  ```bash

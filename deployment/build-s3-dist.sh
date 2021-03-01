@@ -27,12 +27,12 @@
 #  - version-code: version of the package
 
 # Important: CDK global version number
-cdk_version===1.90.0
+cdk_version===1.91.0
 
 # Check to see if the required parameters have been provided:
 if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
     echo "Please provide the base source bucket name, trademark approved solution name and version where the lambda code will eventually reside."
-    echo "For example: ./build-s3-dist.sh solutions trademarked-solution-name v1.0.0"
+    echo "For example: ./build-s3-dist.sh solutions trademarked-solution-name v1.0.0 template-bucket-name"
     exit 1
 fi
 
@@ -73,26 +73,25 @@ echo "cd $source_dir"
 cd $source_dir
 python3 -m venv .env
 source .env/bin/activate
-pip3 install -q -e file://$source_dir
+pip3 install -q $source_dir
 
 echo "------------------------------------------------------------------------------"
 echo "[Synth] CDK Project"
 echo "------------------------------------------------------------------------------"
 
-# Install the global aws-cdk package
-
+# # Install the global aws-cdk package
 echo "npm install -g aws-cdk@$cdk_version"
-npm install -g aws-cdk@$cdk_version
+npm install aws-cdk@$cdk_version
 
 # Run 'cdk synth' to generate raw solution outputs
 echo "cdk synth --output=$staging_dist_dir"
-cdk synth --output=$staging_dist_dir
+node_modules/aws-cdk/bin/cdk synth --output=$staging_dist_dir
 
 # Remove unnecessary output files
 echo "cd $staging_dist_dir"
 cd $staging_dist_dir
 echo "rm tree.json manifest.json cdk.out"
-rm tree.json cdk.out
+rm tree.json manifest.json cdk.out
 
 echo "------------------------------------------------------------------------------"
 echo "[Packing] Template artifacts"
@@ -100,8 +99,9 @@ echo "--------------------------------------------------------------------------
 
 # Move outputs from staging to template_dist_dir
 echo "Move outputs from staging to template_dist_dir"
-echo "cp $staging_dist_dir/*.template $template_dist_dir/"
 mv $staging_dist_dir/*.json $template_dist_dir/
+# cp $staging_dist_dir/*.template.json $template_dist_dir/
+# rm *.template.json
 
 # Rename all *.template.json files to *.template
 echo "Rename all *.template.json to *.template"
@@ -132,6 +132,10 @@ sed -i '' -e $replace $template_dist_dir/*.template
 replace="s/%%VERSION%%/$3/g"
 echo "sed -i '' -e $replace $template_dist_dir/*.template"
 sed -i '' -e $replace $template_dist_dir/*.template
+replace="s/%%TEMPLATE_OUTPUT_BUCKET%%/$4/g"
+echo "sed -i '' -e $replace $template_dist_dir/*.template"
+sed -i '' -e $replace $template_dist_dir/*.template
+
 rm $template_dist_dir/*.json
 
 echo "------------------------------------------------------------------------------"
@@ -166,7 +170,7 @@ for d in `find . -mindepth 1 -maxdepth 1 -type d`; do
         echo "Initiating virtual environment"
         python3 -m venv $venv_folder
         source $venv_folder/bin/activate
-        pip3 install -q file://$source_dir --target $venv_folder/lib/python3.*/site-packages
+        pip3 install -q $source_dir --target $venv_folder/lib/python3.*/site-packages
         deactivate
         echo "package python artifact"
         cd $staging_dist_dir/$fname/$venv_folder/lib/python3.*/site-packages
