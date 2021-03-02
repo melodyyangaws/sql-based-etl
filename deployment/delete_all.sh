@@ -1,10 +1,5 @@
 #!/bin/bash
 
-
-echo "Delete a container repository from ECR"
-aws ecr delete-repository --repository-name arc --force
-
-
 echo "Drop a Delta Lake table default.contact_snapshot"
 accountId=$(aws sts get-caller-identity --query Account --output text)
 aws athena start-query-execution --query-string "DROP TABLE default.contact_snapshot" --result-configuration OutputLocation=s3://aws-athena-query-results-$accountId

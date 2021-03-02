@@ -11,16 +11,16 @@ We introduce a quality-aware design to increase data processing productivity, by
   * [Build Your Own CFN Template](#Build-your-own)
 * [Post Deployment](#Post-Deployment)
   * [Install kubernetes tool](#Install-kubernetes-tool)
-  * [Test ETL job in Jupyter](#Test-an-ETL-job-in-Jupyter)
-  * [Submit & Orchestrate Arc ETL job](#submit--orchestrate-arc-etl-job)
+  * [Test Arc ETL job in Jupyter](#Test-Arc-ETL-job-in-Jupyter)
+  * [Submit & Orchestrate Arc job](#Submit--orchestrate-Arc-ETL-job)
     * [Submit a job on Argo UI](#Submit-a-job-on-Argo-UI)
     * [Submit a job via Argo CLI](#Submit-a-job-via-Argo-CLI)
   * [Submit a native Spark job](#Submit-a-native-Spark-job)
     * [Submit a job via kubectl](#Submit-a-job-via-kubectl)
     * [Self-recovery test](#Self-recovery-test)
     * [Cost savings with spot instance](#Check-Spot-instance-usage-and-cost-savings)
-    * [Auto Scaling across Multi-AZ, and Spark's DynamicAllocation support](#Explore-EKS-features-Auto-Scaling-across-Multi-AZ-and-Spark's-Dynamic-Allocation-support)
-* [Useful commands](#Useful-commands)  
+    * [Auto scaling & Dynamic resource allocation](#Explore-EKS-features-Auto-Scaling-across-Multi-AZ-and-Spark's-Dynamic-Allocation-support)
+* [Useful Commands](#Useful-Commands)  
 * [Clean Up](#clean-up)
 * [Security](#Security)
 * [License](#License)
@@ -35,9 +35,10 @@ Provisionning via CloudFormation template, which takes approx. 30 minutes.
   **N.Virginia-blog** (us-east-1) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SparkOnEKS&templateURL=https://aws-solution-test-us-east-1.s3.amazonaws.com/sql-based-etl/v1.0.0/SparkOnEKS.template) | 
   | **Oregon-solution** (us-west-2) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=SparkOnEKS&templateURL=https://aws-solution-test-us-west-2.s3.amazonaws.com/sql-based-etl/v1.0.0/SparkOnEKS.template) |
 
-Option1: Deploy with default.
-Option2: Jupyter login with a customized username.
-Option3: If ETL your own data, input the parameter `datalakebucket` with your S3 bucket. `NOTE: the S3 bucket must be in the same region as the deployment region.`
+* Option1: Deploy with default.
+* Option2: Jupyter login with a customized username. Fill in the parameter `jhubuser`.
+* Option3: If ETL your own data, fill in the parameter `datalakebucket` with your S3 bucket. 
+`NOTE: the S3 bucket must be in the same region as the deployment region.`
 
 ### Build your own
 You can customize the solution and generate the CloudFormation template in your region: 
@@ -56,7 +57,7 @@ echo "The CloudFormation URL is: https://$DIST_OUTPUT_BUCKET.s3.amazonaws.com/$S
 
 [*^ back to top*](#Table-of-Contents)
 ## Post Deployment
-Run a EKS connection command that can be found on [CloudFormation Output](https://console.aws.amazon.com/cloudformation/) in Stack SparkOnEKS. It looks like this:
+Run a EKS configure command that can be found on [CloudFormation Output](https://console.aws.amazon.com/cloudformation/) in Stack SparkOnEKS. It looks like this:
 ```bash
 aws eks update-kubeconfig --name <eks_name> --region <region> --role-arn <role_arn>
 
@@ -70,39 +71,40 @@ Go to AWS CloudShell:[link to AWS CloudShell](https://console.aws.amazon.com/clo
  ```
  Each CloudShell session will timeout after idle for 20 minutes, the installation may need to run again.
 
-### Test an ETL job in Jupyter
-* Login to the Jupyter found at [CloudFormation Output](https://console.aws.amazon.com/cloudformation/)
+### Test Arc ETL job in Jupyter
+* Login to Jupyter WebUI found at [CloudFormation Output](https://console.aws.amazon.com/cloudformation/).
 
-  * username -  `sparkoneks`, or your own login name specified at the deployment earlier. 
-  * password - run the command in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/)
+  * username - `sparkoneks`, or your login name specified. 
+  * password - get password in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/)
   ```bash
   JHUB_PWD=$(kubectl -n jupyter get secret jupyter-external-secret -o jsonpath="{.data.password}" | base64 --decode)
   echo -e "\nJupyter password: $JHUB_PWD"
   ```
-  NOTE: The Jupyter session will end if it is inactive for 30 minutes. You may lose your work, if it hasn't been saved back to the Git repository. Alternatively, you can download it to your computer, which can be disabled in order to further enhance your data security.
+  NOTE: The Jupyter session will end if it is inactive for 30 minutes. You may lose your work, if it hasn't been saved back to a Git repository. Or you can download it to your computer. The download capability is configurable and could be disabled in order to improve your data security.
 
-* Open the scd2 ETL job notebook `sql-based-etl/source/example/scd2-job.ipynb`. 
+* Open a sample notebook `sql-based-etl/source/example/scd2-job.ipynb` in Jupyter cloned from the current repo.
 
-In thius example, we will create a table to support the [Slowly Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) format. You will have a hands-on experience to do the SQL-based ETL to implement the incremental data load in Data Lake.
+  This example will create a table to support [Slowly Changing Dimension Type 2](https://www.datawarehouse4u.info/SCD-Slowly-Changing-Dimensions.html) format. You will get hands-on experience on SQL-based ETL by walking through the incremental data load in Data Lake.
 
-To demonstrate the DevOps best practice, your Jupyter instance clones the latest source artifact from the current Git repository each time when you login. In real practice, you must check-in all the changes to your source repository, in order to save and run the ETL pipeline.
-* Execute each block and observe the result. Change the data processing logic in SQL if you want.
-* The sample notebook outputs a `Delta Lake` table. Run a query in [Athena](https://console.aws.amazon.com/athena/) console to check if it is a SCD2 type. 
+  To demonstrate the best practice in DataDevOps, your Jupyter instance clones the latest source artifact from this Git repository each time when you login. In real practice, you must check-in all changes to a source repository, in order to save and trigger ETL pipelines.
+
+3. Execute each block and observe the result. Change SQL scripts on the notebook if you like.
+4. The sample notebook outputs a `Delta Lake` table. Run a query in [Athena](https://console.aws.amazon.com/athena/) console to check if it is a SCD2 type. 
     ```bash
     SELECT * FROM default.deltalake_contact_jhub WHERE id=12
     ```
 [*^ back to top*](#Table-of-Contents)
 
-### Submit & Orchestrate Arc ETL job
+### Submit & orchestrate Arc ETL job
 * Check EKS connection in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/). If no access, follow the first step in [Post Deployment](#Post-Deployment)
 ```bash
 kubectl get svc
 ```
-* Go to Argo website found in the Cloudformation output, run `argo auth token` in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/) to get a login token. Paste it to the Argo website.
+* Go to Argo website found in the Cloudformation output. Run `argo auth token` command in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/) to get a login token, and paste it to Argo.
 
 #### Submit a job on Argo UI
 
-  Click `SUBMIT NEW WORKFLOW` button, replace the content by the followings, then `SUBMIT`. Click a pod (dot) to check application logs.
+  Click `SUBMIT NEW WORKFLOW` button, replace content by the followings, then `SUBMIT`. Click a pod (dot) to check application logs.
 
   ```yaml
   apiVersion: argoproj.io/v1alpha1
@@ -136,19 +138,21 @@ kubectl get svc
   ```
 
 #### Submit a job via Argo CLI 
-Let's submit the same scd2 job that was tested in Jupyter notebook earlier.
+
+Let's submit the scd2 notebook that was tested earlier. To mock up a real-world scenario, we have break it down to 3 notebook files, ie. 3 ETL jobs, stored in `deployment/app_code/job/`. It only takes approx. 4 minutes to complte the entire data pipeline.
+
 * Check EKS connection in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/). If no access, follow the first step in [Post Deployment](#Post-Deployment)
 ```bash
 kubectl get svc
 ```
-* Replace the S3 bucket placeholder by a value from the [CloudFormation Output](https://console.aws.amazon.com/cloudformation). Run the command on [AWS CloudShell](https://console.aws.amazon.com/cloudshell) and check progress at the Argo website.
+* Replace the placeholder by an S3 bucket name found in [CloudFormation Console](https://console.aws.amazon.com/cloudformation). Run the command by AWS CloudShell then check progress in Argo UI.
 ```bash
 app_code_bucket=<your_codeBucket_name>
 argo submit https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/blog/source/example/scd2-job-scheduler.yaml -n spark --watch  -p codeBucket=$app_code_bucket
 ```
 ![](/images/3-argo-job-dependency.png)
 
-* Query the table in [Athena](https://console.aws.amazon.com/athena/) to check if it has the same outcome as the table populated by Jupyter. 
+* Query the table in [Athena](https://console.aws.amazon.com/athena/) to see if it has the same outcome as your testing in Jupyter. 
 
 ```
 SELECT * FROM default.contact_snapshot WHERE id=12
@@ -159,7 +163,7 @@ SELECT * FROM default.contact_snapshot WHERE id=12
 
 Reuse the Arc docker image to run a native Spark application, defined by k8s's CRD [Spark Operator](https://operatorhub.io/operator/spark-gcp). It saves efforts on DevOps operation, as the way of deploying Spark application follows the same declarative approach in k8s. It is consistent with other business applications deployment.
   The example demonstrates:
-  * Save cost with Amazon EC2 Spot instance type
+  * Save cost with [Amazon EC2 Spot instance](https://aws.amazon.com/ec2/spot/) type
   * Dynamically scale a Spark application - via [Dynamic Resource Allocation](https://spark.apache.org/docs/3.0.0-preview/job-scheduling.html#dynamic-resource-allocation)
   * Self-recover after losing a Spark driver
   * Monitor a job on Spark WebUI
@@ -167,7 +171,7 @@ Reuse the Arc docker image to run a native Spark application, defined by k8s's C
 #### Submit a job via kubectl 
 * Execute the command on [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1).
 ```bash
-kubectl create configmap special-config --from-literal=codeBucket=<your_codeBucket_nmae>
+kubectl create configmap special-config --from-literal=codeBucket=<your_codeBucket_name>
 kubectl apply -f https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/blog/source/example/native-spark-job-scheduler.yaml
 ```
 * Watch progress in k8s.
@@ -186,7 +190,6 @@ In Spark, driver is a single point of failure in data processing. If driver dies
 * The native Spark job takes approx. 10 minutes to finish. Let's test its fault tolerance by kill the driver first: 
 ```bash
 kubectl delete -n spark pod word-count-driver --force
-
 # has the driver come back immediately?
 kubectl get po -n spark
 ```
@@ -194,17 +197,16 @@ kubectl get po -n spark
 ```bash
 # replace the example pod name by yours
 kubectl delete -n spark pod <example:amazon-reviews-word-count-51ac6d777f7cf184-exec-1> --force
-
 # has it come back with a different number suffix? 
 kubectl get po -n spark
 ```
 [*^ back to top*](#Table-of-Contents)
 #### Check Spot instance usage and cost savings
-Check your [Spot Request](https://console.aws.amazon.com/ec2sp/v2/) console -> Saving Summary, to find out how much running cost have you just saved.
+Go to [Spot Request console](https://console.aws.amazon.com/ec2sp/v2/) -> Saving Summary, to find out how much running cost you just saved.
 
-#### Explore EKS features: Auto Scaling across Multi-AZ, and Spark's Dynamic Allocation support
+#### Explore Other features: Auto Scaling across Multi-AZ, and Spark's Dynamic Allocation support
 
-This job will end up with 20 Spark executors/pods on 10 spot EC2 instances for about 10 minutes. Based on the resource allocation defined by the job manifest file, it runs two executors per EC2 spot instance. As soon as the job is kicked in, you will see the autoscaling is triggered within seconds. It scales the EKS cluster from 1 spot compute node to 5, then from 5 to 10 triggered by Spark's DynamicAllocation.
+This job will end up with 20 Spark executors/pods on 10 spot EC2 instances for about 10 minutes. Based on the resource allocation defined by the job manifest file, it runs two executors per EC2 spot instance. As soon as the job is kicked in, you will see the autoscaling is triggered within seconds. It scales the EKS cluster from 1 spot compute node to 5, then from 5 to 10 driven by the Spark's DynamicAllocation capability.
 
 The auto-scaling is configured to be balanced within two AZs. Depending on your business requirement, you can fit an ETL job into a single AZ if needed.
 
@@ -215,17 +217,10 @@ kubectl get pod -n spark
 ![](/images/4-auto-scaling.png)
 
 [*^ back to top*](#Table-of-Contents)
-## Useful commands
-
- * `cdk ls`          list all stacks in the app
- * `cdk synth`       emits the synthesized CloudFormation template
- * `cdk deploy`      deploy this stack to your default AWS account/region
- * `cdk diff`        compare deployed stack with current state
- * `cdk docs`        open CDK documentation
- * `cdk destroy`     delete the stack deployed earlier
- * `kubectl get pod -n spark`                         list running Spark jobs
+## Useful Commands
  * `argo submit source/example/nyctaxi-job-scheduler.yaml`  submit a spark job via Argo
  * `argo list --all-namespaces`                       show all jobs scheduled via Argo
+ * `kubectl get pod -n spark`                         list running Spark jobs
  * `kubectl delete pod --all -n spark`                delete all Spark jobs
  * `kubectl apply -f source/app_resources/spark-template.yaml` create a reusable Spark job template
 

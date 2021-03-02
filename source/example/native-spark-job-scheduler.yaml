@@ -6,7 +6,7 @@ metadata:
 spec:
   type: Python
   pythonVersion: "3"
-  mode: cluster
+  deployMode: cluster
   image: ghcr.io/tripl-ai/arc:arc_3.7.0_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.4.0
   imagePullPolicy: Always
   mainApplicationFile: "s3a://$(BUCKET_PARAM)/app_code/job/wordcount.py"
@@ -20,24 +20,24 @@ spec:
     "spark.kubernetes.local.dirs.tmpfs": "true"
   driver:
     affinity:
-      podAffinity:
+      nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:  
           nodeSelectorTerms:
-              - matchExpressions:
-                - key: lifecycle 
-                  operator: In 
-                  values: 
-                  - OnDemand
+          - matchExpressions:
+            - key: lifecycle 
+              operator: In 
+              values: 
+              - OnDemand
   executor:
     affinity:
-      podAntiAffinity:
+      nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:     
           nodeSelectorTerms:
-                - matchExpressions:
-                  - key: lifecycle 
-                    operator: In 
-                    values: 
-                    - Ec2Spot  
+          - matchExpressions:
+            - key: lifecycle 
+              operator: In 
+              values: 
+              - Ec2Spot  
   volumes:
     - name: spark-local-dir-1
       hostPath:

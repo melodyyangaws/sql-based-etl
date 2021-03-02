@@ -1,3 +1,5 @@
+image:
+  tag: v1beta2-1.2.0-3.0.0
 serviceAccounts:
   spark:
     create: false
