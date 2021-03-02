@@ -8,6 +8,7 @@ We introduce a quality-aware design to increase data processing productivity, by
 
 #### Table of Contents
 * [Deploy Infrastructure](#Deploy-Infrastructure)
+  * [Generate CFN template for customization](#Generate-CFN-template)
 * [Post Deployment](#Post-Deployment)
   * [Install kubernetes tool](#Install-kubernetes-tool)
   * [Test ETL job in Jupyter](#Test-an-ETL-job-in-Jupyter)
@@ -32,12 +33,13 @@ Provisionning via CloudFormation template, which takes approx. 30 minutes.
   |  ---------------------------   |   -----------------------  |
   |  ---------------------------   |   -----------------------  |
   **N.Virginia-blog** (us-east-1) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SparkOnEKS&templateURL=https://aws-solution-test-us-east-1.s3.amazonaws.com/sql-based-etl/v1.0.0/SparkOnEKS.template) | 
-  | **Oregon-solution** (us-west-2) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=SparkOnEKS&templateURL=https://aws-solution-test-us-west-2.s3.amazonaws.com/global-s3-assets/SparkOnEKS.template) |
+  | **Oregon-solution** (us-west-2) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=SparkOnEKS&templateURL=https://aws-solution-test-us-west-2.s3.amazonaws.com/sql-based-etl/v1.0.0/SparkOnEKS.template) |
 
 Option1: Deploy with default.
 Option2: Jupyter login with a customized username.
 Option3: If ETL your own data, input the parameter `datalakebucket` with your S3 bucket. `NOTE: the S3 bucket must be in the same region as the deployment region.`
 
+### Generate CFN template
 You can customize the solution and generate the CloudFormation template in your region: 
 ```bash
 export DIST_OUTPUT_BUCKET=my-bucket-name # bucket where customized code will reside
@@ -49,13 +51,12 @@ export AWS_REGION=your-region
 
 aws s3 cp ./deployment/global-s3-assets/ s3://$DIST_OUTPUT_BUCKET/$SOLUTION_NAME/$VERSION/ --recursive --acl bucket-owner-full-control
 aws s3 cp ./deployment/regional-s3-assets/ s3://$DIST_OUTPUT_BUCKET/$SOLUTION_NAME/$VERSION/ --recursive --acl bucket-owner-full-control
-echo "The CloudFormation URL is:"
-echo "https://$DIST_OUTPUT_BUCKET.s3.amazonaws.com/$SOLUTION_NAME/$VERSION/SparkOnEKS.template"
+echo "The CloudFormation URL is: https://$DIST_OUTPUT_BUCKET.s3.amazonaws.com/$SOLUTION_NAME/$VERSION/SparkOnEKS.template"
 ```
 
 [*^ back to top*](#Table-of-Contents)
 ## Post Deployment
-Run a EKS connection command that can be found on [CloudFormation Output](https://console.aws.amazon.com/cloudformation/home?region=us-east-1). It looks like this:
+Run a EKS connection command that can be found on [CloudFormation Output](https://console.aws.amazon.com/cloudformation/) in Stack SparkOnEKS. It looks like this:
 ```bash
 aws eks update-kubeconfig --name <eks_name> --region <region> --role-arn <role_arn>
 
@@ -63,15 +64,17 @@ aws eks update-kubeconfig --name <eks_name> --region <region> --role-arn <role_a
 kubectl get svc
 ```
 ### Install kubernetes tool
-Install command tools via AWS CloudShell in your deployment region `us-east-1` or `us-west-2`: [link to AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1). Each CloudShell session will timeout after idle for 20 minutes, the below installation command must run again in a new session.
+Go to AWS CloudShell:[link to AWS CloudShell](https://console.aws.amazon.com/cloudshell/), select the region the solution was deployed. Run the command: 
  ```bash
  curl https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/blog/deployment/setup_cmd_tool.sh | bash
  ```
+ Each CloudShell session will timeout after idle for 20 minutes, the installation may need to run again.
+
 ### Test an ETL job in Jupyter
-* Login to the Jupyter found at [CloudFormation Output](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/stackinfo?filteringStatus=active&filteringText=&viewNested=true&hideStacks=false)
+* Login to the Jupyter found at [CloudFormation Output](https://console.aws.amazon.com/cloudformation/)
 
   * username -  `sparkoneks`, or your own login name specified at the deployment earlier. 
-  * password - run the command in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1)
+  * password - run the command in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/)
   ```bash
   JHUB_PWD=$(kubectl -n jupyter get secret jupyter-external-secret -o jsonpath="{.data.password}" | base64 --decode)
   echo -e "\nJupyter password: $JHUB_PWD"
@@ -91,16 +94,11 @@ To demonstrate the DevOps best practice, your Jupyter instance clones the latest
 [*^ back to top*](#Table-of-Contents)
 
 ### Submit & Orchestrate Arc ETL job
-* Run a EKS connection command from [CloudFormation Output](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/stackinfo?filteringStatus=active&filteringText=&viewNested=true&hideStacks=false) in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1), something like this:
-
-    ```bash
-    aws eks update-kubeconfig --name <eks_name> --region <region> --role-arn <role_arn>
-
-    # check the connection
-    kubectl get svc
-    ```
-
-* Go to Argo website found in the Cloudformation output, run `argo auth token` in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1) to get a login token. Paste it to the Argo website.
+* Check EKS connection in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/). If no access, follow the first step in [Post Deployment](#Post-Deployment)
+```bash
+kubectl get svc
+```
+* Go to Argo website found in the Cloudformation output, run `argo auth token` in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/) to get a login token. Paste it to the Argo website.
 
 #### Submit a job on Argo UI
 
@@ -138,11 +136,15 @@ To demonstrate the DevOps best practice, your Jupyter instance clones the latest
   ```
 
 #### Submit a job via Argo CLI 
-Let's submit the same scd2 job that was tested in Jupyter notebook earlier, then check job logs on Argo UI.
-
-* Replace the bucket placeholder by yours found on the [CloudFormation Output](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/stackinfo?filteringStatus=active&filteringText=&viewNested=true&hideStacks=false). Run the command on [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1).
+Let's submit the same scd2 job that was tested in Jupyter notebook earlier.
+* Check EKS connection in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/). If no access, follow the first step in [Post Deployment](#Post-Deployment)
 ```bash
-argo submit https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/blog/source/example/scd2-job-scheduler.yaml -n spark --watch  -p codeBucket=<your_codeBucket_name>
+kubectl get svc
+```
+* Replace the S3 bucket placeholder by a value from the [CloudFormation Output](https://console.aws.amazon.com/cloudformation). Run the command on [AWS CloudShell](https://console.aws.amazon.com/cloudshell) and check progress at the Argo website.
+```bash
+app_code_bucket=<your_codeBucket_name>
+argo submit https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/blog/source/example/scd2-job-scheduler.yaml -n spark --watch  -p codeBucket=$app_code_bucket
 ```
 ![](/images/3-argo-job-dependency.png)
 
