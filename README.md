@@ -8,7 +8,7 @@ We introduce a quality-aware design to increase data processing productivity, by
 
 #### Table of Contents
 * [Deploy Infrastructure](#Deploy-Infrastructure)
-  * [Generate CFN template for customization](#Generate-CFN-template)
+  * [Build Your Own CFN Template](#Build-your-own)
 * [Post Deployment](#Post-Deployment)
   * [Install kubernetes tool](#Install-kubernetes-tool)
   * [Test ETL job in Jupyter](#Test-an-ETL-job-in-Jupyter)
@@ -39,7 +39,7 @@ Option1: Deploy with default.
 Option2: Jupyter login with a customized username.
 Option3: If ETL your own data, input the parameter `datalakebucket` with your S3 bucket. `NOTE: the S3 bucket must be in the same region as the deployment region.`
 
-### Generate CFN template
+### Build your own
 You can customize the solution and generate the CloudFormation template in your region: 
 ```bash
 export DIST_OUTPUT_BUCKET=my-bucket-name # bucket where customized code will reside
