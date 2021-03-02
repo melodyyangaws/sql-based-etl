@@ -9,8 +9,8 @@ spec:
   mode: cluster
   image: ghcr.io/tripl-ai/arc:arc_3.7.0_spark_3.0.1_scala_2.12_hadoop_3.2.0_1.4.0
   imagePullPolicy: Always
-  mainApplicationFile: "s3a://{{CODEBUCKET}}/app_code/job/wordcount.py"
-  arguments: ["s3a://{{CODEBUCKET}}/app_code/output/native"]
+  mainApplicationFile: "s3a://$(BUCKET_PARAM)/app_code/job/wordcount.py"
+  arguments: ["s3a://$(BUCKET_PARAM)/app_code/output/native"]
   sparkVersion: "3.0.1"
   sparkConf:
     "spark.hadoop.fs.s3a.impl": "org.apache.hadoop.fs.s3a.S3AFileSystem"
@@ -37,7 +37,7 @@ spec:
                   - key: lifecycle 
                     operator: In 
                     values: 
-                    - Ec2Spot           
+                    - Ec2Spot  
   volumes:
     - name: spark-local-dir-1
       hostPath:
@@ -55,32 +55,26 @@ spec:
     onSubmissionFailureRetries: 5
     onSubmissionFailureRetryInterval: 20
   driver:
+    env:
+      - name: BUCKET_PARAM
+        valueFrom:
+          configMapKeyRef:
+            name: special-config
+            key: codeBucket
     cores: 1
     memory: "1G"
     labels:
       role: driver
     serviceAccount: nativejob
-    env:
-    - name: CODEBUCKET
-      valueFrom:
-        configMapKeyRef:
-          name: special-config
-          key: codeBucket
     volumeMounts:
       - name: spark-local-dir-1
         mountPath: "/tmp"
-  executor:
+  executor:  
     cores: 1
     instances: 10
     memory: "4G"
     labels:
       role: executor
-    env:
-    - name: CODEBUCKET
-      valueFrom:
-        configMapKeyRef:
-          name: special-config
-          key: codeBucket
     volumeMounts:
       - name: spark-local-dir-1
         mountPath: "/tmp"

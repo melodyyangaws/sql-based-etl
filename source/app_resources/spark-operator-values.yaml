@@ -6,3 +6,7 @@ serviceAccounts:
 metrics:
 # -- Disable prometheus metric scraping
   enable: false
+webhook:
+  enable: true
+  port: 443
+   
