@@ -11,6 +11,7 @@ We introduce a quality-aware design to increase data processing productivity, by
   * [Build Your Own CFN Template](#Build-your-own)
 * [Post Deployment](#Post-Deployment)
   * [Install kubernetes tool](#Install-kubernetes-tool)
+  * [Connect to EKS](#Connect-to-EKS-cluster)
   * [Test Arc ETL job in Jupyter](#Test-Arc-ETL-job-in-Jupyter)
   * [Submit & Orchestrate Arc job](#Submit--orchestrate-Arc-ETL-job)
     * [Submit a job on Argo UI](#Submit-a-job-on-Argo-UI)
@@ -57,19 +58,22 @@ echo "The CloudFormation URL is: https://$DIST_OUTPUT_BUCKET.s3.amazonaws.com/$S
 
 [*^ back to top*](#Table-of-Contents)
 ## Post Deployment
-Run a EKS configure command that can be found on [CloudFormation Output](https://console.aws.amazon.com/cloudformation/) in Stack SparkOnEKS. It looks like this:
-```bash
-aws eks update-kubeconfig --name <eks_name> --region <region> --role-arn <role_arn>
 
-# check the connection
-kubectl get svc
-```
 ### Install kubernetes tool
 Go to AWS CloudShell:[link to AWS CloudShell](https://console.aws.amazon.com/cloudshell/), select the region the solution was deployed. Run the command: 
  ```bash
  curl https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/blog/deployment/setup_cmd_tool.sh | bash
  ```
  Each CloudShell session will timeout after idle for 20 minutes, the installation may need to run again.
+
+### Connect to EKS cluster
+In the same CloudShell session, run a configure command that can be found on [CloudFormation Output](https://console.aws.amazon.com/cloudformation/) in Stack SparkOnEKS. It looks like this:
+```bash
+aws eks update-kubeconfig --name <eks_name> --region <region> --role-arn <role_arn>
+
+# check the connection
+kubectl get svc
+```
 
 ### Test Arc ETL job in Jupyter
 * Login to Jupyter WebUI found at [CloudFormation Output](https://console.aws.amazon.com/cloudformation/).
@@ -96,7 +100,7 @@ Go to AWS CloudShell:[link to AWS CloudShell](https://console.aws.amazon.com/clo
 [*^ back to top*](#Table-of-Contents)
 
 ### Submit & orchestrate Arc ETL job
-* Check EKS connection in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/). If no access, follow the first step in [Post Deployment](#Post-Deployment)
+* Check your EKS connection in [AWS CloudShell](https://console.aws.amazon.com/cloudshell/). If no access, see the section:[Connect to EKS cluster](#Connect-to-EKS-cluster)
 ```bash
 kubectl get svc
 ```
