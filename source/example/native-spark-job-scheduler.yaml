@@ -18,26 +18,6 @@ spec:
     "spark.kubernetes.allocation.batch.size": "10" 
     "spark.io.encryption.enabled": "true"
     "spark.kubernetes.local.dirs.tmpfs": "true"
-  driver:
-    affinity:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:  
-          nodeSelectorTerms:
-          - matchExpressions:
-            - key: lifecycle 
-              operator: In 
-              values: 
-              - OnDemand
-  executor:
-    affinity:
-      nodeAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:     
-          nodeSelectorTerms:
-          - matchExpressions:
-            - key: lifecycle 
-              operator: In 
-              values: 
-              - Ec2Spot  
   volumes:
     - name: spark-local-dir-1
       hostPath:
@@ -55,6 +35,16 @@ spec:
     onSubmissionFailureRetries: 5
     onSubmissionFailureRetryInterval: 20
   driver:
+    # driver run on OnDemand Ec2
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:  
+          nodeSelectorTerms:
+            - matchExpressions:
+              - key: lifecycle
+                operator: In 
+                values: 
+                - OnDemand
     env:
       - name: BUCKET_PARAM
         valueFrom:
@@ -69,10 +59,20 @@ spec:
     volumeMounts:
       - name: spark-local-dir-1
         mountPath: "/tmp"
-  executor:  
+  executor:
+   # executors run on Spot
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:     
+          nodeSelectorTerms:
+            - matchExpressions:
+              - key: lifecycle
+                operator: In 
+                values: 
+                - Ec2Spot
     cores: 1
     instances: 10
-    memory: "4G"
+    memory: "5G"
     labels:
       role: executor
     volumeMounts:

@@ -32,8 +32,8 @@ Provisionning via CloudFormation template, which takes approx. 30 minutes.
   |   Region  |   Launch Template |
   |  ---------------------------   |   -----------------------  |
   |  ---------------------------   |   -----------------------  |
-  **N.Virginia-blog** (us-east-1) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SparkOnEKS&templateURL=https://aws-solution-test-us-east-1.s3.amazonaws.com/sql-based-etl/v1.0.0/SparkOnEKS.template) | 
-  | **Oregon-solution** (us-west-2) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=SparkOnEKS&templateURL=https://aws-solution-test-us-west-2.s3.amazonaws.com/sql-based-etl/v1.0.0/SparkOnEKS.template) |
+  **N.Virginia** (us-east-1) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=SparkOnEKS&templateURL=https://aws-solution-test-us-east-1.s3.amazonaws.com/sql-based-etl/v1.0.0/SparkOnEKS.template) | 
+  | **Oregon** (us-west-2) | [![Deploy to AWS](/images/00-deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=SparkOnEKS&templateURL=https://aws-solution-test-us-west-2.s3.amazonaws.com/sql-based-etl/v1.0.0/SparkOnEKS.template) |
 
 * Option1: Deploy with default.
 * Option2: Jupyter login with a customized username. Fill in the parameter `jhubuser`.
@@ -161,7 +161,7 @@ SELECT * FROM default.contact_snapshot WHERE id=12
 
 ### Submit a native Spark job
 
-Reuse the Arc docker image to run a native Spark application, defined by k8s's CRD [Spark Operator](https://operatorhub.io/operator/spark-gcp). It saves efforts on DevOps operation, as the way of deploying Spark application follows the same declarative approach in k8s. It is consistent with other business applications deployment.
+Reuse the Arc docker image to run a native Spark application, defined by k8s's CRD [Spark Operator](https://operatorhub.io/operator/spark-gcp). It saves efforts on DevOps operation, as the way of deploying Spark application follows the same declarative approach in k8s. It is consistent with other business applications CICD deployment processes.
   The example demonstrates:
   * Save cost with [Amazon EC2 Spot instance](https://aws.amazon.com/ec2/spot/) type
   * Dynamically scale a Spark application - via [Dynamic Resource Allocation](https://spark.apache.org/docs/3.0.0-preview/job-scheduling.html#dynamic-resource-allocation)
@@ -173,15 +173,17 @@ Reuse the Arc docker image to run a native Spark application, defined by k8s's C
 ```bash
 kubectl create configmap special-config --from-literal=codeBucket=<your_codeBucket_name>
 kubectl apply -f https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/blog/source/example/native-spark-job-scheduler.yaml
-```
-* Watch progress in k8s.
-```bash
+
+# watch the progress in EKS
 kubectl get pod -n spark
-```
-* Watch job progress and performance on SparkUI.
-```bash
+
+# watch job progress on SparkUI
 kubectl port-forward word-count-driver 4040:4040 -n spark
 # go to `localhost:4040` from your web browser
+
+# modify the schedule file locally if you like, then rerun
+kubectl delete -f source/example/native-spark-job-scheduler.yaml
+kubectl apply -f source/example/native-spark-job-scheduler.yaml
 ```
 [*^ back to top*](#Table-of-Contents)
 #### Self-recovery test
@@ -189,8 +191,8 @@ In Spark, driver is a single point of failure in data processing. If driver dies
 
 * The native Spark job takes approx. 10 minutes to finish. Let's test its fault tolerance by kill the driver first: 
 ```bash
-kubectl delete -n spark pod word-count-driver --force
-# has the driver come back immediately?
+kubectl delete pod -n spark word-count-driver --force
+# has the driver come back instantly?
 kubectl get po -n spark
 ```
 * Now kill one of executors: 
@@ -206,9 +208,9 @@ Go to [Spot Request console](https://console.aws.amazon.com/ec2sp/v2/) -> Saving
 
 #### Explore Other features: Auto Scaling across Multi-AZ, and Spark's Dynamic Allocation support
 
-This job will end up with 20 Spark executors/pods on 10 spot EC2 instances for about 10 minutes. Based on the resource allocation defined by the job manifest file, it runs two executors per EC2 spot instance. As soon as the job is kicked in, you will see the autoscaling is triggered within seconds. It scales the EKS cluster from 1 spot compute node to 5, then from 5 to 10 driven by the Spark's DynamicAllocation capability.
+This job will end up with 20 Spark executors/pods on around 7 spot EC2 instances. It takes 10 minutes to complete. Based on the resource allocation defined in the job manifest file, it runs approx. 3 executors per EC2 spot instance. As soon as the job is kicked in, you will see the autoscaling is triggered within seconds. It scales the Spark cluster from 0 to 10 executors, then reduce to 3 executor as only 1 spot node in the EKS intially. Eventualy, the Spark cluster will scale to 20 executors, driven by the DynamicAllocation capability in Spark.
 
-The auto-scaling is configured to be balanced within two AZs. Depending on your business requirement, you can fit an ETL job into a single AZ if needed.
+The auto-scaling is configured to be balanced within two AZs. Depending on your business requirement, you can fit the ETL job into a single AZ if needed.
 
 ```bash
 kubectl get node --label-columns=lifecycle,topology.kubernetes.io/zone
