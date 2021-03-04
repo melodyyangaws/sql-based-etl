@@ -53,6 +53,7 @@ export AWS_REGION=your-region
 
 aws s3 cp ./deployment/global-s3-assets/ s3://$DIST_OUTPUT_BUCKET/$SOLUTION_NAME/$VERSION/ --recursive --acl bucket-owner-full-control
 aws s3 cp ./deployment/regional-s3-assets/ s3://$DIST_OUTPUT_BUCKET/$SOLUTION_NAME/$VERSION/ --recursive --acl bucket-owner-full-control
+
 echo "The CloudFormation URL is: https://$DIST_OUTPUT_BUCKET.s3.amazonaws.com/$SOLUTION_NAME/$VERSION/SparkOnEKS.template"
 ```
 
@@ -60,7 +61,7 @@ echo "The CloudFormation URL is: https://$DIST_OUTPUT_BUCKET.s3.amazonaws.com/$S
 ## Post Deployment
 
 ### Install kubernetes tool
-Go to AWS CloudShell:[link to AWS CloudShell](https://console.aws.amazon.com/cloudshell/), select the region the solution was deployed. Run the command: 
+Go to AWS CloudShell:[link to AWS CloudShell](https://console.aws.amazon.com/cloudshell/), select your **region** the solution was deployed. Run the command: 
  ```bash
  curl https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/blog/deployment/setup_cmd_tool.sh | bash
  ```
