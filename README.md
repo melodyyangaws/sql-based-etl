@@ -6,6 +6,11 @@ We introduce a quality-aware design to increase data processing productivity, by
 ## Overview
 ![](/images/architecture.png)
 
+### Run Notebook in Jupyter
+![Architecture](images/run_jupyter/run_jupyter.mp4)
+
+### Submit Spark job
+
 #### Table of Contents
 * [Deploy Infrastructure](#Deploy-Infrastructure)
   * [Build Your Own CFN Template](#Build-your-own)
@@ -77,6 +82,10 @@ kubectl get svc
 ```
 
 ### Test Arc ETL job in Jupyter
+The sample [contacts data](/deployment/app_code/data/) is generated randomly by a [python script](https://raw.githubusercontent.com/cartershanklin/hive-scd-examples/master/merge_data/generate.py)
+
+![fake_data](/images/generate_fake_data/fake_data_small.gif)
+
 * Login to Jupyter WebUI found at [CloudFormation Output](https://console.aws.amazon.com/cloudformation/).
 
   * username - `sparkoneks`, or your login name specified. 
