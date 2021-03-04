@@ -7,7 +7,7 @@ We introduce a quality-aware design to increase data processing productivity, by
 ![](/images/architecture.png)
 
 ### Run Notebook in Jupyter
-![](/images/run_jupyter/run_jupyter_small.gif)
+![](/images/run_jupyter/run_jupyter.gif)
 
 ### Submit Spark job
 
@@ -84,7 +84,7 @@ kubectl get svc
 ### Test Arc ETL job in Jupyter
 The sample [contacts data](/deployment/app_code/data/) is generated randomly by a [python script](https://raw.githubusercontent.com/cartershanklin/hive-scd-examples/master/merge_data/generate.py)
 
-![fake_data](/images/generate_fake_data/fake_data_small.gif)
+![fake_data](/images/generate_fake_data/fake_data.mp4)
 
 * Login to Jupyter WebUI found at [CloudFormation Output](https://console.aws.amazon.com/cloudformation/).
 
