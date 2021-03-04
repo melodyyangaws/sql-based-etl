@@ -84,7 +84,7 @@ kubectl get svc
 ### Test Arc ETL job in Jupyter
 The sample [contacts data](/deployment/app_code/data/) is generated randomly by a [python script](https://raw.githubusercontent.com/cartershanklin/hive-scd-examples/master/merge_data/generate.py)
 
-![fake_data](/images/generate_fake_data/fake_data.mp4)
+![](/images/generate_fake_data/fake_data.mp4)
 
 * Login to Jupyter WebUI found at [CloudFormation Output](https://console.aws.amazon.com/cloudformation/).
 
