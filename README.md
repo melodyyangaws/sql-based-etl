@@ -7,7 +7,7 @@ We introduce a quality-aware design to increase data processing productivity, by
 ![](/images/architecture.png)
 
 ### Run Notebook in Jupyter
-![](/images/run_jupyter/run_jupyter.mp4)
+![](/images/run_jupyter/run_jupyter.gif)
 
 ### Submit Spark job
 
