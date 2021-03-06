@@ -9,9 +9,10 @@ We introduce a quality-aware design to increase data processing productivity, by
 ### Test job in Jupyter
 ![](/images/run_jupyter.gif)
 
-### Submit Spark job
+### Submit Spark job in Argo
 ![](/images/submit_job_in_argo.gif)
 
+### Submit Spark job in k8s
 ![](images/submit_native_spark.gif)
 
 #### Table of Contents
@@ -194,13 +195,13 @@ kubectl apply -f https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/b
 # watch the progress in EKS
 kubectl get pod -n spark
 
-# watch job progress on SparkUI
-kubectl port-forward word-count-driver 4040:4040 -n spark
-# go to `localhost:4040` from your web browser
-
 # modify the schedule file locally if you like, then rerun
 kubectl delete -f source/example/native-spark-job-scheduler.yaml
 kubectl apply -f source/example/native-spark-job-scheduler.yaml
+
+# watch job progress on SparkUI
+kubectl port-forward word-count-driver 4040:4040 -n spark
+# go to `localhost:4040` from your web browser
 ```
 [*^ back to top*](#Table-of-Contents)
 #### Self-recovery test
