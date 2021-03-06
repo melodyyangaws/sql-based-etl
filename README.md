@@ -7,9 +7,12 @@ We introduce a quality-aware design to increase data processing productivity, by
 ![](/images/architecture.png)
 
 ### Run Notebook in Jupyter
-![](/images/run_jupyter/run_jupyter.gif)
+![](/images/run_jupyter.gif)
 
 ### Submit Spark job
+![](/images/submit_job_in_argo.gif)
+
+![](images/submit_native_spark.gif)
 
 #### Table of Contents
 * [Deploy Infrastructure](#Deploy-Infrastructure)
@@ -185,7 +188,7 @@ Reuse the Arc docker image to run a native Spark application, defined by k8s's C
 #### Submit a job via kubectl 
 * Execute the command on [AWS CloudShell](https://console.aws.amazon.com/cloudshell/home?region=us-east-1).
 ```bash
-kubectl create configmap special-config --from-literal=codeBucket=<your_codeBucket_name>
+kubectl create -n spark configmap special-config --from-literal=codeBucket=<your_codeBucket_name>
 kubectl apply -f https://raw.githubusercontent.com/melodyyangaws/sql-based-etl/blog/source/example/native-spark-job-scheduler.yaml
 
 # watch the progress in EKS
