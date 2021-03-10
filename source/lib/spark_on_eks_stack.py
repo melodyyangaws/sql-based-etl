@@ -36,7 +36,7 @@ class SparkOnEksStack(core.Stack):
 
         # Cloudformation input params
         datalake_bucket = core.CfnParameter(self, "datalakebucket", type="String",
-            description="You existing S3 bucket to be accessed by Jupyter Notebook and ETL job. Default: blank",
+            description="Your existing S3 bucket to be accessed by Jupyter Notebook and ETL job. Default: blank",
             default=""
         )
         login_name = core.CfnParameter(self, "jhubuser", type="String",

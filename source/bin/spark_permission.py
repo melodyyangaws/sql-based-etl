@@ -68,6 +68,7 @@ class SparkOnEksSAConst(core.Construct):
         self._jupyter_sa.node.add_dependency(jupyter_ns)
 
         # Associate AWS IAM role to K8s Service Account
+        datalake_bucket=code_bucket if not datalake_bucket.strip() else datalake_bucket
         _bucket_setting={
                 "{{codeBucket}}": code_bucket,
                 "{{datalakeBucket}}": datalake_bucket
