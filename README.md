@@ -9,6 +9,9 @@ We introduce a quality-aware design to increase data processing productivity, by
 ### Test job in Jupyter
 ![](/images/run_jupyter.gif)
 
+### Test Spark Driver self-recovery
+![](/images/driver_interruption_test.gif)
+
 ### Submit Spark job in Argo
 ![](/images/submit_job_in_argo.gif)
 
