@@ -11,7 +11,7 @@ class EksConst(core.Construct):
     def my_cluster(self):
         return self._my_cluster
 
-    def __init__(self,scope: core.Construct, id:str, eksname: str, eksvpc: ec2.IVpc, noderole: IRole, eks_adminrole: IRole, region:str, **kwargs) -> None:
+    def __init__(self,scope: core.Construct, id:str, eksname: str, eksvpc: ec2.IVpc, noderole: IRole, eks_adminrole: IRole, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
         # 1.Create EKS cluster without node group
@@ -43,12 +43,12 @@ class EksConst(core.Construct):
         _spot_node = self._my_cluster.add_nodegroup_capacity('spot-mn',
             nodegroup_name = 'etl-spot',
             node_role = noderole,
+            capacity_type=eks.CapacityType.SPOT,
             desired_size = 1,
             max_size = 30,
             disk_size = 50,
             instance_types=[ec2.InstanceType("r5.xlarge"),ec2.InstanceType("r4.xlarge"),ec2.InstanceType("r3.xlarge")],
             labels = {'app':'spark', 'lifecycle':'Ec2Spot'},
-            capacity_type=eks.CapacityType.SPOT,
             tags = {'Name':'Spot-'+eksname, 'k8s.io/cluster-autoscaler/enabled': 'true', 'k8s.io/cluster-autoscaler/'+eksname: 'owned'}
         )
 

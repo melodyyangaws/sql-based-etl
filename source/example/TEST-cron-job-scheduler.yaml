@@ -19,7 +19,7 @@ spec:
       inputs:
         parameters:
         - name: image
-          value: ghcr.io/tripl-ai/arc:latest
+          value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
       script:
         image: "{{inputs.parameters.image}}"
         resources:
@@ -50,6 +50,8 @@ spec:
           --conf spark.hadoop.fs.s3a.impl=org.apache.hadoop.fs.s3a.S3AFileSystem \
           --conf spark.hadoop.fs.s3a.fast.upload=true \
           --conf spark.hadoop.fs.s3a.aws.credentials.provider=com.amazonaws.auth.WebIdentityTokenCredentialsProvider \
+          --conf spark.kubernetes.driver.podTemplateFile='driver-pod-template.yaml' \
+          --conf spark.kubernetes.executor.podTemplateFile='executor-pod-template.yaml' \
           --conf spark.kubernetes.authenticate.driver.serviceAccountName=nativejob \
           "s3a://{{codeBucket}}/app_code/job/wordcount.py" \
           "s3a://{{codeBucket}}/app_code/output/native"

@@ -5,6 +5,7 @@ from aws_cdk import (
     aws_iam as iam
 )
 from typing import  List
+import bin.override_rule as scan
 
 class IamConst(core.Construct):
 
@@ -46,8 +47,11 @@ class IamConst(core.Construct):
             iam.ManagedPolicy.from_aws_managed_policy_name('CloudWatchAgentServerPolicy'), 
         )
         self._managed_node_role = iam.Role(self,'NodeInstance-Role',
-            role_name= cluster_name + '-NodeInstanceRole',
             path='/',
             assumed_by=iam.ServicePrincipal('ec2.amazonaws.com'),
             managed_policies=list(_managed_node_managed_policies),
         )
+
+        # Override Cfn Nag rule
+        scan.suppress_cfnNag_rule('W12', 'by default the role has * resource', self._clusterAdminRole.node.find_child('DefaultPolicy').node.default_child)
+        

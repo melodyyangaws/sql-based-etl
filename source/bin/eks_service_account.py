@@ -5,6 +5,7 @@ from aws_cdk import (
 from aws_cdk.aws_secretsmanager import ISecret
 from aws_cdk.aws_eks import ICluster
 from bin.manifest_reader import *
+import bin.override_rule as scan
 
 class EksSAConst(core.Construct):
 
@@ -44,3 +45,12 @@ class EksSAConst(core.Construct):
                     )
         for statmt in _secrets_role:
             self._secrets_sa.add_to_principal_policy(iam.PolicyStatement.from_json(statmt))  
+
+# //************************************v*************************************************************//
+# //*********************** Override cfn Nag scan rules for deployment *******************************//
+# //***********************************************************************************************//   
+        
+        # Override Cfn Nag warning W12: IAM policy should not allow * resource
+        scan.suppress_cfnNag_rule('W12', 'by default the role has * resource', self._scaler_sa.role.node.find_child('DefaultPolicy').node.default_child)
+        scan.suppress_cfnNag_rule('W12', 'by default the role has * resource', self._alb_sa.role.node.find_child('DefaultPolicy').node.default_child)
+        scan.suppress_cfnNag_rule('W12', 'by default the role has * resource', self._secrets_sa.role.node.find_child('DefaultPolicy').node.default_child)

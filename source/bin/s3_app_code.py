@@ -3,6 +3,7 @@ from aws_cdk import (
     aws_s3 as s3,
     aws_s3_deployment as s3deploy
 )
+import bin.override_rule as scan
 from os import path
 
 class S3AppCodeConst(core.Construct):
@@ -20,7 +21,7 @@ class S3AppCodeConst(core.Construct):
             encryption=s3.BucketEncryption.KMS_MANAGED,
             removal_policy=core.RemovalPolicy.DESTROY,
             auto_delete_objects=True,
-            # server_access_logs_prefix="bucketAccessLog",
+            # server_access_logs_prefix="bucketAccessLog/",
             access_control = s3.BucketAccessControl.LOG_DELIVERY_WRITE
         )  
         code_path=path.dirname(path.abspath(__file__))
@@ -30,3 +31,7 @@ class S3AppCodeConst(core.Construct):
             destination_key_prefix="app_code"
         )
         self._code_bucket = artifact_bucket.bucket_name
+        
+        # Override Cfn_Nag rule for S3 access logging
+        scan.suppress_cfnNag_rule('W35','access logging stops the solution to be auto-deleted at user account. disable for now',artifact_bucket.node.default_child)
+

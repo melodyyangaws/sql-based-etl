@@ -4,6 +4,7 @@ from aws_cdk import (
 )
 from aws_cdk.aws_eks import ICluster, KubernetesManifest
 from bin.manifest_reader import loadYamlReplaceVarLocal
+import bin.override_rule as scan
 
 class SparkOnEksSAConst(core.Construct):
 
@@ -98,3 +99,9 @@ class SparkOnEksSAConst(core.Construct):
         _native_spark_iam = loadYamlReplaceVarLocal('../app_resources/native-spark-iam-role.yaml',fields=_bucket_setting)
         for statmnt in _native_spark_iam:
             self._spark_sa.add_to_principal_policy(iam.PolicyStatement.from_json(statmnt))
+
+
+        # Override Cfn Nag warning W12: IAM policy should not allow * resource
+        scan.suppress_cfnNag_rule('W12', 'by default the role has * resource', self._etl_sa.role.node.find_child('DefaultPolicy').node.default_child)
+        scan.suppress_cfnNag_rule('W12', 'by default the role has * resource', self._spark_sa.role.node.find_child('DefaultPolicy').node.default_child)
+        scan.suppress_cfnNag_rule('W12', 'by default the role has * resource', self._jupyter_sa.role.node.find_child('DefaultPolicy').node.default_child)

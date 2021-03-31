@@ -33,9 +33,9 @@ spec:
     onFailureRetries: 3
     onFailureRetryInterval: 10
     onSubmissionFailureRetries: 5
-    onSubmissionFailureRetryInterval: 20
+    onSubmissionFailureRetryInterval: 20          
   driver:
-    # driver run on OnDemand Ec2
+    # driver run on Spot
     affinity:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:  
@@ -44,7 +44,8 @@ spec:
               - key: lifecycle
                 operator: In 
                 values: 
-                - OnDemand
+                - Ec2Spot
+                # - OnDemand    
     env:
       - name: BUCKET_PARAM
         valueFrom:
@@ -69,7 +70,7 @@ spec:
               - key: lifecycle
                 operator: In 
                 values: 
-                - Ec2Spot
+                - Ec2Spot    
     cores: 1
     instances: 10
     memory: "5G"
