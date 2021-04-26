@@ -33,7 +33,6 @@ fi
 source_template_dir="$PWD"
 dist_dir="$source_template_dir/deployment/open-source"
 source_dir="$source_template_dir/source"
-image_dir="$source_template_dir/images"
 sample_code_dir="$source_template_dir/deployment"
 github_dir="$source_template_dir/.github"
 
@@ -45,6 +44,11 @@ echo "rm -rf $dist_dir"
 rm -rf $dist_dir
 echo "mkdir -p $dist_dir"
 mkdir -p $dist_dir
+
+echo "rm -rf $dist_dir/deployment"
+rm -rf $dist_dir/deployment
+echo "mkdir -p $dist_dir/deployment"
+mkdir -p $dist_dir/deployment
 
 echo "------------------------------------------------------------------------------"
 echo "[Packing] GitHub templates"
@@ -60,19 +64,21 @@ echo "--------------------------------------------------------------------------
 echo "cp -r $source_dir $dist_dir"
 cp -r $source_dir $dist_dir
 
-echo "cp -r $image_dir $dist_dir"
-cp -r $image_dir $dist_dir
-
 echo "------------------------------------------------------------------------------"
 echo "[Packing] Deployment folder"
 echo "------------------------------------------------------------------------------"
 
-echo "cp -r $sample_code_dir $dist_dir"
-cp -r $sample_code_dir/app_code/ $dist_dir/deployment/
-cp -r $sample_code_dir/cdk-solution-helper/ $dist_dir/deployment/
+echo "cp -r $sample_code_dir/*.sh $dist_dir/deployment"
 cp -rf $sample_code_dir/*.sh $dist_dir/deployment/
-cp $sample_code_dir/Dockerfile $dist_dir/deployment/
-rm -rf $dist_dir/deployment/build-open-source-dist.sh
+
+echo "cp -r $sample_code_dir/app_code $dist_dir/deployment"
+cp -r $sample_code_dir/app_code $dist_dir/deployment
+
+echo "cp -r $sample_code_dir/cdk-solution-helper $dist_dir/deployment"
+cp -r $sample_code_dir/cdk-solution-helper $dist_dir/deployment
+
+echo "rm $dist_dir/deployment/build-open-source-dist.sh"
+rm $dist_dir/deployment/build-open-source-dist.sh
 
 echo "------------------------------------------------------------------------------"
 echo "[Packing] Files from the root level of the project"
@@ -108,6 +114,14 @@ echo "find $dist_dir -iname "node_modules" -type d -exec rm -rf "{}" \; 2> /dev/
 find $dist_dir -iname "node_modules" -type d -exec rm -rf "{}" \; 2> /dev/null
 echo "find $dist_dir -iname "package-lock.json" -type f -exec rm -f "{}" \; 2> /dev/null"
 find $dist_dir -iname "package-lock.json" -type f -exec rm -f "{}" \; 2> /dev/null
+echo "find $dist_dir -iname "cdk.context.json" -type f -exec rm -f "{}" \; 2> /dev/null"
+find $dist_dir -iname "cdk.context.json" -type f -exec rm -f "{}" \; 2> /dev/null
+echo "find $dist_dir -iname ".env" -type d -exec rm -rf "{}" \; 2> /dev/null"
+find $dist_dir -iname ".env" -type d -exec rm -rf "{}" \; 2> /dev/null
+echo "find $dist_dir -iname "test" -type d -exec rm -r "{}" \; 2> /dev/null"
+find $dist_dir -iname "test" -type d -exec rm -r "{}" \; 2> /dev/null
+echo "find $dist_dir -iname "*.egg-info" -type d -exec rm -rf "{}" \; 2> /dev/null"
+find $dist_dir -iname "*.egg-info" -type d -exec rm -rf "{}" \; 2> /dev/null
 
 echo "------------------------------------------------------------------------------"
 echo "[Packing] Create GitHub (open-source) zip file"

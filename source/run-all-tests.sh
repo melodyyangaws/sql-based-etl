@@ -63,7 +63,7 @@ run_python_test() {
 	echo "coverage report path set to $coverage_report_path"
 
 	# Use -vv for debugging
-	python3 -m pytest --cov --cov-fail-under=10 --cov-report=term-missing --cov-report "xml:$coverage_report_path"
+	python3 -m pytest --cov --cov-fail-under=20 --cov-report=term-missing --cov-report "xml:$coverage_report_path"
 	if [ "$?" = "1" ]; then
 		echo "(source/run-all-tests.sh) ERROR: there is likely output above." 1>&2
 		exit 1
@@ -97,7 +97,7 @@ run_source_unit_test() {
 	for folder in */; do
 		cd "$folder"
 		# function_name=${PWD##*}
-		if [ "$folder" = "bin/" ]; then
+		if [ "$folder" = "test/" ]; then
 			echo "------------------------------------------------------------------------------"
 			echo "[Test] Run tests against $folder"
 			echo "------------------------------------------------------------------------------"

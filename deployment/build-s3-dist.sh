@@ -27,7 +27,7 @@
 #  - version-code: version of the package
 
 # Important: CDK global version number
-cdk_version===1.91.0
+cdk_version===1.96.0
 
 # Check to see if the required parameters have been provided:
 if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
@@ -38,7 +38,7 @@ fi
 
 # Get reference for all important folders
 template_dir="$PWD"
-staging_dist_dir="$template_dir/deployment/staging"
+staging_dist_dir="$template_dir/staging"
 template_dist_dir="$template_dir/deployment/global-s3-assets"
 build_dist_dir="$template_dir/deployment/regional-s3-assets"
 source_dir="$template_dir/source"
@@ -69,11 +69,13 @@ cd $template_dir/deployment/cdk-solution-helper
 echo "npm install"
 npm install
 
-echo "cd $source_dir"
-cd $source_dir
+cd $template_dir
+echo "pip3 install -q $source_dir"
 python3 -m venv .env
 source .env/bin/activate
-pip3 install -q $source_dir
+pip3 install --upgrade pip -q $source_dir
+echo "cd $source_dir"
+cd $source_dir
 
 echo "------------------------------------------------------------------------------"
 echo "[Synth] CDK Project"
@@ -170,7 +172,7 @@ for d in `find . -mindepth 1 -maxdepth 1 -type d`; do
         echo "Initiating virtual environment"
         python3 -m venv $venv_folder
         source $venv_folder/bin/activate
-        pip3 install -q $source_dir --target $venv_folder/lib/python3.*/site-packages
+        pip3 install --upgrade -q $source_dir --target $venv_folder/lib/python3.*/site-packages
         deactivate
         echo "package python artifact"
         cd $staging_dist_dir/$fname/$venv_folder/lib/python3.*/site-packages

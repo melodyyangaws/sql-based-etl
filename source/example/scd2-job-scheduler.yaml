@@ -24,7 +24,7 @@ spec:
             - name: jobId
               value: initial-load
             - name: image
-              value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
+              value: {{ECR_URL}}
             - name: configUri
               value: "s3a://{{workflow.parameters.codeBucket}}/app_code/job/initial_load.ipynb"
             - name: parameters
@@ -39,7 +39,7 @@ spec:
             - name: jobId
               value: delta-load 
             - name: image
-              value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
+              value: {{ECR_URL}}
             - name: configUri
               value: "s3a://{{workflow.parameters.codeBucket}}/app_code/job/delta_load.ipynb"
             - name: parameters
@@ -55,7 +55,7 @@ spec:
             - name: jobId
               value: SCD2-merge 
             - name: image
-              value: {{ACCOUNTNUMBER}}.dkr.ecr.{{REGION}}.amazonaws.com/arc:latest
+              value: {{ECR_URL}}
             - name: configUri
               value: "s3a://{{workflow.parameters.codeBucket}}/app_code/job/scd2_merge.ipynb"
             - name: parameters

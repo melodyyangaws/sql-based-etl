@@ -1,5 +1,15 @@
-# // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-# // SPDX-License-Identifier: MIT-0
+######################################################################################################################
+# Copyright 2020-2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.                                      #
+#                                                                                                                   #
+# Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance    #
+# with the License. A copy of the License is located at                                                             #
+#                                                                                                                   #
+#     http://www.apache.org/licenses/LICENSE-2.0                                                                    #
+#                                                                                                                   #
+# or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES #
+# OR CONDITIONS OF ANY KIND, express o#implied. See the License for the specific language governing permissions     #
+# and limitations under the License.  																				#                                                                              #
+######################################################################################################################
 
 from aws_cdk import (
     core,
@@ -8,7 +18,7 @@ from aws_cdk import (
     aws_elasticloadbalancingv2 as alb,
     aws_s3 as s3
 )
-import bin.override_rule as scan
+import lib.util.override_rule as scan
 
 class NestedStack(core.NestedStack):
 
@@ -20,7 +30,7 @@ class NestedStack(core.NestedStack):
     def argo_cf(self):
         return self._argo_cf
 
-    def __init__(self, scope: core.Construct, id: str,
+    def __init__(self,scope: core.Construct, id: str,
         logbucket: str,
         eksname: str, 
         argo_alb_dns_name: str, 
@@ -66,7 +76,6 @@ def add_distribution(scope: core.Construct, id: str, alb_dns_name: str, port: in
         log_bucket=logbucket
     )
     # Override Cfn_Nag rule for Cloudfront TLS-1.2 (https://github.com/stelligent/cfn_nag/issues/384)
-    scan.suppress_cfnNag_rule('W70','the distribution uses CloudFront domain name and automatically sets the policy to TLSv1',dist.node.default_child)
+    scan.suppress_cfnnag_rule('W70','the distribution uses CloudFront domain name and automatically sets the policy to TLSv1',dist.node.default_child)
 
     return dist.distribution_domain_name
-

@@ -1,5 +1,16 @@
-# // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-# // SPDX-License-Identifier: MIT-0
+######################################################################################################################
+# Copyright 2020-2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.                                      #
+#                                                                                                                   #
+# Licensed under the Apache License, Version 2.0 (the "License"). You may not use this file except in compliance    #
+# with the License. A copy of the License is located at                                                             #
+#                                                                                                                   #
+#     http://www.apache.org/licenses/LICENSE-2.0                                                                    #
+#                                                                                                                   #
+# or in the 'license' file accompanying this file. This file is distributed on an 'AS IS' BASIS, WITHOUT WARRANTIES #
+# OR CONDITIONS OF ANY KIND, express o#implied. See the License for the specific language governing permissions     #
+# and limitations under the License.  																				#                                                                              #
+######################################################################################################################
+
 import setuptools
 
 try:
@@ -22,19 +33,22 @@ setuptools.setup(
     packages=setuptools.find_packages(where="./"),
 
     install_requires=[
-        "aws-cdk.core==1.91.0",
-        "aws-cdk.aws_iam==1.91.0",
-        "aws-cdk.aws_eks==1.91.0",
-        "aws-cdk.aws_ec2==1.91.0",
-        "aws-cdk.aws_s3==1.91.0",
-        "aws-cdk.aws_s3_deployment==1.91.0",
-        "aws_cdk.aws_secretsmanager==1.91.0",
-        "aws_cdk.aws_elasticloadbalancingv2==1.91.0",
-        "aws-cdk.aws_cloudfront==1.91.0",
-        "aws-cdk.aws_cloudfront_origins==1.91.0",
-        "aws-cdk.aws_efs==1.91.0",
-        "aws-cdk.aws_kms==1.91.0",
-        "pyyaml==5.3"
+        "aws-cdk.core==1.96.0",
+        "aws-cdk.aws_iam==1.96.0",
+        "aws-cdk.aws_eks==1.96.0",
+        "aws-cdk.aws_ec2==1.96.0",
+        "aws-cdk.aws_s3==1.96.0",
+        "aws-cdk.aws_s3_deployment==1.96.0",
+        "aws_cdk.aws_secretsmanager==1.96.0",
+        "aws_cdk.aws_elasticloadbalancingv2==1.96.0",
+        "aws-cdk.aws_cloudfront==1.96.0",
+        "aws-cdk.aws_cloudfront_origins==1.96.0",
+        "aws-cdk.aws_kms==1.96.0",
+        "aws-cdk.aws_ecr==1.96.0",
+        "aws-cdk.aws_codepipeline==1.96.0",
+        "aws-cdk.aws_codebuild==1.96.0",
+        "aws-cdk.aws_codepipeline_actions==1.96.0",
+        "pyyaml==5.4"
     ],
 
     python_requires=">=3.6",
